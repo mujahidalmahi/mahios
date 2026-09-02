@@ -176,7 +176,6 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the retro desktop simulation.  
-Open [http://localhost:3000/admin](http://localhost:3000/admin) to access the Admin CMS (Default Master Key: `mahi-admin-2026`).
 
 ---
 
