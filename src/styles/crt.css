@@ -1,0 +1,168 @@
+/* =========================================================
+   MahiOS: Vintage CRT 90s Monitor Effects
+   ========================================================= */
+
+/* CRT Monitor Outer Bezel Housing */
+.crt-monitor-chassis {
+  background: radial-gradient(circle at 50% 30%, #d8d4c9 0%, #b8b2a3 70%, #8e887a 100%);
+  border: 12px solid #a49e90;
+  border-top-color: #cac5b8;
+  border-left-color: #bcb6a9;
+  border-right-color: #8c8678;
+  border-bottom-color: #726d60;
+  border-radius: 20px;
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.75),
+    inset 0 4px 10px rgba(255, 255, 255, 0.35),
+    inset 0 -6px 15px rgba(0, 0, 0, 0.6);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1280px) {
+  .crt-monitor-chassis {
+    border-width: 16px;
+    border-radius: 24px;
+  }
+}
+
+/* CRT Screen Inner Bezel (Dark Sunken Inset) */
+.crt-screen-bezel {
+  background: #111111;
+  border: 8px solid #222222;
+  border-top-color: #1a1a1a;
+  border-left-color: #1c1c1c;
+  border-right-color: #333333;
+  border-bottom-color: #444444;
+  border-radius: 14px;
+  box-shadow: 
+    inset 0 8px 20px rgba(0, 0, 0, 0.9),
+    inset 0 0 8px rgba(0, 0, 0, 0.8),
+    0 1px 3px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* CRT Glass Screen with Curvature Distortion */
+.crt-screen-glass {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.crt-screen-curvature {
+  transform: perspective(1000px) rotateX(0.3deg) scale(0.996);
+  transition: transform 0.3s ease;
+}
+
+/* Scanline Overlay */
+.crt-scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+  background-size: 100% 4px;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* Screen Vignette & Phosphor Glow */
+.crt-scanlines::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(18, 255, 120, 0.02) 0%, rgba(0, 0, 0, 0.45) 100%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* CRT Screen Turn-On / Power Flicker Animation */
+@keyframes crt-flicker {
+  0% { opacity: 0.985; }
+  50% { opacity: 1; }
+  52% { opacity: 0.97; }
+  54% { opacity: 1; }
+  80% { opacity: 0.99; }
+  100% { opacity: 1; }
+}
+
+.crt-flicker {
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-power-on {
+  0% {
+    transform: scale(1, 0.002);
+    filter: brightness(25);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1, 0.005);
+    filter: brightness(15);
+  }
+  70% {
+    transform: scale(1, 1);
+    filter: brightness(2.5);
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+    opacity: 1;
+  }
+}
+
+.crt-power-on-anim {
+  animation: crt-power-on 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* Monitor Stand & Base (Vintage Grey plastic foot) */
+.crt-monitor-neck {
+  width: 140px;
+  height: 16px;
+  margin: 0 auto;
+  background: linear-gradient(90deg, #7c776c 0%, #a49e90 50%, #6e695e 100%);
+  border-left: 2px solid #b8b2a3;
+  border-right: 2px solid #58544a;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.crt-monitor-base {
+  width: 280px;
+  height: 14px;
+  margin: 0 auto;
+  background: radial-gradient(ellipse at center, #c8c2b4 0%, #9e988a 100%);
+  border: 3px solid #7c776c;
+  border-top-color: #ded9cd;
+  border-bottom-color: #555045;
+  border-radius: 6px 6px 12px 12px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* Monitor Badge / LED Power Light */
+.crt-led-on {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #39ff14;
+  box-shadow: 0 0 8px #39ff14, 0 0 14px #39ff14;
+}
+
+.crt-badge {
+  font-family: 'Courier New', monospace;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: #635f55;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
+}

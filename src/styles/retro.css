@@ -1,0 +1,150 @@
+/* =========================================================
+   MahiOS: Retro 1990s Desktop UI Styling
+   ========================================================= */
+
+:root {
+  --win-gray: #c0c0c0;
+  --win-dark-gray: #808080;
+  --win-light: #ffffff;
+  --win-black: #000000;
+  --win-blue-start: #000080;
+  --win-blue-end: #1084d0;
+  --win-inactive-start: #808080;
+  --win-inactive-end: #b5b5b5;
+  --win-desktop: #008080;
+}
+
+/* Classic 90s Outset Button & Window Border */
+.retro-box-outset {
+  background-color: var(--win-gray);
+  border-top: 2px solid var(--win-light);
+  border-left: 2px solid var(--win-light);
+  border-right: 2px solid var(--win-black);
+  border-bottom: 2px solid var(--win-black);
+  box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px var(--win-dark-gray);
+}
+
+/* Outset Button with Active Pressed State */
+.retro-btn {
+  background-color: var(--win-gray);
+  border-top: 2px solid var(--win-light);
+  border-left: 2px solid var(--win-light);
+  border-right: 2px solid var(--win-black);
+  border-bottom: 2px solid var(--win-black);
+  box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px var(--win-dark-gray);
+  color: var(--win-black);
+  font-family: 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  user-select: none;
+  cursor: pointer;
+  transition: none;
+}
+
+.retro-btn:active, .retro-btn-pressed {
+  border-top: 2px solid var(--win-black);
+  border-left: 2px solid var(--win-black);
+  border-right: 2px solid var(--win-light);
+  border-bottom: 2px solid var(--win-light);
+  box-shadow: inset 1px 1px 0px var(--win-dark-gray), inset -1px -1px 0px #dfdfdf;
+  padding-top: calc(theme('spacing.1') + 1px);
+  padding-left: calc(theme('spacing.2') + 1px);
+}
+
+/* Classic Sunken / Inset Input Box */
+.retro-box-inset {
+  background-color: #ffffff;
+  border-top: 2px solid var(--win-dark-gray);
+  border-left: 2px solid var(--win-dark-gray);
+  border-right: 2px solid var(--win-light);
+  border-bottom: 2px solid var(--win-light);
+  box-shadow: inset 1px 1px 0px var(--win-black), inset -1px -1px 0px #dfdfdf;
+}
+
+/* Window Title Bar */
+.retro-titlebar {
+  background: linear-gradient(90deg, var(--win-blue-start) 0%, var(--win-blue-end) 100%);
+  color: #ffffff;
+  font-family: 'MS Sans Serif', Tahoma, sans-serif;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.retro-titlebar-inactive {
+  background: linear-gradient(90deg, var(--win-inactive-start) 0%, var(--win-inactive-end) 100%);
+  color: #d4d0c8;
+}
+
+/* Window Header Close/Min/Max Button */
+.retro-window-btn {
+  width: 18px;
+  height: 16px;
+  background-color: var(--win-gray);
+  border-top: 1.5px solid var(--win-light);
+  border-left: 1.5px solid var(--win-light);
+  border-right: 1.5px solid var(--win-black);
+  border-bottom: 1.5px solid var(--win-black);
+  box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px var(--win-dark-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.retro-window-btn:active {
+  border-top: 1.5px solid var(--win-black);
+  border-left: 1.5px solid var(--win-black);
+  border-right: 1.5px solid var(--win-light);
+  border-bottom: 1.5px solid var(--win-light);
+  box-shadow: inset 1px 1px 0px var(--win-dark-gray);
+}
+
+/* Retro Taskbar */
+.retro-taskbar {
+  background-color: var(--win-gray);
+  border-top: 2px solid var(--win-light);
+  box-shadow: inset 0 1px 0 #dfdfdf;
+}
+
+/* Retro Scrollbar (Scoped only to Desktop & Retro Window views) */
+.retro-os ::-webkit-scrollbar,
+.retro-window ::-webkit-scrollbar,
+.retro-scroll ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  background-color: #dfdfdf;
+}
+
+.retro-os ::-webkit-scrollbar-thumb,
+.retro-window ::-webkit-scrollbar-thumb,
+.retro-scroll ::-webkit-scrollbar-thumb {
+  background-color: var(--win-gray);
+  border-top: 2px solid var(--win-light);
+  border-left: 2px solid var(--win-light);
+  border-right: 2px solid var(--win-black);
+  border-bottom: 2px solid var(--win-black);
+  box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px var(--win-dark-gray);
+}
+
+.retro-os ::-webkit-scrollbar-button,
+.retro-window ::-webkit-scrollbar-button,
+.retro-scroll ::-webkit-scrollbar-button {
+  background-color: var(--win-gray);
+  border-top: 2px solid var(--win-light);
+  border-left: 2px solid var(--win-light);
+  border-right: 2px solid var(--win-black);
+  border-bottom: 2px solid var(--win-black);
+  box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px var(--win-dark-gray);
+  width: 16px;
+  height: 16px;
+}
+
+/* Retro Dotted Focus Border */
+.retro-focused {
+  outline: 1px dotted #000000;
+  outline-offset: -3px;
+}

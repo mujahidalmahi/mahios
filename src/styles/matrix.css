@@ -1,0 +1,55 @@
+/* =========================================================
+   MahiOS: Hacker Boot & Matrix Rain Styling
+   ========================================================= */
+
+.matrix-terminal {
+  background-color: #000000;
+  color: #00ff66;
+  font-family: 'Courier New', Courier, monospace;
+  text-shadow: 0 0 6px rgba(0, 255, 102, 0.7);
+}
+
+.matrix-green-glow {
+  color: #00ff66;
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.8), 0 0 16px rgba(0, 255, 102, 0.4);
+}
+
+.matrix-amber-glow {
+  color: #ffb000;
+  text-shadow: 0 0 8px rgba(255, 176, 0, 0.8), 0 0 16px rgba(255, 176, 0, 0.4);
+}
+
+.matrix-cyan-glow {
+  color: #00e5ff;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+}
+
+/* Terminal Cursor Blink */
+@keyframes term-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.term-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background-color: #00ff66;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: term-blink 0.8s infinite;
+}
+
+/* Retro ASCII Progress Bar */
+.ascii-progress-container {
+  border: 1px solid #00ff66;
+  padding: 2px;
+  background-color: #051405;
+}
+
+.ascii-progress-bar {
+  background-color: #00ff66;
+  height: 12px;
+  transition: width 0.15s ease-out;
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.8);
+}

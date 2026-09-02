@@ -1,7 +1,32 @@
 {
-  "name": "biography",
-  "version": "0.1.0",
-  "private": true,
+  "name": "mahios",
+  "version": "2.0.0",
+  "description": "A 1990s retro desktop OS biography & digital portfolio built with Next.js 16, React 19, Supabase, TipTap, Web Audio API, CRT shaders, and a dynamic Admin CMS Control Center.",
+  "author": "Mujahid Al Mahi <mujahidmahi.official@gmail.com> (https://mujahidmahi.xyz)",
+  "license": "MIT",
+  "homepage": "https://mujahidmahi.xyz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mujahidalmahi/mahios.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mujahidalmahi/mahios/issues"
+  },
+  "keywords": [
+    "portfolio",
+    "biography",
+    "retro-os",
+    "windows-95",
+    "nextjs-16",
+    "react-19",
+    "supabase",
+    "tailwindcss",
+    "tiptap",
+    "web-audio-api",
+    "crt-shaders",
+    "admin-dashboard",
+    "cms"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,9 +34,35 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.113.0",
+    "@tiptap/extension-code-block-lowlight": "^3.31.0",
+    "@tiptap/extension-color": "^3.31.0",
+    "@tiptap/extension-highlight": "^3.31.0",
+    "@tiptap/extension-image": "^3.31.0",
+    "@tiptap/extension-link": "^3.31.0",
+    "@tiptap/extension-table": "^3.31.0",
+    "@tiptap/extension-table-cell": "^3.31.0",
+    "@tiptap/extension-table-header": "^3.31.0",
+    "@tiptap/extension-table-row": "^3.31.0",
+    "@tiptap/extension-text-align": "^3.31.0",
+    "@tiptap/extension-text-style": "^3.31.0",
+    "@tiptap/extension-underline": "^3.31.0",
+    "@tiptap/react": "^3.31.0",
+    "@tiptap/starter-kit": "^3.31.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.4",
+    "cloudinary": "^2.11.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^13.1.1",
+    "lowlight": "^3.3.0",
+    "lucide-react": "^1.39.0",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.5.4",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

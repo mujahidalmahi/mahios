@@ -1,0 +1,66 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { isMaliciousBot } from '@/lib/security/botShield';
+
+export function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const userAgent = req.headers.get('user-agent');
+
+  // 1. Anti-Bot / Anti-Scraper Protection
+  if (isMaliciousBot(userAgent)) {
+    return new NextResponse('Access Denied: Malicious bot or unauthorized scraper detected.', {
+      status: 403,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+
+  // 2. Strict Admin Route Protection
+  const isAdminRoute = pathname.startsWith('/admin') && pathname !== '/admin/login';
+  if (isAdminRoute) {
+    const sessionCookie = req.cookies.get('mahios_admin_session')?.value;
+    
+    // Check Supabase Auth cookie or custom session token
+    let hasValidSession = false;
+    if (sessionCookie) {
+      try {
+        const decoded = JSON.parse(Buffer.from(sessionCookie, 'base64').toString('utf-8'));
+        if (decoded && typeof decoded.exp === 'number' && decoded.exp > Date.now()) {
+          hasValidSession = true;
+        }
+      } catch {
+        hasValidSession = false;
+      }
+    }
+
+    // Check Supabase session cookies if present
+    const hasSupabaseCookie = Array.from(req.cookies.getAll()).some(
+      (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
+    );
+
+    if (!hasValidSession && !hasSupabaseCookie) {
+      const loginUrl = new URL('/admin/login', req.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // 3. Enterprise Security Headers
+  const response = NextResponse.next();
+
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2)$).*)',
+  ],
+};
