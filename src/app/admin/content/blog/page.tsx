@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,9 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { BlogPost } from '@/types/database';
 
 export default function BlogAdminPage() {
@@ -163,9 +166,7 @@ export default function BlogAdminPage() {
     p.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Dev Notes & Articles...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -447,7 +448,7 @@ export default function BlogAdminPage() {
                         onClick={() => handleRemoveTag(tag)}
                         className="text-slate-500 hover:text-red-400 ml-1"
                       >
-                        ✕
+                        âœ•
                       </button>
                     </span>
                   ))}
@@ -491,3 +492,6 @@ export default function BlogAdminPage() {
     </div>
   );
 }
+
+
+

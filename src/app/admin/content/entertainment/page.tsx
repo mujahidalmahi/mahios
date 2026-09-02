@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -9,6 +9,9 @@ import CategoryPicker from '@/components/admin/CategoryPicker';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { EntertainmentItem } from '@/types/database';
 
 export default function EntertainmentAdminPage() {
@@ -120,9 +123,7 @@ export default function EntertainmentAdminPage() {
     ? items
     : items.filter((i) => i.type.toLowerCase() === typeFilter.toLowerCase());
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Media & Entertainment...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -407,3 +408,6 @@ export default function EntertainmentAdminPage() {
     </div>
   );
 }
+
+
+

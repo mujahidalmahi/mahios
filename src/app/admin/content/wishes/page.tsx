@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import confetti from 'canvas-confetti';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { WishItem } from '@/types/database';
 
 export default function WishesAdminPage() {
@@ -65,9 +68,7 @@ export default function WishesAdminPage() {
     });
   };
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading The 3 Wishes...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -146,7 +147,7 @@ export default function WishesAdminPage() {
                 <Globe className="w-3.5 h-3.5 text-blue-400" />
                 <span>Impact Scope: {wish.impact_scope}</span>
               </span>
-              <span className="text-amber-400 font-bold">★ Universal Tier</span>
+              <span className="text-amber-400 font-bold">â˜… Universal Tier</span>
             </div>
           </div>
         ))}
@@ -241,3 +242,6 @@ export default function WishesAdminPage() {
     </div>
   );
 }
+
+
+

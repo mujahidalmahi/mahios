@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const clientIp = getClientIp(req.headers);
 
-    // Strict Rate Limiting: 5 attempts per 60 seconds
+    // Strict Rate Limiting: 5 attempts per 60 seconds per IP
     const rateLimit = checkRateLimit(`login_${clientIp}`, {
       maxRequests: 5,
       windowSeconds: 60,
@@ -38,22 +38,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, password, honeypot } = body;
 
-    // Honeypot check
+    // Honeypot check for bots
     if (!validateHoneypot(honeypot)) {
       return NextResponse.json({ error: 'Authentication failed.' }, { status: 400 });
     }
 
-    const cleanEmail = sanitizeInput(email || '');
-    const cleanPassword = password || '';
+    const cleanEmail = sanitizeInput(email || '').trim();
+    const cleanPassword = (password || '').trim();
 
     if (!cleanEmail || !cleanPassword) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
     let isAuthenticated = false;
+    let authUserEmail = cleanEmail;
 
-    // 1. Check Supabase Auth if credentials configured
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    // 1. Authenticate via Supabase Auth
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
       try {
         const supabase = createAdminSupabaseClient();
@@ -64,23 +65,14 @@ export async function POST(req: NextRequest) {
 
         if (!error && data?.user) {
           isAuthenticated = true;
+          authUserEmail = data.user.email || cleanEmail;
         }
       } catch (e) {
         console.warn('Supabase auth attempt returned:', e);
       }
     }
 
-    // 2. Master Admin Passphrase fallback
-    const masterKey = process.env.ADMIN_MASTER_KEY || 'mahi-admin-2026';
-    const isMasterEmail =
-      cleanEmail.toLowerCase().includes('admin') ||
-      cleanEmail.toLowerCase().includes('mahi') ||
-      cleanEmail.toLowerCase() === 'mujahidmahi.official@gmail.com' ||
-      cleanEmail.toLowerCase() === 'contact@mujahidmahi.xyz';
 
-    if (!isAuthenticated && (cleanPassword === masterKey || cleanPassword === 'admin123' || cleanPassword === 'mahios1995') && isMasterEmail) {
-      isAuthenticated = true;
-    }
 
     if (!isAuthenticated) {
       return NextResponse.json(
@@ -97,10 +89,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate Session Token
+    // Generate Secure Session Token
     const sessionToken = Buffer.from(
       JSON.stringify({
-        sub: cleanEmail,
+        authenticated: true,
+        sub: authUserEmail,
         role: 'authenticated_admin',
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       })

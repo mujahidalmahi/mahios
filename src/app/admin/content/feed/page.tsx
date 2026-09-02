@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { FeedPost } from '@/types/database';
 
 export default function FeedAdminPage() {
@@ -109,9 +112,7 @@ export default function FeedAdminPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Feed Posts...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -161,7 +162,7 @@ export default function FeedAdminPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                 <span className="text-xs font-bold text-white">{post.author_name}</span>
-                <span className="text-[11px] font-mono text-slate-400">• {post.timestamp}</span>
+                <span className="text-[11px] font-mono text-slate-400">â€¢ {post.timestamp}</span>
                 {post.tag && (
                   <span className="px-2 py-0.2 rounded text-[10px] font-mono bg-slate-950 text-cyan-300 border border-slate-800">
                     {post.tag}
@@ -320,3 +321,6 @@ export default function FeedAdminPage() {
     </div>
   );
 }
+
+
+

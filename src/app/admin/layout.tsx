@@ -20,21 +20,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (sessionCookie) {
     try {
       const decoded = JSON.parse(Buffer.from(sessionCookie, 'base64').toString('utf-8'));
-      if (decoded && typeof decoded.exp === 'number' && decoded.exp > Date.now()) {
+      if (
+        decoded &&
+        (decoded.authenticated === true || decoded.role === 'authenticated_admin') &&
+        typeof decoded.exp === 'number' &&
+        decoded.exp > Date.now()
+      ) {
         isAuthenticated = true;
       }
     } catch {
       isAuthenticated = false;
-    }
-  }
-
-  // Also verify Supabase session cookies if present
-  if (!isAuthenticated) {
-    const hasSupabaseCookie = cookieStore.getAll().some(
-      (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
-    );
-    if (hasSupabaseCookie) {
-      isAuthenticated = true;
     }
   }
 

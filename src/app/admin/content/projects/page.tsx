@@ -12,6 +12,9 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { Project } from '@/types/database';
 
 export default function ProjectsAdminPage() {
@@ -69,13 +72,14 @@ export default function ProjectsAdminPage() {
     });
   };
 
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+
   const openEdit = (p: Project) => {
     setIsNew(false);
     setEditingProject({ ...p });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+  const performDelete = async (id: string) => {
     try {
       const supabase = createClient();
       await supabase.from('projects').delete().eq('id', id);
@@ -169,9 +173,7 @@ export default function ProjectsAdminPage() {
     return matchSearch && matchCat;
   });
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Projects Directory...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -243,7 +245,16 @@ export default function ProjectsAdminPage() {
       </div>
 
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {filteredProjects.length === 0 ? (
+        <EmptyState
+          icon={FolderGit2}
+          title="No projects found"
+          description="Create your first software engineering showcase or tweak your category/search filter."
+          actionLabel="Add Project"
+          onAction={openNew}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProjects.map((p, idx) => (
           <div
             key={p.id}
@@ -356,7 +367,7 @@ export default function ProjectsAdminPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(p.id)}
+                  onClick={() => setDeleteTarget(p)}
                   className="p-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-300 rounded cursor-pointer"
                   title="Delete Project"
                 >
@@ -367,6 +378,7 @@ export default function ProjectsAdminPage() {
           </div>
         ))}
       </div>
+      )}
 
       {/* ==================== PROJECT EDIT/CREATE MODAL ==================== */}
       {editingProject && (
@@ -509,7 +521,7 @@ export default function ProjectsAdminPage() {
                         onClick={() => handleRemoveTag(tag)}
                         className="text-slate-500 hover:text-red-400 ml-1"
                       >
-                        ✕
+                        âœ•
                       </button>
                     </span>
                   ))}
@@ -550,6 +562,24 @@ export default function ProjectsAdminPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={`Delete "${deleteTarget?.title || 'Project'}"?`}
+        message="This project and all its showcase assets will be permanently removed from MahiOS. This action cannot be undone."
+        confirmLabel="Delete Project"
+        onConfirm={() => {
+          if (deleteTarget) {
+            performDelete(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
+
+
+

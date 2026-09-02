@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { PhilosophyItem } from '@/types/database';
 
 export default function PhilosophyAdminPage() {
@@ -117,9 +120,7 @@ export default function PhilosophyAdminPage() {
     ? items
     : items.filter((i) => i.category.toLowerCase() === categoryFilter.toLowerCase());
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Principles & Philosophy...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -253,7 +254,7 @@ export default function PhilosophyAdminPage() {
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
               <span>RANK: #{item.sort_order || idx + 1}</span>
-              <span className="text-indigo-400 font-bold">★ Active Principle</span>
+              <span className="text-indigo-400 font-bold">â˜… Active Principle</span>
             </div>
           </div>
         ))}
@@ -343,3 +344,6 @@ export default function PhilosophyAdminPage() {
     </div>
   );
 }
+
+
+

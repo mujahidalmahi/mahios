@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 [![CI Status](https://img.shields.io/github/actions/workflow/status/mujahidalmahi/mahios/ci.yml?branch=main&style=for-the-badge)](https://github.com/mujahidalmahi/mahios/actions)
 
-[🌐 Live Demo](https://mujahidmahi.xyz) • [📖 Documentation](./docs) • [🛠️ Admin CMS](./docs/ADMIN_GUIDE.md) • [🚀 Deploy Guide](./docs/DEPLOYMENT.md) • [💬 Report Issue](https://github.com/mujahidalmahi/mahios/issues)
+[🌐 Live Demo](https://mujahidmahi.me) • [📖 Documentation](./docs) • [🛠️ Admin CMS](./docs/ADMIN_GUIDE.md) • [🚀 Deploy Guide](./docs/DEPLOYMENT.md) • [💬 Report Issue](https://github.com/mujahidalmahi/mahios/issues)
 
 ```
  __________________________________________________________________________
@@ -238,7 +238,7 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more informa
 ## 👤 Author
 
 **Mujahid Al Mahi**
-- 🌐 Website: [https://mujahidmahi.xyz](https://mujahidmahi.xyz)
+- 🌐 Website: [https://mujahidmahi.me](https://mujahidmahi.me)
 - 🐙 GitHub: [@mujahidalmahi](https://github.com/mujahidalmahi)
 - 💼 LinkedIn: [Mujahid Al Mahi](https://linkedin.com/in/mujahidmahi)
 - 📧 Email: [mujahidmahi.official@gmail.com](mailto:mujahidmahi.official@gmail.com)
@@ -246,5 +246,5 @@ Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more informa
 ---
 
 <div align="center">
-  <sub>Built with 💾 retro soul and ⚡ modern engineering craft by <a href="https://mujahidmahi.xyz">Mujahid Al Mahi</a>.</sub>
+  <sub>Built with 💾 retro soul and ⚡ modern engineering craft by <a href="https://mujahidmahi.me">Mujahid Al Mahi</a>.</sub>
 </div>

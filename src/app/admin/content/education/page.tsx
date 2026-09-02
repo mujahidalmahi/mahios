@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,9 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { Education } from '@/types/database';
 
 export default function EducationAdminPage() {
@@ -143,9 +146,7 @@ export default function EducationAdminPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Education Background...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -211,7 +212,7 @@ export default function EducationAdminPage() {
                     <span className="font-semibold text-blue-400">{edu.institution}</span>
                     {edu.grade && (
                       <>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span className="text-emerald-400 font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60 text-[10px]">
                           {edu.grade}
                         </span>
@@ -224,7 +225,7 @@ export default function EducationAdminPage() {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 mr-2">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{edu.start_year} – {edu.end_year}</span>
+                  <span>{edu.start_year} â€“ {edu.end_year}</span>
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -284,7 +285,7 @@ export default function EducationAdminPage() {
                 <ul className="space-y-1 text-xs text-slate-300 pl-2">
                   {edu.activities.map((act, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">•</span>
+                      <span className="text-blue-400 font-bold">â€¢</span>
                       <span>{act}</span>
                     </li>
                   ))}
@@ -438,7 +439,7 @@ export default function EducationAdminPage() {
                 <div className="space-y-1.5 pt-2">
                   {editingEdu.activities?.map((act, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800 text-slate-200">
-                      <span>• {act}</span>
+                      <span>â€¢ {act}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveActivity(idx)}
@@ -475,3 +476,6 @@ export default function EducationAdminPage() {
     </div>
   );
 }
+
+
+

@@ -7,7 +7,7 @@ The **MahiOS Admin Dashboard** (`/admin`) is a dynamic content management system
 ## 🧭 Navigation & Access
 
 1. **URL**: Navigate to `/admin` or press `Ctrl + Shift + A` from the desktop.
-2. **Authentication Gate**: Direct access is protected. Log in via `/admin/login` using your Supabase credentials or the configured `ADMIN_MASTER_KEY`.
+2. **Authentication Gate**: Direct access is protected. Log in via `/admin/login` using your administrator credentials registered in Supabase Authentication.
 3. **Universal Command Palette (`Ctrl + K` / `Cmd + K`)**: Instant keyboard search and jump to any of the 25+ studios.
 4. **Mobile Navigation**: Hamburger menu button on screens `<768px` reveals a touch-optimized slide-out navigation drawer with live search filtering.
 

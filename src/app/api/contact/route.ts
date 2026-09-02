@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
 
     const clientIp = getClientIp(req.headers);
 
-    // Rate Limit: Max 10 contact messages per 60 seconds per IP
+    // Rate Limit: Max 5 contact messages per 60 seconds per IP
     const rateLimit = checkRateLimit(`contact_${clientIp}`, {
-      maxRequests: 10,
+      maxRequests: 5,
       windowSeconds: 60,
     });
 

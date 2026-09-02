@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Save, CheckCircle2, User, Sparkles, Loader2, Plus, X, Tag } from 'lucide-react';
@@ -6,6 +6,9 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { AboutContent } from '@/types/database';
 
 export default function AboutEditorPage() {
@@ -313,3 +316,6 @@ export default function AboutEditorPage() {
     </form>
   );
 }
+
+
+

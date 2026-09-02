@@ -9,6 +9,9 @@ import {
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { GalleryImage, GalleryCategory } from '@/types/database';
 
 export default function GalleryAdminPage() {
@@ -66,13 +69,14 @@ export default function GalleryAdminPage() {
     });
   };
 
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: 'image' | 'category'; title?: string } | null>(null);
+
   const openEditImage = (img: GalleryImage) => {
     setIsNewImage(false);
     setEditingImage({ ...img });
   };
 
-  const handleDeleteImage = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this photograph?')) return;
+  const performDeleteImage = async (id: string) => {
     try {
       const supabase = createClient();
       await supabase.from('gallery_images').delete().eq('id', id);
@@ -124,8 +128,7 @@ export default function GalleryAdminPage() {
     setEditingCategory({ ...cat });
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this album category?')) return;
+  const performDeleteCategory = async (id: string) => {
     try {
       const supabase = createClient();
       await supabase.from('gallery_categories').delete().eq('id', id);
@@ -190,9 +193,7 @@ export default function GalleryAdminPage() {
     ? images
     : images.filter((i) => i.category_id === selectedCatFilter);
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Photo Gallery & Albums...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -306,7 +307,16 @@ export default function GalleryAdminPage() {
           </div>
 
           {/* Photos Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredImages.length === 0 ? (
+            <EmptyState
+              icon={ImageIcon}
+              title="No photographs in this album"
+              description="Upload your first photograph to populate this album."
+              actionLabel="Upload Photo"
+              onAction={openNewImage}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredImages.map((img, idx) => {
               const catName = categories.find((c) => c.id === img.category_id)?.name || 'Unassigned';
               return (
@@ -378,7 +388,7 @@ export default function GalleryAdminPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteImage(img.id)}
+                        onClick={() => setDeleteTarget({ id: img.id, type: 'image', title: img.title })}
                         className="p-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-300 rounded cursor-pointer"
                         title="Delete Photo"
                       >
@@ -390,6 +400,7 @@ export default function GalleryAdminPage() {
               );
             })}
           </div>
+          )}
         </div>
       )}
 
@@ -430,7 +441,7 @@ export default function GalleryAdminPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteCategory(cat.id)}
+                      onClick={() => setDeleteTarget({ id: cat.id, type: 'category', title: cat.name })}
                       className="p-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-300 rounded-md cursor-pointer"
                       title="Delete Album"
                     >
@@ -628,6 +639,32 @@ export default function GalleryAdminPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title={`Delete ${deleteTarget?.type === 'image' ? 'Photograph' : 'Album Category'}?`}
+        message={
+          deleteTarget?.type === 'image'
+            ? `Delete "${deleteTarget.title || 'this photograph'}" permanently? This action cannot be undone.`
+            : `Delete "${deleteTarget?.title || 'this album'}" category? Photos in this album will remain in your database.`
+        }
+        confirmLabel="Delete Permanently"
+        onConfirm={() => {
+          if (deleteTarget) {
+            if (deleteTarget.type === 'image') {
+              performDeleteImage(deleteTarget.id);
+            } else {
+              performDeleteCategory(deleteTarget.id);
+            }
+            setDeleteTarget(null);
+          }
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
+
+
+

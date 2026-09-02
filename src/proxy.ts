@@ -13,17 +13,21 @@ export function proxy(req: NextRequest) {
     });
   }
 
-  // 2. Strict Admin Route Protection
+  // 2. Strict Zero-Bypass Admin Route Protection
   const isAdminRoute = pathname.startsWith('/admin') && pathname !== '/admin/login';
   if (isAdminRoute) {
     const sessionCookie = req.cookies.get('mahios_admin_session')?.value;
-    
-    // Check Supabase Auth cookie or custom session token
     let hasValidSession = false;
+
     if (sessionCookie) {
       try {
         const decoded = JSON.parse(Buffer.from(sessionCookie, 'base64').toString('utf-8'));
-        if (decoded && typeof decoded.exp === 'number' && decoded.exp > Date.now()) {
+        if (
+          decoded &&
+          (decoded.authenticated === true || decoded.role === 'authenticated_admin') &&
+          typeof decoded.exp === 'number' &&
+          decoded.exp > Date.now()
+        ) {
           hasValidSession = true;
         }
       } catch {
@@ -31,12 +35,8 @@ export function proxy(req: NextRequest) {
       }
     }
 
-    // Check Supabase session cookies if present
-    const hasSupabaseCookie = Array.from(req.cookies.getAll()).some(
-      (c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token')
-    );
-
-    if (!hasValidSession && !hasSupabaseCookie) {
+    // Strictly redirect unauthenticated requests to /admin/login
+    if (!hasValidSession) {
       const loginUrl = new URL('/admin/login', req.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
@@ -51,6 +51,7 @@ export function proxy(req: NextRequest) {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('X-DNS-Prefetch-Control', 'on');
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 
   if (process.env.NODE_ENV === 'production') {
     response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
@@ -58,6 +59,8 @@ export function proxy(req: NextRequest) {
 
   return response;
 }
+
+export default proxy;
 
 export const config = {
   matcher: [

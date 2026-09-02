@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const data = await getBiographyData();
   const settings = data.settings;
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.xyz';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.me';
   const title = settings.seo_title || `${settings.owner_name} | Digital Biography & Interactive OS`;
   const description = settings.seo_description || settings.bio_short;
 
@@ -80,7 +80,7 @@ export default async function RootLayout({
 }>) {
   const data = await getBiographyData();
   const settings = data.settings;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.xyz';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.me';
 
   // JSON-LD Structured Data for Person & WebSite
   const jsonLd = {

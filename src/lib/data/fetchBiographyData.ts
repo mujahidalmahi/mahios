@@ -1,16 +1,16 @@
 import { BiographyDatabaseData } from '@/types/database';
 import { fallbackBiographyData } from './initialData';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 
 export async function getBiographyData(): Promise<BiographyDatabaseData> {
   try {
     // Check if Supabase credentials look real
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     if (!url || url.includes('placeholder')) {
       return fallbackBiographyData;
     }
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminSupabaseClient();
 
     const [
       settingsRes,

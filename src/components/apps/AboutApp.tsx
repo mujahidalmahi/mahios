@@ -71,7 +71,7 @@ export default function AboutApp({ about }: AboutAppProps) {
 
   const handleCopyEmail = () => {
     playSound('click');
-    navigator.clipboard.writeText('contact@mujahidmahi.xyz');
+    navigator.clipboard.writeText('mujahidmahi.official@gmail.com');
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -82,8 +82,8 @@ export default function AboutApp({ about }: AboutAppProps) {
 VERSION:3.0
 FN:${about.full_name}
 TITLE:Full-Stack Software Engineer & Creative Technologist
-EMAIL:contact@mujahidmahi.xyz
-URL:https://mujahidmahi.xyz
+EMAIL:mujahidmahi.official@gmail.com
+URL:https://mujahidmahi.me
 ADR:;;${about.location};;;;
 NOTE:${about.status_text}
 END:VCARD`;

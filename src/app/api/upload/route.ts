@@ -10,6 +10,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
     }
 
+    // 1. Strict Administrator Authentication Verification
+    const sessionCookie = req.cookies.get('mahios_admin_session')?.value;
+    let isAuthorized = false;
+
+    if (sessionCookie) {
+      try {
+        const decoded = JSON.parse(Buffer.from(sessionCookie, 'base64').toString('utf-8'));
+        if (
+          decoded &&
+          (decoded.authenticated === true || decoded.role === 'authenticated_admin') &&
+          typeof decoded.exp === 'number' &&
+          decoded.exp > Date.now()
+        ) {
+          isAuthorized = true;
+        }
+      } catch {
+        isAuthorized = false;
+      }
+    }
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: 'Unauthorized. An active administrator session is required to upload media.' },
+        { status: 401 }
+      );
+    }
+
     const clientIp = getClientIp(req.headers);
 
     // Rate Limit: 20 uploads per 60 seconds per IP

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { BiographyMilestone } from '@/types/database';
 
 export default function BiographyAdminPage() {
@@ -39,7 +42,7 @@ export default function BiographyAdminPage() {
       id: `bio-ch-${Date.now()}`,
       chapter: `Chapter ${chapters.length + 1}: The Next Frontier`,
       title: '',
-      period: '2026 – Future',
+      period: '2026 â€“ Future',
       location: 'Dhaka / Global',
       story_html: '<p>Document this pivotal era of your life, breakthroughs, and memories...</p>',
       key_learning: '',
@@ -111,9 +114,7 @@ export default function BiographyAdminPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Biography Timeline...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -282,7 +283,7 @@ export default function BiographyAdminPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 2014 – 2018"
+                    placeholder="e.g. 2014 â€“ 2018"
                     value={editingChapter.period}
                     onChange={(e) => setEditingChapter({ ...editingChapter, period: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
@@ -350,3 +351,6 @@ export default function BiographyAdminPage() {
     </div>
   );
 }
+
+
+

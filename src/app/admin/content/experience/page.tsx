@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,9 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { Experience } from '@/types/database';
 
 export default function ExperienceAdminPage() {
@@ -169,9 +172,7 @@ export default function ExperienceAdminPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Career Experience...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -242,7 +243,7 @@ export default function ExperienceAdminPage() {
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-0.5">
                     <span className="font-semibold text-blue-400">{exp.company}</span>
-                    <span>•</span>
+                    <span>â€¢</span>
                     <span className="text-slate-400">{exp.employment_type || 'Full-time'}</span>
                     {exp.company_url && (
                       <a href={exp.company_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white">
@@ -257,7 +258,7 @@ export default function ExperienceAdminPage() {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 mr-2">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{exp.start_date} – {exp.end_date}</span>
+                  <span>{exp.start_date} â€“ {exp.end_date}</span>
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -315,7 +316,7 @@ export default function ExperienceAdminPage() {
                 <ul className="space-y-1 text-xs text-slate-300 pl-2">
                   {exp.achievements.map((ach, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">•</span>
+                      <span className="text-blue-400 font-bold">â€¢</span>
                       <span>{ach}</span>
                     </li>
                   ))}
@@ -512,7 +513,7 @@ export default function ExperienceAdminPage() {
                 <div className="space-y-1.5 pt-2">
                   {editingExp.achievements?.map((ach, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800 text-slate-200">
-                      <span>• {ach}</span>
+                      <span>â€¢ {ach}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveAchievement(idx)}
@@ -555,7 +556,7 @@ export default function ExperienceAdminPage() {
                         onClick={() => handleRemoveTech(tech)}
                         className="text-slate-500 hover:text-red-400 ml-1"
                       >
-                        ✕
+                        âœ•
                       </button>
                     </span>
                   ))}
@@ -586,3 +587,6 @@ export default function ExperienceAdminPage() {
     </div>
   );
 }
+
+
+

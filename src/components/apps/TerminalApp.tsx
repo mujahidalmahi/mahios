@@ -17,9 +17,9 @@ interface HistoryItem {
 }
 
 const virtualFiles: Record<string, string> = {
-  'bio.txt': 'Mujahid Islam Mahi -- Full-Stack Software Engineer & Creative Technologist based in Dhaka, Bangladesh. Passionate about Next.js 16, Supabase, TypeScript, and high-performance web systems.',
+  'bio.txt': 'Mujahid Al Mahi -- Full-Stack Software Engineer & Creative Technologist based in Dhaka, Bangladesh. Passionate about Next.js 16, Supabase, TypeScript, and high-performance web systems.',
   'stack.txt': 'Primary Technologies: Next.js 16, React 19, TypeScript, PostgreSQL, Supabase, Tailwind CSS 4, Docker, Redis, TipTap.',
-  'contact.txt': 'Direct Mail: contact@mujahidmahi.xyz\nGitHub: https://github.com/mujahidmahi\nLinkedIn: https://linkedin.com/in/mujahidmahi\nWebsite: https://mujahidmahi.xyz',
+  'contact.txt': 'Direct Mail: mujahidmahi.official@gmail.com\nGitHub: https://github.com/mujahidalmahi\nLinkedIn: https://linkedin.com/in/mujahidmahi\nWebsite: https://mujahidmahi.me',
   'system.ini': '[MahiOS]\nVersion=2.0.26\nKernel=Modular Quantum RISC-V\nDisplay=CRT 1024x768 (High-Res)\nAudio=WebAudio 8-Bit Synthesizer',
 };
 

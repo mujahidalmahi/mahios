@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { DreamItem } from '@/types/database';
 
 export default function DreamAdminPage() {
@@ -116,9 +119,7 @@ export default function DreamAdminPage() {
     ? dreams
     : dreams.filter((d) => d.horizon.toLowerCase() === horizonFilter.toLowerCase());
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Dreamscape Manifestos...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -204,7 +205,7 @@ export default function DreamAdminPage() {
                   <span className="px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded text-[10px] font-mono uppercase">
                     {dream.horizon}
                   </span>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span>Impact Sphere: {dream.impact_area}</span>
                 </div>
               </div>
@@ -338,3 +339,6 @@ export default function DreamAdminPage() {
     </div>
   );
 }
+
+
+

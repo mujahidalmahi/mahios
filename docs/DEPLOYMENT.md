@@ -47,14 +47,13 @@ This guide walks you through deploying **MahiOS** to production using **Vercel**
 
 | Variable Name | Description | Example |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_SITE_URL` | Your live website URL | `https://mujahidmahi.xyz` |
+| `NEXT_PUBLIC_SITE_URL` | Your live website URL | `https://mujahidmahi.me` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL | `https://xyzcompany.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Public Anon Key | `eyJhbGciOi...` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase Private Service Role Key | `eyJhbGciOi...` |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`| Cloudinary Cloud Name (Optional) | `mahios-cloud` |
 | `CLOUDINARY_API_KEY` | Cloudinary API Key (Optional) | `1234567890` |
 | `CLOUDINARY_API_SECRET` | Cloudinary Secret (Optional) | `secret_abcdef` |
-| `ADMIN_MASTER_KEY` | Master passphrase for Admin login | `your-secure-admin-passphrase` |
 
 5. Click **Deploy**. Vercel will build and deploy MahiOS in under 60 seconds!
 
@@ -62,7 +61,7 @@ This guide walks you through deploying **MahiOS** to production using **Vercel**
 
 ## 🔒 Post-Deployment Security Checklist
 
-- [ ] Change the default `ADMIN_MASTER_KEY` in Vercel environment variables to a strong random passphrase.
+- [ ] Create your Admin user in **Supabase Dashboard -> Authentication -> Users -> Add User** (Email: `mujahidmahi.official@gmail.com`).
 - [ ] Confirm that visiting `/admin` directly redirects to `/admin/login`.
 - [ ] Test the contact form (`Mail_Client.exe`) to confirm email messages are received in your Admin inbox (`/admin/messages`).
-- [ ] Confirm HTTPS SSL certificates are active on your custom domain.
+- [ ] Confirm HTTPS SSL certificates are active on your custom domain `mujahidmahi.me`.

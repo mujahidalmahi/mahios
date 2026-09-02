@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { SocialLinkItem } from '@/types/database';
 
 export default function SocialsAdminPage() {
@@ -119,9 +122,7 @@ export default function SocialsAdminPage() {
     ? links
     : links.filter((l) => l.category.toLowerCase() === categoryFilter.toLowerCase());
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Social Links Hub...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -386,3 +387,6 @@ export default function SocialsAdminPage() {
     </div>
   );
 }
+
+
+

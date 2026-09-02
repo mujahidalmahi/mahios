@@ -479,8 +479,8 @@ export const fallbackBiographyData: BiographyDatabaseData = {
       images: ['https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80'],
       tags: ['Next.js 16', 'TypeScript', 'Supabase', 'Tailwind CSS 4', 'Web Audio'],
       category: 'Creative UI & Spatial Systems',
-      live_url: 'https://mujahidmahi.xyz',
-      github_url: 'https://github.com/mujahidmahi/mahios',
+      live_url: 'https://mujahidmahi.me',
+      github_url: 'https://github.com/mujahidalmahi/mahios',
       featured: true,
       sort_order: 1,
     },
@@ -588,12 +588,12 @@ export const fallbackBiographyData: BiographyDatabaseData = {
   resumeConfig: {
     id: 'res-1',
     pdf_url: '',
-    download_filename: 'Mujahid_Islam_Mahi_Resume.pdf',
+    download_filename: 'Mujahid_Al_Mahi_Resume.pdf',
     last_updated_date: 'September 2026',
-    summary_markdown: `MUJAHID ISLAM MAHI
+    summary_markdown: `MUJAHID AL MAHI
 Full-Stack Software Engineer & Creative Technologist
-Location: Dhaka, Bangladesh | Email: contact@mujahidmahi.xyz | Web: https://mujahidmahi.xyz
-GitHub: github.com/mujahidmahi | LinkedIn: linkedin.com/in/mujahidmahi
+Location: Dhaka, Bangladesh | Email: mujahidmahi.official@gmail.com | Web: https://mujahidmahi.me
+GitHub: github.com/mujahidalmahi | LinkedIn: linkedin.com/in/mujahidmahi
 
 SUMMARY
 Experienced Full-Stack Engineer with 4+ years of expertise in React 19, Next.js 16, TypeScript, Supabase, PostgreSQL, and distributed web architectures. Proven track record of reducing 99th-percentile API latencies, designing resilient caching layers, and engineering memorable user experiences.
@@ -725,10 +725,10 @@ University of Engineering & Technology | CGPA: 3.88 (First Class Honors)`,
   ],
 
   socialLinks: [
-    { id: 'soc-1', platform_name: 'GitHub', username: '@mujahidmahi', url: 'https://github.com/mujahidmahi', icon_name: 'Github', category: 'code', is_verified: true, accent_color: '#24292e', sort_order: 1 },
+    { id: 'soc-1', platform_name: 'GitHub', username: '@mujahidalmahi', url: 'https://github.com/mujahidalmahi', icon_name: 'Github', category: 'code', is_verified: true, accent_color: '#24292e', sort_order: 1 },
     { id: 'soc-2', platform_name: 'LinkedIn', username: 'in/mujahidmahi', url: 'https://linkedin.com/in/mujahidmahi', icon_name: 'Linkedin', category: 'social', is_verified: true, accent_color: '#0077b5', sort_order: 2 },
     { id: 'soc-3', platform_name: 'Twitter / X', username: '@mujahidmahi', url: 'https://twitter.com/mujahidmahi', icon_name: 'Twitter', category: 'social', is_verified: true, accent_color: '#000000', sort_order: 3 },
-    { id: 'soc-4', platform_name: 'Email (Direct)', username: 'contact@mujahidmahi.xyz', url: 'mailto:contact@mujahidmahi.xyz', icon_name: 'Mail', category: 'contact', is_verified: true, accent_color: '#ea4335', sort_order: 4 },
+    { id: 'soc-4', platform_name: 'Email (Direct)', username: 'mujahidmahi.official@gmail.com', url: 'mailto:mujahidmahi.official@gmail.com', icon_name: 'Mail', category: 'contact', is_verified: true, accent_color: '#ea4335', sort_order: 4 },
     { id: 'soc-5', platform_name: 'Discord', username: 'mahi#0001', url: 'https://discord.com', icon_name: 'MessageSquare', category: 'gaming', is_verified: true, accent_color: '#5865F2', sort_order: 5 },
     { id: 'soc-6', platform_name: 'Telegram', username: '@mujahidmahi', url: 'https://t.me/mujahidmahi', icon_name: 'Send', category: 'contact', is_verified: true, accent_color: '#0088cc', sort_order: 6 },
     { id: 'soc-7', platform_name: 'Spotify', username: 'Mahi Soundwaves', url: 'https://spotify.com', icon_name: 'Music', category: 'media', is_verified: false, accent_color: '#1DB954', sort_order: 7 },

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,9 @@ import confetti from 'canvas-confetti';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { Achievement } from '@/types/database';
 
 export default function AchievementsAdminPage() {
@@ -128,9 +131,7 @@ export default function AchievementsAdminPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Achievements & Honors...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -197,7 +198,7 @@ export default function AchievementsAdminPage() {
                   <h3 className="text-sm font-bold text-white truncate">{ach.title}</h3>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-0.5">
                     <span className="font-semibold text-amber-400">{ach.issuer}</span>
-                    <span>•</span>
+                    <span>â€¢</span>
                     <span className="text-slate-400 font-mono text-[11px]">{ach.issue_date}</span>
                   </div>
                 </div>
@@ -373,3 +374,6 @@ export default function AchievementsAdminPage() {
     </div>
   );
 }
+
+
+

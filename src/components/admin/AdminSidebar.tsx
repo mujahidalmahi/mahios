@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, User, Briefcase, GraduationCap, FolderGit2,
   Cpu, Award, Image as ImageIcon, FileText, FileBadge,
@@ -46,7 +46,7 @@ const navGroups = [
       { label: 'Favourites Hall', href: '/admin/content/favourites', icon: Star },
       { label: 'Photo Gallery', href: '/admin/content/gallery', icon: ImageIcon },
       { label: 'Dev Notes Blog', href: '/admin/content/blog', icon: FileText },
-      { label: 'Messages Inbox', href: '/admin/messages', icon: Mail },
+      { label: 'Messages Inbox', href: '/admin/messages', icon: Mail, badge: true },
     ],
   },
   {
@@ -65,11 +65,11 @@ const navGroups = [
 interface AdminSidebarProps {
   mobileOpen?: boolean;
   onCloseMobile?: () => void;
+  unreadCount?: number;
 }
 
-export default function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
+export default function AdminSidebar({ mobileOpen = false, onCloseMobile, unreadCount = 0 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [filterQuery, setFilterQuery] = useState('');
 
   const handleLogout = async () => {
@@ -78,15 +78,14 @@ export default function AdminSidebar({ mobileOpen = false, onCloseMobile }: Admi
       const supabase = createClient();
       await supabase.auth.signOut();
     } catch {
-      // Ignore
+      // ignore
     }
-    router.push('/admin/login');
-    router.refresh();
+    window.location.href = '/admin/login';
   };
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
+      {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
           onClick={onCloseMobile}
@@ -157,6 +156,7 @@ export default function AdminSidebar({ mobileOpen = false, onCloseMobile }: Admi
                   const isActive =
                     pathname === item.href ||
                     (item.href !== '/admin' && pathname.startsWith(item.href));
+                  const showBadge = item.badge && unreadCount > 0;
 
                   return (
                     <Link
@@ -176,7 +176,12 @@ export default function AdminSidebar({ mobileOpen = false, onCloseMobile }: Admi
                           isActive ? 'text-white' : 'text-slate-400'
                         }`}
                       />
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate flex-1">{item.label}</span>
+                      {showBadge && (
+                        <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

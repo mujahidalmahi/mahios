@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { FavouriteItem } from '@/types/database';
 
 export default function FavouritesAdminPage() {
@@ -117,9 +120,7 @@ export default function FavouritesAdminPage() {
     ? items
     : items.filter((i) => i.category.toLowerCase() === categoryFilter.toLowerCase());
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Favourites Hall of Fame...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -257,7 +258,7 @@ export default function FavouritesAdminPage() {
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
               <span>ORDER: #{fav.sort_order || idx + 1}</span>
-              <span className="text-amber-400 font-bold">★ Hall of Fame</span>
+              <span className="text-amber-400 font-bold">â˜… Hall of Fame</span>
             </div>
           </div>
         ))}
@@ -328,7 +329,7 @@ export default function FavouritesAdminPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-300 uppercase">Why It’s Beloved & Impact</label>
+                <label className="font-semibold text-slate-300 uppercase">Why Itâ€™s Beloved & Impact</label>
                 <textarea
                   rows={4}
                   required
@@ -363,3 +364,6 @@ export default function FavouritesAdminPage() {
     </div>
   );
 }
+
+
+

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { Skill, SkillCategory } from '@/types/database';
 
 export default function SkillsAdminPage() {
@@ -174,9 +177,7 @@ export default function SkillsAdminPage() {
     return matchSearch && matchCat;
   });
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Technical Skills & Categories...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -586,3 +587,6 @@ export default function SkillsAdminPage() {
     </div>
   );
 }
+
+
+

@@ -3,7 +3,7 @@ import { getBiographyData } from '@/lib/data/fetchBiographyData';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const data = await getBiographyData();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.xyz';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.me';
 
   // Base routes
   const routes: MetadataRoute.Sitemap = [

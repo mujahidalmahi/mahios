@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { Menu, Search, Terminal, Lock, Loader2 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Menu, Search, Terminal, Lock, Loader2, Mail } from 'lucide-react';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminCommandPalette from '@/components/admin/AdminCommandPalette';
+import { createClient } from '@/lib/supabase/client';
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -13,21 +14,42 @@ interface AdminLayoutClientProps {
 
 export default function AdminLayoutClient({ children, isAuthenticated }: AdminLayoutClientProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const isLoginPage = pathname === '/admin/login';
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(!isAuthenticated && !isLoginPage);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread message count for badge
+  useEffect(() => {
+    if (!isAuthenticated || isLoginPage) return;
+
+    async function fetchUnread() {
+      try {
+        const supabase = createClient();
+        const { count } = await supabase
+          .from('contact_messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_read', false);
+        setUnreadCount(count ?? 0);
+      } catch {
+        // ignore
+      }
+    }
+
+    fetchUnread();
+    // Re-poll every 60s
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, isLoginPage]);
 
   useEffect(() => {
     if (!isLoginPage && !isAuthenticated) {
-      // Force redirect to login page immediately
-      router.replace(`/admin/login?redirect=${encodeURIComponent(pathname)}`);
+      window.location.href = `/admin/login?redirect=${encodeURIComponent(pathname)}`;
     } else {
       setCheckingAuth(false);
     }
-  }, [isAuthenticated, isLoginPage, pathname, router]);
+  }, [isAuthenticated, isLoginPage, pathname]);
 
-  // If on login page, render full screen login without sidebar
   if (isLoginPage) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
@@ -36,7 +58,6 @@ export default function AdminLayoutClient({ children, isAuthenticated }: AdminLa
     );
   }
 
-  // If unauthenticated and trying to access protected admin pages, block rendering completely!
   if (!isAuthenticated || checkingAuth) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 space-y-4">
@@ -57,10 +78,11 @@ export default function AdminLayoutClient({ children, isAuthenticated }: AdminLa
       {/* Global Command Palette */}
       <AdminCommandPalette />
 
-      {/* Sidebar (Desktop Sticky + Mobile Slide-out Drawer) */}
+      {/* Sidebar */}
       <AdminSidebar
         mobileOpen={mobileDrawerOpen}
         onCloseMobile={() => setMobileDrawerOpen(false)}
+        unreadCount={unreadCount}
       />
 
       {/* Main Content Pane */}
@@ -90,18 +112,32 @@ export default function AdminLayoutClient({ children, isAuthenticated }: AdminLa
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Command Palette Trigger Button */}
+            {/* Unread Messages Badge */}
+            {unreadCount > 0 && (
+              <a
+                href="/admin/messages"
+                className="relative p-2 rounded-lg bg-slate-950 border border-slate-800 hover:border-indigo-600 transition-all"
+                title={`${unreadCount} unread message${unreadCount > 1 ? 's' : ''}`}
+              >
+                <Mail className="w-4 h-4 text-slate-400" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              </a>
+            )}
+
+            {/* Command Palette Trigger */}
             <button
               type="button"
               onClick={() => {
                 const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true });
                 window.dispatchEvent(event);
               }}
-              className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-400 hover:text-white flex items-center gap-2 cursor-pointer transition-all shadow-xs"
+              className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs text-slate-400 hover:text-white flex items-center gap-2 cursor-pointer transition-all"
             >
               <Search className="w-3.5 h-3.5 text-blue-400" />
               <span className="hidden sm:inline">Search / Jump</span>
-              <kbd className="px-1.5 py-0.2 bg-slate-900 border border-slate-700 text-[10px] font-mono rounded text-slate-300">
+              <kbd className="px-1.5 py-0.5 bg-slate-900 border border-slate-700 text-[10px] font-mono rounded text-slate-300">
                 Ctrl+K
               </kbd>
             </button>

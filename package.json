@@ -2,9 +2,9 @@
   "name": "mahios",
   "version": "2.0.0",
   "description": "A 1990s retro desktop OS biography & digital portfolio built with Next.js 16, React 19, Supabase, TipTap, Web Audio API, CRT shaders, and a dynamic Admin CMS Control Center.",
-  "author": "Mujahid Al Mahi <mujahidmahi.official@gmail.com> (https://mujahidmahi.xyz)",
+  "author": "Mujahid Al Mahi <mujahidmahi.official@gmail.com> (https://mujahidmahi.me)",
   "license": "MIT",
-  "homepage": "https://mujahidmahi.xyz",
+  "homepage": "https://mujahidmahi.me",
   "repository": {
     "type": "git",
     "url": "https://github.com/mujahidalmahi/mahios.git"

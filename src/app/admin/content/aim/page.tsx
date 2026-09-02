@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,9 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import EmptyState from '@/components/admin/EmptyState';
 import { AimItem } from '@/types/database';
 
 export default function AimAdminPage() {
@@ -42,7 +45,7 @@ export default function AimAdminPage() {
     setEditingAim({
       id: `aim-${Date.now()}`,
       goal_title: '',
-      timeline_target: '2026 – 2027',
+      timeline_target: '2026 â€“ 2027',
       category: allDistinctCategories[0] || 'engineering',
       progress_percentage: 50,
       status: 'in_progress',
@@ -136,9 +139,7 @@ export default function AimAdminPage() {
     ? aims
     : aims.filter((a) => a.category.toLowerCase() === categoryFilter.toLowerCase());
 
-  if (loading) {
-    return <div className="p-8 text-slate-400 text-xs font-mono">Loading Strategic Aims...</div>;
-  }
+  if (loading) return <SkeletonListPage rows={5} />;
 
   return (
     <div className="space-y-6">
@@ -293,7 +294,7 @@ export default function AimAdminPage() {
                 <ul className="space-y-1 text-slate-300">
                   {aim.deliverables.map((del, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">•</span>
+                      <span className="text-blue-400 font-bold">â€¢</span>
                       <span>{del}</span>
                     </li>
                   ))}
@@ -346,7 +347,7 @@ export default function AimAdminPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 2026 – 2027"
+                    placeholder="e.g. 2026 â€“ 2027"
                     value={editingAim.timeline_target}
                     onChange={(e) => setEditingAim({ ...editingAim, timeline_target: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
@@ -406,7 +407,7 @@ export default function AimAdminPage() {
                 <div className="space-y-1.5 pt-2">
                   {editingAim.deliverables?.map((del, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800 text-slate-200">
-                      <span>• {del}</span>
+                      <span>â€¢ {del}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveDeliverable(idx)}
@@ -443,3 +444,6 @@ export default function AimAdminPage() {
     </div>
   );
 }
+
+
+
