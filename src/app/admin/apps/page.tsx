@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   AppWindow, CheckCircle2, Save, Eye, EyeOff,
-  Edit2, X, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle, Sparkles
+  Edit2, X, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle, Sparkles, Smartphone, Pin
 } from 'lucide-react';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
@@ -16,6 +16,10 @@ export default function DesktopAppsManagerPage() {
   const [editingApp, setEditingApp] = useState<DesktopApp | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [mobileSlots, setMobileSlots] = useState<string[]>([
+    'about', 'biography', 'projects', 'terminal', 'feed', 'contact'
+  ]);
+  const [isSavingMobile, setIsSavingMobile] = useState(false);
 
   useEffect(() => {
     async function loadApps() {
@@ -34,6 +38,23 @@ export default function DesktopAppsManagerPage() {
           });
           const sorted = Array.from(map.values()).sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
           setApps(sorted);
+
+          // Calculate current mobile top 6
+          const currentPinned = sorted
+            .filter((a) => a.default_x >= 1 && a.default_x <= 6)
+            .sort((a, b) => a.default_x - b.default_x)
+            .map((a) => a.app_id);
+
+          if (currentPinned.length === 6) {
+            setMobileSlots(currentPinned);
+          } else {
+            const existing = new Set(currentPinned);
+            const backfill = sorted
+              .filter((a) => !existing.has(a.app_id) && a.is_visible)
+              .slice(0, 6 - currentPinned.length)
+              .map((a) => a.app_id);
+            setMobileSlots([...currentPinned, ...backfill]);
+          }
         }
       } catch {
         // Fallback
@@ -150,6 +171,63 @@ export default function DesktopAppsManagerPage() {
     }
   };
 
+  const handleSlotChange = (slotIndex: number, newAppId: string) => {
+    const newSlots = [...mobileSlots];
+    const existingSlot = newSlots.indexOf(newAppId);
+    if (existingSlot !== -1) {
+      newSlots[existingSlot] = newSlots[slotIndex];
+    }
+    newSlots[slotIndex] = newAppId;
+    setMobileSlots(newSlots);
+  };
+
+  const handleSaveMobileTop6 = async (slotsToSave = mobileSlots) => {
+    setIsSavingMobile(true);
+    try {
+      const updated = apps.map((app) => {
+        const slotIdx = slotsToSave.indexOf(app.app_id);
+        return {
+          ...app,
+          default_x: slotIdx !== -1 ? slotIdx + 1 : 0,
+        };
+      });
+
+      setApps(updated);
+
+      await adminMutate<DesktopApp[]>({
+        table: 'desktop_apps',
+        action: 'upsert',
+        data: updated,
+      });
+
+      setNotification('Mobile Home Top 6 applications updated successfully!');
+      setTimeout(() => setNotification(null), 3000);
+    } catch (err) {
+      console.error('Failed saving mobile top 6:', err);
+      setNotification('Failed saving mobile top 6 selection.');
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setIsSavingMobile(false);
+    }
+  };
+
+  const handleToggleMobilePin = async (appId: string) => {
+    let newSlots = [...mobileSlots];
+    const isPinned = newSlots.includes(appId);
+
+    if (isPinned) {
+      newSlots = newSlots.filter((id) => id !== appId);
+      const existing = new Set(newSlots);
+      const candidate = apps.find((a) => a.is_visible && !existing.has(a.app_id));
+      if (candidate) newSlots.push(candidate.app_id);
+    } else {
+      newSlots[5] = appId;
+    }
+
+    setMobileSlots(newSlots);
+    await handleSaveMobileTop6(newSlots);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
@@ -157,9 +235,12 @@ export default function DesktopAppsManagerPage() {
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <AppWindow className="w-5 h-5 text-blue-400" />
             <span>Desktop OS Applications Studio</span>
+            <span className="px-2 py-0.5 rounded text-xs font-mono bg-slate-800 text-blue-400 border border-slate-700">
+              {apps.length} Applications Total
+            </span>
           </h1>
           <p className="text-xs text-slate-400">
-            Control which retro window applications spawn on the desktop, their sizes, icons, badges, and categories.
+            Control which retro window applications spawn on the desktop, their order, mobile homepage dock, icons, and categories.
           </p>
         </div>
 
@@ -179,6 +260,79 @@ export default function DesktopAppsManagerPage() {
           <span>{notification}</span>
         </div>
       )}
+
+      {/* ========================================================= */}
+      {/* MOBILE HOMEPAGE TOP 6 APPLICATIONS SELECTION DOCK        */}
+      {/* ========================================================= */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4.5 space-y-3.5 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-950/80 border border-blue-800 flex items-center justify-center text-blue-400 shrink-0">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Mobile Homepage Top 6 Applications</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-900/60 text-blue-300 border border-blue-700 font-semibold">
+                  Today Screen Dock
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Choose and order the 6 featured applications pinned directly to the mobile homepage grid.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={isSavingMobile}
+            onClick={() => handleSaveMobileTop6()}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-md transition-all self-start sm:self-auto"
+          >
+            <Save className="w-4 h-4" />
+            <span>{isSavingMobile ? 'Saving Slots...' : 'Save Mobile Top 6'}</span>
+          </button>
+        </div>
+
+        {/* 6 Slot Selectors in a Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[0, 1, 2, 3, 4, 5].map((slotIdx) => {
+            const currentAppId = mobileSlots[slotIdx];
+            const currentApp = apps.find((a) => a.app_id === currentAppId);
+
+            return (
+              <div
+                key={slotIdx}
+                className="bg-slate-950 border border-slate-800 hover:border-blue-900/80 rounded-xl p-3 space-y-2 transition-all shadow-sm"
+              >
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-bold text-blue-400 flex items-center gap-1">
+                    <Smartphone className="w-3 h-3" />
+                    <span>Slot #{slotIdx + 1}</span>
+                  </span>
+                  {currentApp && (
+                    <span className="text-[10px] text-slate-500 capitalize truncate max-w-[65px]">
+                      {currentApp.category}
+                    </span>
+                  )}
+                </div>
+
+                <select
+                  value={currentAppId || ''}
+                  onChange={(e) => handleSlotChange(slotIdx, e.target.value)}
+                  className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-medium text-white focus:outline-none focus:border-blue-500 truncate cursor-pointer"
+                >
+                  {apps.map((a) => (
+                    <option key={a.id} value={a.app_id}>
+                      {a.title} ({a.app_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Grid of registered applications */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,6 +356,12 @@ export default function DesktopAppsManagerPage() {
                         {app.badge_text}
                       </span>
                     )}
+                    {mobileSlots.includes(app.app_id) && (
+                      <span className="px-1.5 py-0.2 bg-blue-950/80 text-blue-300 border border-blue-700 text-[10px] font-mono rounded flex items-center gap-1 font-semibold">
+                        <Smartphone className="w-2.5 h-2.5 text-blue-400" />
+                        <span>Mobile #{mobileSlots.indexOf(app.app_id) + 1}</span>
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs font-mono text-slate-400 mt-0.5">ID: {app.app_id}</p>
                   <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-mono">
@@ -213,6 +373,22 @@ export default function DesktopAppsManagerPage() {
               </div>
 
               <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleToggleMobilePin(app.app_id)}
+                  className={`p-1.5 rounded cursor-pointer transition-all ${
+                    mobileSlots.includes(app.app_id)
+                      ? 'text-blue-400 hover:bg-slate-800'
+                      : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                  }`}
+                  title={
+                    mobileSlots.includes(app.app_id)
+                      ? `Pinned in Mobile Slot #${mobileSlots.indexOf(app.app_id) + 1} (Click to unpin)`
+                      : 'Pin to Mobile Top 6'
+                  }
+                >
+                  <Smartphone className="w-4 h-4" />
+                </button>
                 <button
                   type="button"
                   onClick={() => handleToggleVisibility(app)}

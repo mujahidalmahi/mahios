@@ -106,12 +106,24 @@ export default function MobileShell({ data }: MobileShellProps) {
     );
   }, [sortedApps, searchQuery]);
 
-  // Pinned quick-launch apps for Home Today screen
-  const pinnedAppIds = ['about', 'biography', 'projects', 'terminal', 'feed', 'contact'];
+  // Dynamic mobile top 6 quick-launch apps for Home Today screen
   const pinnedApps = useMemo(() => {
-    return pinnedAppIds
-      .map((id) => data.apps.find((a) => a.app_id === id))
-      .filter(Boolean) as DesktopApp[];
+    // 1. Prioritize apps explicitly assigned to mobile slots 1..6 (default_x = 1..6)
+    const explicitlyPinned = data.apps
+      .filter((a) => a.is_visible && a.default_x >= 1 && a.default_x <= 6)
+      .sort((a, b) => a.default_x - b.default_x);
+
+    if (explicitlyPinned.length >= 6) {
+      return explicitlyPinned.slice(0, 6);
+    }
+
+    // 2. If fewer than 6 are explicitly pinned, backfill with highest sort_order visible apps
+    const pinnedIds = new Set(explicitlyPinned.map((a) => a.app_id));
+    const fallback = data.apps
+      .filter((a) => a.is_visible && !pinnedIds.has(a.app_id))
+      .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+
+    return [...explicitlyPinned, ...fallback].slice(0, 6);
   }, [data.apps]);
 
   // Touch gesture handling: Swipe up to open drawer, swipe down to close
@@ -310,8 +322,9 @@ export default function MobileShell({ data }: MobileShellProps) {
 
             {/* Pinned Default Applications (Quick Launcher) */}
             <div className="retro-box-outset bg-[#c0c0c0] p-2 shadow-md">
-              <div className="text-[10px] font-bold text-gray-600 mb-1.5 uppercase tracking-wider px-1">
-                Pinned Applications
+              <div className="text-[10px] font-bold text-gray-600 mb-1.5 uppercase tracking-wider px-1 flex items-center justify-between">
+                <span>Featured Applications (Top 6)</span>
+                <span className="text-[9px] font-mono text-gray-500">MahiOS 05</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {pinnedApps.map((app) => {
