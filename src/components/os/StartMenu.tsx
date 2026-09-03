@@ -91,11 +91,12 @@ export default function StartMenu({ isOpen, onClose, apps }: StartMenuProps) {
     };
   }, [isOpen, onClose]);
 
-  // Filtered applications based on real-time search query
+  // Filtered applications based on real-time search query and sort_order
   const filteredApps = useMemo(() => {
-    if (!searchQuery.trim()) return apps;
+    const sorted = [...apps].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+    if (!searchQuery.trim()) return sorted;
     const q = searchQuery.toLowerCase().trim();
-    return apps.filter(
+    return sorted.filter(
       (a) =>
         a.title.toLowerCase().includes(q) ||
         a.app_id.toLowerCase().includes(q) ||

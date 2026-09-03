@@ -131,38 +131,23 @@ export default function Desktop({ data }: DesktopProps) {
     }
   }, [data, openWindow, setDesktopBgColor]);
 
-  // Ensure all 28 applications are present in visibleApps
+  // Visible applications filtered by admin toggle
   const visibleApps = data.apps.filter((a) => a.is_visible);
 
-  // Canonical ordering for the 28 apps (14 on left, 14 on right)
-  const leftCol1Keys = ['my-computer', 'biography', 'about', 'experience', 'projects', 'skills', 'education'];
-  const leftCol2Keys = ['achievements', 'resume', 'terminal', 'blog', 'feed', 'contact', 'socials'];
-  const rightCol1Keys = ['philosophy', 'ideology', 'aim', 'dream', 'wishes', 'favourites', 'entertainment'];
-  const rightCol2Keys = ['gallery', 'calculator', 'notepad', 'paint', 'task-manager', 'settings', 'recycle-bin'];
+  // Dynamically sort apps based on desktopSortBy context or custom sort_order
+  const sortedVisibleApps = React.useMemo(() => {
+    return [...visibleApps].sort((a, b) => {
+      if (desktopSortBy === 'name') return a.title.localeCompare(b.title);
+      if (desktopSortBy === 'category') return (a.category || '').localeCompare(b.category || '');
+      return (a.sort_order ?? 999) - (b.sort_order ?? 999);
+    });
+  }, [visibleApps, desktopSortBy]);
 
-  // Matcher helper
-  const findApp = (key: string) =>
-    visibleApps.find((a) => a.app_id === key || a.app_id.includes(key));
-
-  const leftCol1 = leftCol1Keys.map(findApp).filter(Boolean) as DesktopApp[];
-  const leftCol2 = leftCol2Keys.map(findApp).filter(Boolean) as DesktopApp[];
-  const rightCol1 = rightCol1Keys.map(findApp).filter(Boolean) as DesktopApp[];
-  const rightCol2 = rightCol2Keys.map(findApp).filter(Boolean) as DesktopApp[];
-
-  // Fallback if any apps weren't in the canonical list
-  const placedAppIds = new Set([
-    ...leftCol1.map((a) => a.id),
-    ...leftCol2.map((a) => a.id),
-    ...rightCol1.map((a) => a.id),
-    ...rightCol2.map((a) => a.id),
-  ]);
-  const unplaced = visibleApps.filter((a) => !placedAppIds.has(a.id));
-  unplaced.forEach((a, i) => {
-    if (i % 2 === 0 && leftCol2.length < 7) leftCol2.push(a);
-    else if (rightCol1.length < 7) rightCol1.push(a);
-    else if (rightCol2.length < 7) rightCol2.push(a);
-    else if (leftCol1.length < 7) leftCol1.push(a);
-  });
+  // Distribute sorted applications across 4 symmetrical columns (7 per column)
+  const leftCol1 = sortedVisibleApps.slice(0, 7);
+  const leftCol2 = sortedVisibleApps.slice(7, 14);
+  const rightCol1 = sortedVisibleApps.slice(14, 21);
+  const rightCol2 = sortedVisibleApps.slice(21);
 
   const handleDesktopClick = (e: React.MouseEvent) => {
     const isIconClick = (e.target as HTMLElement)?.closest('[data-desktop-icon="true"]');

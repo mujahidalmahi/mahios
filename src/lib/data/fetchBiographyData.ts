@@ -104,7 +104,7 @@ export async function getBiographyData(): Promise<BiographyDatabaseData> {
       });
     }
 
-    const mergedApps = Array.from(appsMap.values());
+    const mergedApps = Array.from(appsMap.values()).sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
 
     const rawSettings = getResultData(settingsRes, fallbackBiographyData.settings);
     const sanitizedSettings = {

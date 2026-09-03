@@ -22,7 +22,19 @@ export default function DesktopAppsManagerPage() {
       try {
         const supabase = createClient();
         const { data } = await supabase.from('desktop_apps').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setApps(data);
+        if (data && data.length > 0) {
+          const map = new Map<string, DesktopApp>();
+          fallbackBiographyData.apps.forEach((a) => map.set(a.app_id, a));
+          data.forEach((a: DesktopApp) => {
+            if (map.has(a.app_id)) {
+              map.set(a.app_id, { ...map.get(a.app_id)!, ...a });
+            } else {
+              map.set(a.app_id, a);
+            }
+          });
+          const sorted = Array.from(map.values()).sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+          setApps(sorted);
+        }
       } catch {
         // Fallback
       }
@@ -113,7 +125,7 @@ export default function DesktopAppsManagerPage() {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= apps.length) return;
 
@@ -126,16 +138,15 @@ export default function DesktopAppsManagerPage() {
     setApps(updated);
 
     try {
-      updated.forEach(async (item) => {
-        await adminMutate<DesktopApp>({
-          table: 'desktop_apps',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
+      await adminMutate<DesktopApp[]>({
+        table: 'desktop_apps',
+        action: 'upsert',
+        data: updated,
       });
-    } catch {
-      // Local fallback
+      setNotification('Application order updated.');
+      setTimeout(() => setNotification(null), 2000);
+    } catch (err) {
+      console.error('Failed saving app order:', err);
     }
   };
 
@@ -179,20 +190,25 @@ export default function DesktopAppsManagerPage() {
             }`}
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white">{app.title}</h3>
-                  {app.badge_text && (
-                    <span className="px-1.5 py-0.2 bg-blue-950 text-blue-300 border border-blue-800 text-[10px] font-mono rounded">
-                      {app.badge_text}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs font-mono text-slate-400 mt-0.5">ID: {app.app_id}</p>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-mono">
-                  <span>View: {app.component_key}</span>
-                  <span>•</span>
-                  <span className="capitalize">{app.category}</span>
+              <div className="flex items-start gap-2.5">
+                <span className="w-6 h-6 rounded bg-slate-800 border border-slate-700 text-xs font-mono font-bold flex items-center justify-center text-blue-400 shrink-0 mt-0.5">
+                  #{idx + 1}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white">{app.title}</h3>
+                    {app.badge_text && (
+                      <span className="px-1.5 py-0.2 bg-blue-950 text-blue-300 border border-blue-800 text-[10px] font-mono rounded">
+                        {app.badge_text}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-mono text-slate-400 mt-0.5">ID: {app.app_id}</p>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-mono">
+                    <span>View: {app.component_key}</span>
+                    <span>•</span>
+                    <span className="capitalize">{app.category}</span>
+                  </div>
                 </div>
               </div>
 
