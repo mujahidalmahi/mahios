@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Save, CheckCircle2, User, Sparkles, Loader2, Plus, X, Tag } from 'lucide-react';
@@ -10,6 +10,7 @@ import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
 import { AboutContent } from '@/types/database';
+import { adminMutate } from '@/lib/api/adminMutate';
 
 export default function AboutEditorPage() {
   const [data, setData] = useState<AboutContent>(fallbackBiographyData.about);
@@ -70,13 +71,21 @@ export default function AboutEditorPage() {
     };
 
     try {
-      const supabase = createClient();
-      await supabase.from('about_content').upsert(updated);
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3000);
-    } catch {
-      setSavedSuccess(true);
-      setTimeout(() => setSavedSuccess(false), 3000);
+      const res = await adminMutate<AboutContent>({
+        table: 'about_content',
+        action: 'upsert',
+        data: updated,
+      });
+      if (res.success) {
+        setSavedSuccess(true);
+        setTimeout(() => setSavedSuccess(false), 3000);
+      } else {
+        console.error('Save failed:', res.error);
+        alert(`Save failed: ${res.error}`);
+      }
+    } catch (err) {
+      console.error('Save error:', err);
+      alert(`Save error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }

@@ -106,8 +106,25 @@ export async function getBiographyData(): Promise<BiographyDatabaseData> {
 
     const mergedApps = Array.from(appsMap.values());
 
+    const rawSettings = getResultData(settingsRes, fallbackBiographyData.settings);
+    const sanitizedSettings = {
+      ...rawSettings,
+      boot_title: (rawSettings.boot_title || 'MAHI QUANTUM BIOS v4.08 (C) 2005-2026')
+        .replace(/1995/g, '2005')
+        .replace(/MahiOS 95/g, 'MahiOS 05'),
+      boot_subtitle: (rawSettings.boot_subtitle || 'MahiOS Modular Kernel Initialization Engine')
+        .replace(/1995/g, '2005')
+        .replace(/MahiOS 95/g, 'MahiOS 05'),
+      copyright_text: (rawSettings.copyright_text || '© 2005-2026 Mujahid Al Mahi. All systems operational.')
+        .replace(/1995/g, '2005')
+        .replace(/MahiOS 95/g, 'MahiOS 05'),
+      site_title: (rawSettings.site_title || 'MahiOS 05 — Mujahid Al Mahi Digital Biography')
+        .replace(/1995/g, '2005')
+        .replace(/MahiOS 95/g, 'MahiOS 05'),
+    };
+
     return {
-      settings: getResultData(settingsRes, fallbackBiographyData.settings),
+      settings: sanitizedSettings,
       apps: mergedApps,
       about: getResultData(aboutRes, fallbackBiographyData.about),
       categories: getResultData(categoriesRes, fallbackBiographyData.categories),

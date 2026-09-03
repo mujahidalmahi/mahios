@@ -8,6 +8,7 @@ import {
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { BootLog } from '@/types/database';
+import { adminMutate } from '@/lib/api/adminMutate';
 
 export default function BootAdminPage() {
   const [logs, setLogs] = useState<BootLog[]>([]);
@@ -60,13 +61,17 @@ export default function BootAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this boot sequence log entry?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('boot_logs').delete().eq('id', id);
+      const res = await adminMutate({
+        table: 'boot_logs',
+        action: 'delete',
+        match: { id },
+      });
+      if (!res.success) throw new Error(res.error);
       setLogs((prev) => prev.filter((l) => l.id !== id));
       setFeedback({ type: 'success', text: 'Boot log removed.' });
       setTimeout(() => setFeedback(null), 3000);
-    } catch {
-      setLogs((prev) => prev.filter((l) => l.id !== id));
+    } catch (err) {
+      setFeedback({ type: 'error', text: `Delete failed: ${err instanceof Error ? err.message : 'Unknown error'}` });
     }
   };
 
@@ -77,33 +82,30 @@ export default function BootAdminPage() {
     setFeedback(null);
 
     try {
-      const supabase = createClient();
-
       if (isNew) {
-        const { error } = await supabase.from('boot_logs').insert([editingItem]);
-        if (!error) {
-          setLogs((prev) => [...prev, editingItem]);
-        } else {
-          setLogs((prev) => [...prev, editingItem]);
-        }
+        const res = await adminMutate({
+          table: 'boot_logs',
+          action: 'insert',
+          data: editingItem,
+        });
+        if (!res.success) throw new Error(res.error);
+        setLogs((prev) => [...prev, editingItem]);
       } else {
-        const { error } = await supabase
-          .from('boot_logs')
-          .update(editingItem)
-          .eq('id', editingItem.id);
-
-        if (!error) {
-          setLogs((prev) => prev.map((l) => (l.id === editingItem.id ? editingItem : l)));
-        } else {
-          setLogs((prev) => prev.map((l) => (l.id === editingItem.id ? editingItem : l)));
-        }
+        const res = await adminMutate({
+          table: 'boot_logs',
+          action: 'update',
+          data: editingItem,
+          match: { id: editingItem.id },
+        });
+        if (!res.success) throw new Error(res.error);
+        setLogs((prev) => prev.map((l) => (l.id === editingItem.id ? editingItem : l)));
       }
 
       setFeedback({ type: 'success', text: 'Boot sequence log saved successfully.' });
       setEditingItem(null);
       setTimeout(() => setFeedback(null), 3000);
-    } catch {
-      setFeedback({ type: 'error', text: 'Error saving log to database.' });
+    } catch (err) {
+      setFeedback({ type: 'error', text: `Error saving log: ${err instanceof Error ? err.message : 'Unknown error'}` });
     } finally {
       setSaving(false);
     }

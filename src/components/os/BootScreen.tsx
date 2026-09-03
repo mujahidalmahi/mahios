@@ -90,6 +90,14 @@ export default function BootScreen({ bootLogs, settings, onBootComplete }: BootS
 
   if (!isBooting) return null;
 
+  const cleanBootTitle = (settings.boot_title || 'MAHI QUANTUM BIOS v4.08 (C) 2005-2026')
+    .replace(/1995/g, '2005')
+    .replace(/MahiOS 95/g, 'MahiOS 05');
+
+  const cleanBootSubtitle = (settings.boot_subtitle || 'MahiOS Modular Kernel Initialization Engine')
+    .replace(/1995/g, '2005')
+    .replace(/MahiOS 95/g, 'MahiOS 05');
+
   return (
     <div
       onClick={() => {
@@ -107,11 +115,11 @@ export default function BootScreen({ bootLogs, settings, onBootComplete }: BootS
         <div className="border-b border-[#008833] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="text-sm sm:text-base font-bold tracking-wider matrix-green-glow flex items-center gap-2">
-              <span>{settings.boot_title || 'MahiOS Energy Star BIOS v4.51PG'}</span>
+              <span>{cleanBootTitle}</span>
               <span className="w-2 h-2 rounded-full bg-[#00ff66] animate-pulse" />
             </div>
             <div className="text-xs text-[#00cc55] opacity-80">
-              {settings.boot_subtitle || 'Copyright (C) 2005-2026, Mahi Interactive Systems Inc.'}
+              {cleanBootSubtitle}
             </div>
           </div>
           <div className="text-left sm:text-right">

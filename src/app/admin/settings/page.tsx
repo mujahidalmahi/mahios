@@ -12,6 +12,7 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { createClient } from '@/lib/supabase/client';
 import { SiteSettings } from '@/types/database';
 import { fallbackBiographyData } from '@/lib/data/initialData';
+import { adminMutate } from '@/lib/api/adminMutate';
 
 export default function SiteSettingsPage() {
   const [settings, setSettings] = useState<SiteSettings>(fallbackBiographyData.settings);
@@ -44,9 +45,12 @@ export default function SiteSettingsPage() {
     setIsSaving(true);
     const updated = { ...settings, updated_at: new Date().toISOString() };
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from('site_settings').upsert(updated);
-      if (error) throw error;
+      const res = await adminMutate<SiteSettings>({
+        table: 'site_settings',
+        action: 'upsert',
+        data: updated,
+      });
+      if (!res.success) throw new Error(res.error);
       setOriginalSettings(updated);
       setFeedback({ type: 'success', text: 'All site settings saved successfully!' });
     } catch (err) {
