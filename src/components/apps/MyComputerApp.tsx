@@ -131,7 +131,7 @@ export default function MyComputerApp() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] font-mono">
           <div>
             <span className="text-gray-500">Operating System: </span>
-            <span className="font-bold">MahiOS 95 Enterprise</span>
+            <span className="font-bold">MahiOS 05 Enterprise</span>
           </div>
           <div>
             <span className="text-gray-500">Registered To: </span>

@@ -66,9 +66,12 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     },
     icons: {
-      icon: settings.favicon_url || '/favicon.ico',
-      shortcut: settings.favicon_url || '/favicon.ico',
-      apple: settings.favicon_url || '/apple-touch-icon.png',
+      icon: [
+        { url: '/favicon.ico' },
+        { url: '/favicon.png', type: 'image/png' },
+      ],
+      shortcut: '/favicon.ico',
+      apple: '/favicon.png',
     },
   };
 }

@@ -64,18 +64,9 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         <MobileShell data={data} />
       ) : viewportMode === 'tablet' ? (
         <TabletShell data={data} />
-      ) : crtMonitorFrame ? (
-        /* Optional Vintage Beige CRT Monitor Frame Housing */
-        <CRTMonitor>
-          <Desktop data={data} />
-        </CRTMonitor>
       ) : (
-        /* Native Full-Screen Web OS Desktop (Default) */
-        <div
-          className={`w-full h-full relative overflow-hidden ${
-            crtCurvature ? 'crt-screen-curvature' : ''
-          } ${crtScanlines ? 'crt-scanlines' : ''} ${crtFlicker ? 'crt-flicker' : ''}`}
-        >
+        /* Native Full-Screen Web OS Desktop */
+        <div className="w-full h-full relative overflow-hidden">
           <Desktop data={data} />
         </div>
       )}

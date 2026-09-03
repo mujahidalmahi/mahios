@@ -218,7 +218,7 @@ export default function TerminalApp({ commands }: TerminalAppProps) {
       | |  | | (_| | | | | | |__| |____) |
       |_|  |_|\\__,_|_| |_|_|\\____/|_____/ 
       
-  OS: MahiOS 95 Pro Edition [x86_64]
+  OS: MahiOS 05 Pro Edition [x86_64]
   Host: Quantum RISC-V 8-Core @ 4.80 GHz
   Kernel: 2026.09.02-release
   Uptime: Active Session

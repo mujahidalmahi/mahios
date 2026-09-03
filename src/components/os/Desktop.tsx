@@ -128,9 +128,12 @@ export default function Desktop({ data }: DesktopProps) {
   });
 
   const handleDesktopClick = (e: React.MouseEvent) => {
-    if (e.target === desktopRef.current || (e.target as HTMLElement)?.dataset?.desktopCanvas) {
+    const isIconClick = (e.target as HTMLElement)?.closest('[data-desktop-icon="true"]');
+    if (!isIconClick) {
       setSelectedIconId(null);
-      if (contextMenu.visible) setContextMenu({ ...contextMenu, visible: false });
+    }
+    if (contextMenu.visible) {
+      setContextMenu({ ...contextMenu, visible: false });
     }
   };
 
@@ -147,9 +150,10 @@ export default function Desktop({ data }: DesktopProps) {
   // Rubber-band marquee selection
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    if (e.target === desktopRef.current || (e.target as HTMLElement)?.dataset?.desktopCanvas) {
-      const rect = desktopRef.current?.getBoundingClientRect();
-      if (!rect) return;
+    const isIconClick = (e.target as HTMLElement)?.closest('[data-desktop-icon="true"]');
+    const isWindowClick = (e.target as HTMLElement)?.closest('[data-window="true"]');
+    if (!isIconClick && !isWindowClick && desktopRef.current) {
+      const rect = desktopRef.current.getBoundingClientRect();
       setSelectionBox({
         startX: e.clientX - rect.left,
         startY: e.clientY - rect.top,
@@ -290,11 +294,10 @@ export default function Desktop({ data }: DesktopProps) {
 
       {/* LEFT SIDE: 14 APPS (2 COLUMNS OF 7 EACH) */}
       <div
-        data-desktop-canvas="true"
-        className="absolute top-2 left-2 bottom-10 flex gap-1 z-0 pointer-events-auto"
+        className="absolute top-2 left-2 bottom-10 flex gap-2 z-0 pointer-events-auto"
       >
         {/* Column 1 (Leftmost 7) */}
-        <div data-desktop-canvas="true" className="flex flex-col gap-1 w-20">
+        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
           {leftCol1.map((app) => (
             <DesktopIcon
               key={app.id}
@@ -305,7 +308,7 @@ export default function Desktop({ data }: DesktopProps) {
         </div>
 
         {/* Column 2 (Second Left 7) */}
-        <div data-desktop-canvas="true" className="flex flex-col gap-1 w-20">
+        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
           {leftCol2.map((app) => (
             <DesktopIcon
               key={app.id}
@@ -318,11 +321,10 @@ export default function Desktop({ data }: DesktopProps) {
 
       {/* RIGHT SIDE: 14 APPS (2 COLUMNS OF 7 EACH) */}
       <div
-        data-desktop-canvas="true"
-        className="absolute top-2 right-2 bottom-10 flex gap-1 z-0 pointer-events-auto"
+        className="absolute top-2 right-2 bottom-10 flex gap-2 z-0 pointer-events-auto"
       >
         {/* Column 3 (First Right 7) */}
-        <div data-desktop-canvas="true" className="flex flex-col gap-1 w-20">
+        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
           {rightCol1.map((app) => (
             <DesktopIcon
               key={app.id}
@@ -333,7 +335,7 @@ export default function Desktop({ data }: DesktopProps) {
         </div>
 
         {/* Column 4 (Rightmost 7) */}
-        <div data-desktop-canvas="true" className="flex flex-col gap-1 w-20">
+        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
           {rightCol2.map((app) => (
             <DesktopIcon
               key={app.id}

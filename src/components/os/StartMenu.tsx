@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
-import Link from 'next/link';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   User, Briefcase, FolderGit2, Cpu, GraduationCap,
   Terminal, Image as ImageIcon, Award, FileText, FileBadge,
-  Mail, Settings, RotateCcw, ShieldCheck, Power,
+  Mail, Settings, RotateCcw, Power,
   Compass, Radio, BookOpen, Share2, Scale, Gamepad2, Target, Sparkles, Flame, Star, Globe, Rocket,
   Monitor, Trash2, Calculator, FileEdit, Palette, Activity,
-  ChevronRight, Folder, FolderTree, ExternalLink
+  Search, X
 } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useBootStore } from '@/stores/bootStore';
@@ -59,13 +58,28 @@ export default function StartMenu({ isOpen, onClose, apps }: StartMenuProps) {
   const { startBoot } = useBootStore();
   const { playSound } = useSystemStore();
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Auto-focus search input when start menu opens
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('');
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
+        // Only close if click was not on the start button itself
+        const target = e.target as HTMLElement;
+        if (!target.closest('button[data-start-btn="true"]')) {
+          onClose();
+        }
       }
     };
 
@@ -77,35 +91,19 @@ export default function StartMenu({ isOpen, onClose, apps }: StartMenuProps) {
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Filtered applications based on real-time search query
+  const filteredApps = useMemo(() => {
+    if (!searchQuery.trim()) return apps;
+    const q = searchQuery.toLowerCase().trim();
+    return apps.filter(
+      (a) =>
+        a.title.toLowerCase().includes(q) ||
+        a.app_id.toLowerCase().includes(q) ||
+        a.category.toLowerCase().includes(q)
+    );
+  }, [apps, searchQuery]);
 
-  // Clean categorized groups for all 28 applications
-  const programGroups = [
-    {
-      id: 'engineering',
-      name: 'Engineering & Career',
-      icon: Briefcase,
-      appIds: ['experience', 'projects', 'skills', 'education', 'achievements', 'biography', 'resume'],
-    },
-    {
-      id: 'vision',
-      name: 'Vision & Mindset',
-      icon: Compass,
-      appIds: ['philosophy', 'ideology', 'aim', 'dream', 'wishes'],
-    },
-    {
-      id: 'media',
-      name: 'Media & Entertainment',
-      icon: Gamepad2,
-      appIds: ['feed', 'entertainment', 'favourites', 'gallery', 'blog', 'socials'],
-    },
-    {
-      id: 'accessories',
-      name: 'System Utilities & Tools',
-      icon: Cpu,
-      appIds: ['my-computer', 'calculator', 'notepad', 'paint', 'task-manager', 'terminal', 'settings', 'recycle-bin', 'contact'],
-    },
-  ];
+  if (!isOpen) return null;
 
   const handleLaunchApp = (app: DesktopApp) => {
     playSound('open');
@@ -113,92 +111,75 @@ export default function StartMenu({ isOpen, onClose, apps }: StartMenuProps) {
     onClose();
   };
 
-  const getAppsForGroup = (appIds: string[]) => {
-    return appIds
-      .map((id) => apps.find((a) => a.app_id === id || a.app_id.includes(id)))
-      .filter(Boolean) as DesktopApp[];
-  };
-
   return (
     <div
       ref={menuRef}
-      className="absolute bottom-8 left-0 z-50 retro-box-outset bg-[#c0c0c0] flex shadow-2xl overflow-visible select-none w-64 text-black text-xs font-sans"
+      style={{ bottom: '32px' }}
+      className="absolute left-0 z-50 retro-box-outset bg-[#c0c0c0] flex shadow-2xl overflow-hidden select-none w-72 h-[480px] max-h-[calc(100vh-42px)] text-black text-xs font-sans border-2 border-white"
     >
-      {/* 90s Vertical Banner */}
+      {/* 90s Vertical Banner (MahiOS 05) */}
       <div className="w-8 bg-gradient-to-t from-[#000080] via-[#1084d0] to-[#000080] flex items-end justify-center py-4 px-1 text-white font-bold font-mono tracking-widest uppercase shrink-0">
         <span className="transform -rotate-90 origin-center whitespace-nowrap text-sm drop-shadow">
-          MahiOS 95
+          MahiOS 05
         </span>
       </div>
 
-      {/* Main Start Menu List */}
-      <div className="flex-1 p-1 flex flex-col justify-between relative">
-        <div className="space-y-0.5">
-          {/* Categorized Cascading Programs Menu */}
-          {programGroups.map((group) => {
-            const GroupIcon = group.icon;
-            const groupApps = getAppsForGroup(group.appIds);
-            const isHovered = activeCategory === group.id;
-
-            return (
-              <div
-                key={group.id}
-                onMouseEnter={() => setActiveCategory(group.id)}
-                className="relative"
+      {/* Main Start Menu Container */}
+      <div className="flex-1 p-2 flex flex-col justify-between overflow-hidden">
+        {/* Real-time Program Search Bar */}
+        <div className="mb-2">
+          <div className="relative flex items-center bg-white border-2 border-[#808080] retro-box-inset px-2 py-1">
+            <Search className="w-3.5 h-3.5 text-gray-500 shrink-0 mr-1.5" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search programs..."
+              className="w-full bg-transparent text-xs text-black placeholder-gray-500 focus:outline-none font-sans"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="text-gray-400 hover:text-black p-0.5 cursor-pointer"
               >
-                <div
-                  className={`w-full px-2 py-1.5 flex items-center justify-between rounded-xs transition-none cursor-pointer ${
-                    isHovered ? 'bg-[#000080] text-white' : 'hover:bg-gray-200 text-black'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <GroupIcon className="w-4 h-4 text-[#000080]" />
-                    <span className="font-bold">{group.name}</span>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </div>
-
-                {/* Cascading Flyout Submenu */}
-                {isHovered && (
-                  <div
-                    onMouseLeave={() => setActiveCategory(null)}
-                    className="absolute left-[98%] top-0 w-56 bg-[#c0c0c0] retro-box-outset p-0.5 shadow-2xl z-50 space-y-0.5"
-                  >
-                    {groupApps.map((app) => {
-                      const Icon = iconMap[app.icon_name] || FileText;
-                      return (
-                        <button
-                          key={app.id}
-                          type="button"
-                          onClick={() => handleLaunchApp(app)}
-                          className="w-full px-2 py-1.5 flex items-center gap-2 hover:bg-[#000080] hover:text-white rounded-xs text-left cursor-pointer group"
-                        >
-                          <div className="w-4 h-4 flex items-center justify-center text-[#000080] group-hover:text-white shrink-0">
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <span className="truncate">{app.title}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* System & Power Options */}
-        <div className="pt-1 mt-1 border-t border-gray-400 space-y-0.5">
-          <Link
-            href="/admin"
-            target="_blank"
-            onClick={onClose}
-            className="w-full px-2 py-1.5 flex items-center gap-2.5 hover:bg-[#000080] hover:text-white rounded-xs transition-none text-left cursor-pointer group text-amber-900 font-semibold"
-          >
-            <ShieldCheck className="w-4 h-4 text-amber-600 group-hover:text-white" />
-            <span>Master Admin Panel</span>
-          </Link>
+        {/* Scrollable All Applications List */}
+        <div className="flex-1 overflow-y-auto pr-1 space-y-0.5 border border-gray-400 retro-box-inset bg-white/90 p-1">
+          {filteredApps.length === 0 ? (
+            <div className="p-6 text-center text-gray-400 font-mono text-[11px]">
+              No programs found matching &ldquo;{searchQuery}&rdquo;
+            </div>
+          ) : (
+            filteredApps.map((app) => {
+              const Icon = iconMap[app.icon_name] || FileText;
+              return (
+                <button
+                  key={app.id}
+                  type="button"
+                  onClick={() => handleLaunchApp(app)}
+                  className="w-full px-2 py-1.5 flex items-center gap-2.5 hover:bg-[#000080] hover:text-white rounded-xs transition-none text-left cursor-pointer group text-black"
+                >
+                  <div className="w-5 h-5 flex items-center justify-center text-[#000080] group-hover:text-white shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="truncate block font-medium text-xs">{app.title}</span>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
 
+        {/* System Power Options (No Admin Panel) */}
+        <div className="pt-2 mt-2 border-t border-gray-400 space-y-1 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -206,10 +187,10 @@ export default function StartMenu({ isOpen, onClose, apps }: StartMenuProps) {
               startBoot();
               onClose();
             }}
-            className="w-full px-2 py-1.5 flex items-center gap-2.5 hover:bg-[#000080] hover:text-white rounded-xs transition-none text-left cursor-pointer group"
+            className="w-full px-2 py-1.5 flex items-center gap-2 hover:bg-[#000080] hover:text-white rounded-xs transition-none text-left cursor-pointer group text-red-900 font-bold"
           >
             <RotateCcw className="w-4 h-4 text-red-700 group-hover:text-white" />
-            <span>Reboot MahiOS...</span>
+            <span>Reboot MahiOS 05...</span>
           </button>
         </div>
       </div>

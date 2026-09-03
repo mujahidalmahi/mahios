@@ -95,17 +95,18 @@ export default function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
 
   return (
     <div
+      data-desktop-icon="true"
       tabIndex={0}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
-      className={`w-20 p-1.5 m-0.5 flex flex-col items-center gap-1 text-center select-none cursor-pointer rounded-xs transition-none focus:outline-none ${
-        isSelected ? 'bg-[#000080]/30 outline-1 outline-dotted outline-white/80' : 'hover:bg-white/10'
+      className={`w-20 p-1 flex flex-col items-center justify-start text-center select-none cursor-pointer rounded-xs transition-none focus:outline-none h-full ${
+        isSelected ? 'bg-[#000080]/40 outline-1 outline-dotted outline-white/90' : 'hover:bg-white/10'
       }`}
     >
       {/* 90s Pixelated Icon Box */}
-      <div className={`w-10 h-10 retro-box-outset bg-[#c0c0c0] flex items-center justify-center text-[#000080] shadow-md ${
+      <div className={`w-10 h-10 shrink-0 retro-box-outset bg-[#c0c0c0] flex items-center justify-center text-[#000080] shadow-md ${
         isSelected ? 'brightness-90' : ''
       }`}>
         <IconComponent className="w-6 h-6 stroke-[1.8]" />
@@ -113,7 +114,7 @@ export default function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
 
       {/* Icon Label */}
       <span
-        className={`text-[11px] font-sans font-medium px-1 py-0.5 rounded-2xs leading-tight line-clamp-2 ${
+        className={`text-[11px] font-sans font-medium px-1 py-0.5 rounded-2xs leading-tight line-clamp-2 mt-0.5 ${
           isSelected
             ? 'bg-[#000080] text-white border border-dotted border-white'
             : 'text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]'

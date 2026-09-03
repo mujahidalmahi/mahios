@@ -2,11 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  RotateCcw, Settings, Terminal, Monitor,
-  Info, Sparkles, FolderOpen, ShieldCheck,
-  Layers, LayoutGrid, Rows, Columns, Minus,
-  SlidersHorizontal, Check, ArrowDownAZ, Activity,
-  ExternalLink, FileCode
+  RotateCcw, Settings, Terminal,
+  FolderOpen, Layers, Rows, Columns, Minus,
+  FileCode, FileEdit, ExternalLink
 } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
@@ -22,26 +20,12 @@ interface ContextMenuProps {
 
 export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const {
-    openWindow,
-    cascadeWindows,
-    tileHorizontally,
-    tileVertically,
-    minimizeAllWindows,
-    restoreAllWindows,
-    windows
-  } = useWindowStore();
+  const { openWindow } = useWindowStore();
 
   const {
     playSound,
-    toggleCrtMonitorFrame,
-    crtMonitorFrame,
     setActiveAppProperties,
-    desktopSortBy,
-    setDesktopSortBy,
   } = useSystemStore();
-
-  const [activeSubmenu, setActiveSubmenu] = useState<'sort' | 'arrange' | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -61,13 +45,12 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
     };
   }, [onClose]);
 
-  // Adjust coordinates so menu doesn't clip off-screen
-  const menuWidth = 210;
-  const menuHeight = targetApp ? 140 : 280;
+  const menuWidth = 200;
+  const menuHeight = targetApp ? 120 : 250;
   const adjustedX = Math.min(x, typeof window !== 'undefined' ? window.innerWidth - menuWidth - 10 : x);
   const adjustedY = Math.min(y, typeof window !== 'undefined' ? window.innerHeight - menuHeight - 10 : y);
 
-  const openAppByName = (appId: string) => {
+  const openAppById = (appId: string) => {
     const found = apps.find((a) => a.app_id === appId || a.id === appId);
     if (found) {
       playSound('open');
@@ -81,6 +64,18 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
     if (typeof window !== 'undefined') {
       window.location.reload();
     }
+  };
+
+  const handleNewTextDoc = () => {
+    playSound('open');
+    openAppById('notepad');
+    onClose();
+  };
+
+  const handleOpenTerminal = () => {
+    playSound('open');
+    openAppById('terminal');
+    onClose();
   };
 
   return (
@@ -119,7 +114,7 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
 
           <div className="border-t border-gray-400 my-0.5" />
 
-          {/* AUTHENTIC APP PROPERTIES (Fixes opening control panel) */}
+          {/* Genuine App Properties Dialog */}
           <button
             type="button"
             onClick={() => {
@@ -129,7 +124,7 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
             }}
             className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white font-bold cursor-pointer text-black"
           >
-            <FileCode className="w-3.5 h-3.5 text-[#000080] group-hover:text-white" />
+            <FileCode className="w-3.5 h-3.5 text-[#000080]" />
             <span>Properties</span>
           </button>
         </div>
@@ -148,124 +143,56 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
 
           <div className="border-t border-gray-400 my-0.5" />
 
-          {/* Sort By Submenu */}
-          <div
-            onMouseEnter={() => setActiveSubmenu('sort')}
-            className="relative"
+          {/* New Text Document Shortcut (Issue 3) */}
+          <button
+            type="button"
+            onClick={handleNewTextDoc}
+            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer"
           >
-            <div className="w-full px-3 py-1 text-left flex items-center justify-between hover:bg-[#000080] hover:text-white cursor-pointer">
-              <span className="flex items-center gap-2">
-                <ArrowDownAZ className="w-3.5 h-3.5" />
-                <span>Sort by</span>
-              </span>
-              <span className="text-[10px]">▶</span>
-            </div>
+            <FileEdit className="w-3.5 h-3.5 text-blue-900" />
+            <span>New Text Document</span>
+          </button>
 
-            {activeSubmenu === 'sort' && (
-              <div className="absolute left-[98%] top-0 w-36 bg-[#c0c0c0] retro-box-outset p-0.5 shadow-xl space-y-0.5">
-                {[
-                  { key: 'name', label: 'Name (A-Z)' },
-                  { key: 'category', label: 'Category' },
-                  { key: 'order', label: 'Default Order' },
-                ].map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => {
-                      playSound('click');
-                      setDesktopSortBy(key as typeof desktopSortBy);
-                      onClose();
-                    }}
-                    className="w-full px-2 py-1 text-left flex items-center justify-between hover:bg-[#000080] hover:text-white cursor-pointer"
-                  >
-                    <span>{label}</span>
-                    {desktopSortBy === key && <Check className="w-3 h-3" />}
-                  </button>
-                ))}
-              </div>
-            )}
+          {/* Open Terminal Shortcut (Issue 3) */}
+          <button
+            type="button"
+            onClick={handleOpenTerminal}
+            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer"
+          >
+            <Terminal className="w-3.5 h-3.5 text-black" />
+            <span>Open MS-DOS Prompt</span>
+          </button>
+
+          <div className="border-t border-gray-400 my-0.5" />
+
+          {/* Intentionally disabled window layout features (per user instruction: Issue 3) */}
+          <div className="w-full px-3 py-1 text-left flex items-center gap-2 text-gray-400 cursor-not-allowed select-none opacity-60">
+            <Layers className="w-3.5 h-3.5" />
+            <span>Cascade Windows</span>
+          </div>
+
+          <div className="w-full px-3 py-1 text-left flex items-center gap-2 text-gray-400 cursor-not-allowed select-none opacity-60">
+            <Rows className="w-3.5 h-3.5" />
+            <span>Tile Windows Horizontally</span>
+          </div>
+
+          <div className="w-full px-3 py-1 text-left flex items-center gap-2 text-gray-400 cursor-not-allowed select-none opacity-60">
+            <Columns className="w-3.5 h-3.5" />
+            <span>Tile Windows Vertically</span>
+          </div>
+
+          <div className="w-full px-3 py-1 text-left flex items-center gap-2 text-gray-400 cursor-not-allowed select-none opacity-60">
+            <Minus className="w-3.5 h-3.5" />
+            <span>Show Desktop</span>
           </div>
 
           <div className="border-t border-gray-400 my-0.5" />
 
-          {/* Real OS Window Management Actions */}
-          <button
-            type="button"
-            disabled={windows.length === 0}
-            onClick={() => {
-              playSound('click');
-              cascadeWindows();
-              onClose();
-            }}
-            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer disabled:opacity-40"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Cascade Windows</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={windows.length === 0}
-            onClick={() => {
-              playSound('click');
-              tileHorizontally();
-              onClose();
-            }}
-            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer disabled:opacity-40"
-          >
-            <Rows className="w-3.5 h-3.5" />
-            <span>Tile Windows Horizontally</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={windows.length === 0}
-            onClick={() => {
-              playSound('click');
-              tileVertically();
-              onClose();
-            }}
-            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer disabled:opacity-40"
-          >
-            <Columns className="w-3.5 h-3.5" />
-            <span>Tile Windows Vertically</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={windows.length === 0}
-            onClick={() => {
-              playSound('click');
-              minimizeAllWindows();
-              onClose();
-            }}
-            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer disabled:opacity-40"
-          >
-            <Minus className="w-3.5 h-3.5" />
-            <span>Show Desktop (Minimize All)</span>
-          </button>
-
-          <div className="border-t border-gray-400 my-0.5" />
-
-          {/* CRT Frame Toggle */}
+          {/* Display Properties */}
           <button
             type="button"
             onClick={() => {
-              playSound('click');
-              toggleCrtMonitorFrame();
-              onClose();
-            }}
-            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer"
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span>{crtMonitorFrame ? 'Exit CRT Chassis Housing' : 'Mount Vintage CRT Chassis'}</span>
-          </button>
-
-          {/* Desktop Properties */}
-          <button
-            type="button"
-            onClick={() => {
-              openAppByName('settings');
+              openAppById('settings');
               onClose();
             }}
             className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer font-bold"

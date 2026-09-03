@@ -7,7 +7,7 @@ import {
 export const fallbackBiographyData: BiographyDatabaseData = {
   settings: {
     id: 'site-1',
-    site_title: 'MahiOS 95 — Mujahid Al Mahi Digital Biography',
+    site_title: 'MahiOS 05 — Mujahid Al Mahi Digital Biography',
     owner_name: 'Mujahid Al Mahi',
     headline: 'Full-Stack Software Engineer & Creative Technologist',
     bio_short: 'Engineering high-performance distributed systems, modern React/Next.js architectures, and tactile spatial computing experiences with 90s aesthetic soul.',
@@ -561,9 +561,9 @@ export const fallbackBiographyData: BiographyDatabaseData = {
   projects: [
     {
       id: 'proj-1',
-      title: 'MahiOS 95 — Vintage Web Operating System',
-      slug: 'mahios-95',
-      summary: 'A complete, tactile 90s vintage operating system built on Next.js 16, Supabase, TipTap, and Web Audio synthesizers.',
+      title: 'MahiOS 05 — Vintage Web Operating System',
+      slug: 'mahios-05',
+      summary: 'A complete, tactile vintage operating system built on Next.js 16, Supabase, TipTap, and Web Audio synthesizers.',
       description_html: '<p>MahiOS is a fully interactive retro web operating system featuring authentic window management, CRT shader effects, draggable multi-tasking windows, MS-DOS terminal CLI, and dynamic Supabase admin dashboards.</p>',
       thumbnail_url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&auto=format&fit=crop&q=80',
       images: ['https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80'],

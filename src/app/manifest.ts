@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MahiOS 95 — Mujahid Mahi Biography & Operating System',
+    name: 'MahiOS 05 — Mujahid Al Mahi Biography & Operating System',
     short_name: 'MahiOS',
-    description: 'An interactive 90s vintage operating system showcasing the full-stack engineering portfolio, projects, skills, and biography of Mujahid Islam Mahi.',
+    description: 'An interactive vintage operating system showcasing the full-stack engineering portfolio, projects, skills, and biography of Mujahid Al Mahi.',
     start_url: '/',
     display: 'standalone',
     background_color: '#008080',

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Monitor, Clock, Database, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Volume2, VolumeX, Database, X } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { DesktopApp } from '@/types/database';
@@ -15,7 +15,6 @@ export default function Taskbar({ apps }: TaskbarProps) {
   const { windows, activeWindowId, focusWindow, minimizeWindow } = useWindowStore();
   const {
     soundEnabled, toggleSound,
-    crtMonitorFrame, toggleCrtMonitorFrame,
     timeFormat, showSeconds,
     playSound, volume, setVolume
   } = useSystemStore();
@@ -90,8 +89,9 @@ export default function Taskbar({ apps }: TaskbarProps) {
     <div className="absolute bottom-0 left-0 right-0 h-8 retro-taskbar flex items-center justify-between px-1 z-40 select-none text-xs text-black font-sans">
       {/* Start Button & Window Tabs */}
       <div className="flex items-center gap-1 min-w-0 flex-1 h-full py-0.5">
-        {/* Start Button */}
+        {/* Start Button with Custom Transparent Logo */}
         <button
+          data-start-btn="true"
           type="button"
           onClick={() => {
             playSound('click');
@@ -101,13 +101,12 @@ export default function Taskbar({ apps }: TaskbarProps) {
             startMenuOpen ? 'retro-btn-pressed' : 'retro-btn'
           }`}
         >
-          {/* 4-Color Retro Flag */}
-          <div className="w-3.5 h-3.5 grid grid-cols-2 gap-0.5">
-            <span className="bg-[#ff0000] rounded-2xs" />
-            <span className="bg-[#00ff00] rounded-2xs" />
-            <span className="bg-[#0000ff] rounded-2xs" />
-            <span className="bg-[#ffff00] rounded-2xs" />
-          </div>
+          {/* Custom MahiOS Logo */}
+          <img
+            src="/images/mahios-logo.png"
+            alt="MahiOS Logo"
+            className="w-4 h-4 object-contain shrink-0 drop-shadow-xs"
+          />
           <span>Start</span>
         </button>
 
@@ -151,7 +150,7 @@ export default function Taskbar({ apps }: TaskbarProps) {
               <button
                 type="button"
                 onClick={() => setVolumePopoverOpen(false)}
-                className="hover:text-gray-300"
+                className="hover:text-gray-300 cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -194,7 +193,7 @@ export default function Taskbar({ apps }: TaskbarProps) {
               <button
                 type="button"
                 onClick={() => setClockPopoverOpen(false)}
-                className="hover:text-gray-300"
+                className="hover:text-gray-300 cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -239,7 +238,7 @@ export default function Taskbar({ apps }: TaskbarProps) {
             </div>
 
             <div className="text-[10px] text-gray-600 font-mono text-center">
-              MahiOS Real-Time Clock Subsystem
+              MahiOS 05 Real-Time Clock Subsystem
             </div>
           </div>
         )}
@@ -254,19 +253,6 @@ export default function Taskbar({ apps }: TaskbarProps) {
             <Database className="w-3.5 h-3.5" />
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </div>
-
-          {/* CRT Frame Housing Toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              playSound('click');
-              toggleCrtMonitorFrame();
-            }}
-            className={`hover:opacity-75 cursor-pointer ${crtMonitorFrame ? 'text-blue-800 font-bold' : 'text-gray-600'}`}
-            title={crtMonitorFrame ? 'Switch to Full-Screen OS Mode' : 'Mount Vintage CRT Monitor Housing'}
-          >
-            <Monitor className="w-3.5 h-3.5" />
-          </button>
 
           {/* Volume Trigger */}
           <button
