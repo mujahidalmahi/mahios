@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
 import confetti from 'canvas-confetti';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -48,10 +49,13 @@ export default function WishesAdminPage() {
     setWishes(updated);
 
     try {
-      const supabase = createClient();
-      await supabase.from('wish_items').upsert(editingWish);
+      await adminMutate<WishItem>({
+        table: 'wish_items',
+        action: 'upsert',
+        data: editingWish,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingWish(null);

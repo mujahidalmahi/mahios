@@ -116,7 +116,7 @@ export default function StartMenu({ isOpen, onClose, apps }: StartMenuProps) {
       ref={menuRef}
       data-start-menu="true"
       style={{ bottom: '32px' }}
-      className="absolute left-0 z-50 retro-box-outset bg-[#c0c0c0] flex shadow-2xl overflow-hidden select-none w-72 h-[480px] max-h-[calc(100vh-42px)] text-black text-xs font-sans border-2 border-white"
+      className="absolute left-0 z-[950] retro-box-outset bg-[#c0c0c0] flex shadow-2xl overflow-hidden select-none w-72 h-[480px] max-h-[calc(100vh-42px)] text-black text-xs font-sans border-2 border-white"
     >
       {/* 90s Vertical Banner (MahiOS 05) */}
       <div className="w-8 bg-gradient-to-t from-[#000080] via-[#1084d0] to-[#000080] flex items-center justify-center text-white font-bold font-mono tracking-widest uppercase shrink-0 overflow-hidden select-none">

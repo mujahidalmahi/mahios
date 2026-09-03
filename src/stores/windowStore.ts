@@ -24,15 +24,16 @@ interface WindowStore {
 export const useWindowStore = create<WindowStore>((set, get) => ({
   windows: [],
   activeWindowId: null,
-  highestZIndex: 10,
+  highestZIndex: 100,
 
   openWindow: (app: DesktopApp) => {
     const { windows, highestZIndex } = get();
     const existing = windows.find((w) => w.appId === app.app_id);
+    const currentMaxZ = Math.max(highestZIndex, ...windows.map((w) => w.zIndex || 0), 100);
+    const newZ = currentMaxZ + 1;
 
     if (existing) {
-      // If already open, restore if minimized and bring to front
-      const newZ = highestZIndex + 1;
+      // If already open, restore if minimized and bring to top
       set({
         windows: windows.map((w) =>
           w.appId === app.app_id ? { ...w, isMinimized: false, zIndex: newZ } : w
@@ -42,8 +43,6 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       });
       return;
     }
-
-    const newZ = highestZIndex + 1;
     const count = windows.length;
     // Slight cascade offset so multiple overlapping windows remain visible
     const cascadeOffset = (count % 5) * 20;
@@ -100,9 +99,12 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     let nextActive = activeWindowId === appId ? null : activeWindowId;
 
     if (nextActive === null && updated.length > 0) {
-      // Find highest z-index remaining window
-      const topWin = [...updated].sort((a, b) => b.zIndex - a.zIndex)[0];
-      if (topWin) nextActive = topWin.appId;
+      // Find highest z-index remaining visible window
+      const visible = updated.filter((w) => !w.isMinimized);
+      if (visible.length > 0) {
+        const topWin = [...visible].sort((a, b) => b.zIndex - a.zIndex)[0];
+        if (topWin) nextActive = topWin.appId;
+      }
     }
 
     set({
@@ -134,7 +136,8 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
 
   maximizeWindow: (appId: string) => {
     const { windows, highestZIndex } = get();
-    const newZ = highestZIndex + 1;
+    const currentMaxZ = Math.max(highestZIndex, ...windows.map((w) => w.zIndex || 0), 100);
+    const newZ = currentMaxZ + 1;
 
     set({
       windows: windows.map((w) => {
@@ -165,10 +168,9 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
   },
 
   focusWindow: (appId: string) => {
-    const { windows, highestZIndex, activeWindowId } = get();
-    if (activeWindowId === appId) return;
-
-    const newZ = highestZIndex + 1;
+    const { windows, highestZIndex } = get();
+    const currentMaxZ = Math.max(highestZIndex, ...windows.map((w) => w.zIndex || 0), 100);
+    const newZ = currentMaxZ + 1;
     set({
       windows: windows.map((w) =>
         w.appId === appId ? { ...w, isMinimized: false, zIndex: newZ } : w

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -60,10 +61,13 @@ export default function FavouritesAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this favourite item?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('favourite_items').delete().eq('id', id);
+      await adminMutate<FavouriteItem>({
+        table: 'favourite_items',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setItems((prev) => prev.filter((i) => i.id !== id));
     setFeedback({ type: 'success', text: 'Favourite item removed.' });
@@ -82,10 +86,13 @@ export default function FavouritesAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('favourite_items').upsert(editingItem);
+      await adminMutate<FavouriteItem>({
+        table: 'favourite_items',
+        action: 'upsert',
+        data: editingItem,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingItem(null);
@@ -107,12 +114,16 @@ export default function FavouritesAdminPage() {
     setItems(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('favourite_items').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<FavouriteItem>({
+          table: 'favourite_items',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

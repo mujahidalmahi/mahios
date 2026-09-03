@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -75,10 +76,13 @@ export default function SkillsAdminPage() {
   const handleDeleteSkill = async (id: string) => {
     if (!confirm('Are you sure you want to delete this skill?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('skills').delete().eq('id', id);
+      await adminMutate<Skill>({
+        table: 'skills',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setSkills((prev) => prev.filter((s) => s.id !== id));
     setFeedback({ type: 'success', text: 'Skill removed successfully.' });
@@ -97,10 +101,13 @@ export default function SkillsAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('skills').upsert(editingSkill);
+      await adminMutate<Skill>({
+        table: 'skills',
+        action: 'upsert',
+        data: editingSkill,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingSkill(null);
@@ -137,10 +144,13 @@ export default function SkillsAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('skill_categories').delete().eq('id', id);
+      await adminMutate<SkillCategory>({
+        table: 'skill_categories',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setCategories((prev) => prev.filter((c) => c.id !== id));
     setFeedback({ type: 'success', text: 'Skill category deleted.' });
@@ -159,10 +169,13 @@ export default function SkillsAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('skill_categories').upsert(editingCategory);
+      await adminMutate<SkillCategory>({
+        table: 'skill_categories',
+        action: 'upsert',
+        data: editingCategory,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingCategory(null);

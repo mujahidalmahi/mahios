@@ -168,12 +168,13 @@ export default function MyComputerApp() {
       <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-300">
         <button
           type="button"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             playSound('open');
             openWindow({
               id: 'app-terminal',
               app_id: 'terminal',
-              title: 'MS-DOS Prompt',
+              title: 'Terminal',
               icon_name: 'Terminal',
               component_key: 'TerminalApp',
               default_x: 80,
@@ -194,7 +195,8 @@ export default function MyComputerApp() {
 
         <button
           type="button"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             playSound('open');
             openWindow({
               id: 'app-settings',

@@ -6,6 +6,7 @@ import {
   Search, AlertCircle, Clock, CheckCheck, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { ContactMessage } from '@/types/database';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -49,8 +50,12 @@ export default function MessagesInboxPage() {
     setMessages(updated);
     if (selectedMessage?.id === msg.id) setSelectedMessage({ ...selectedMessage, is_read: !selectedMessage.is_read });
     try {
-      const supabase = createClient();
-      await supabase.from('contact_messages').update({ is_read: !msg.is_read }).eq('id', msg.id);
+      await adminMutate<ContactMessage>({
+        table: 'contact_messages',
+        action: 'update',
+        match: { id: msg.id },
+        data: { is_read: !msg.is_read },
+      });
     } catch { /* ignore */ }
   }, [messages, selectedMessage]);
 
@@ -59,8 +64,12 @@ export default function MessagesInboxPage() {
     setMessages(updated);
     if (selectedMessage?.id === msg.id) setSelectedMessage({ ...selectedMessage, is_starred: !selectedMessage.is_starred });
     try {
-      const supabase = createClient();
-      await supabase.from('contact_messages').update({ is_starred: !msg.is_starred }).eq('id', msg.id);
+      await adminMutate<ContactMessage>({
+        table: 'contact_messages',
+        action: 'update',
+        match: { id: msg.id },
+        data: { is_starred: !msg.is_starred },
+      });
     } catch { /* ignore */ }
   }, [messages, selectedMessage]);
 
@@ -69,8 +78,11 @@ export default function MessagesInboxPage() {
     setMessages(remaining);
     if (selectedMessage?.id === id) setSelectedMessage(remaining.length > 0 ? remaining[0] : null);
     try {
-      const supabase = createClient();
-      await supabase.from('contact_messages').delete().eq('id', id);
+      await adminMutate<ContactMessage>({
+        table: 'contact_messages',
+        action: 'delete',
+        match: { id },
+      });
     } catch { /* ignore */ }
     showFeedback('success', 'Message deleted.');
   };
@@ -84,8 +96,13 @@ export default function MessagesInboxPage() {
     }
     setSelectedIds(new Set());
     try {
-      const supabase = createClient();
-      await supabase.from('contact_messages').delete().in('id', ids);
+      for (const id of ids) {
+        await adminMutate<ContactMessage>({
+          table: 'contact_messages',
+          action: 'delete',
+          match: { id },
+        });
+      }
     } catch { /* ignore */ }
     showFeedback('success', `${ids.length} message${ids.length > 1 ? 's' : ''} deleted.`);
   };
@@ -95,8 +112,14 @@ export default function MessagesInboxPage() {
     setMessages(updated);
     if (selectedMessage) setSelectedMessage({ ...selectedMessage, is_read: true });
     try {
-      const supabase = createClient();
-      await supabase.from('contact_messages').update({ is_read: true }).eq('is_read', false);
+      for (const m of messages.filter((msg) => !msg.is_read)) {
+        await adminMutate<ContactMessage>({
+          table: 'contact_messages',
+          action: 'update',
+          match: { id: m.id },
+          data: { is_read: true },
+        });
+      }
     } catch { /* ignore */ }
     showFeedback('success', 'All messages marked as read.');
   };

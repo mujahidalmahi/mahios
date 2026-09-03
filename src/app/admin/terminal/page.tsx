@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { TerminalCommand } from '@/types/database';
 
 export default function TerminalAdminPage() {
@@ -60,8 +61,11 @@ export default function TerminalAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this terminal command?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('terminal_commands').delete().eq('id', id);
+      await adminMutate<TerminalCommand>({
+        table: 'terminal_commands',
+        action: 'delete',
+        match: { id },
+      });
       setCommands((prev) => prev.filter((c) => c.id !== id));
       setFeedback({ type: 'success', text: 'Terminal command deleted.' });
       setTimeout(() => setFeedback(null), 3000);
@@ -77,39 +81,36 @@ export default function TerminalAdminPage() {
     setFeedback(null);
 
     const cleanCommand = editingItem.command.trim().toLowerCase();
+    const payload = {
+      ...editingItem,
+      command: cleanCommand,
+    };
 
     try {
-      const supabase = createClient();
-      const payload = {
-        ...editingItem,
-        command: cleanCommand,
-      };
-
       if (isNew) {
-        const { error } = await supabase.from('terminal_commands').insert([payload]);
-        if (!error) {
-          setCommands((prev) => [...prev, payload]);
-        } else {
-          setCommands((prev) => [...prev, payload]);
-        }
+        const res = await adminMutate<TerminalCommand>({
+          table: 'terminal_commands',
+          action: 'insert',
+          data: payload,
+        });
+        if (!res.success) throw new Error(res.error);
+        setCommands((prev) => [...prev, payload]);
       } else {
-        const { error } = await supabase
-          .from('terminal_commands')
-          .update(payload)
-          .eq('id', editingItem.id);
-
-        if (!error) {
-          setCommands((prev) => prev.map((c) => (c.id === editingItem.id ? payload : c)));
-        } else {
-          setCommands((prev) => prev.map((c) => (c.id === editingItem.id ? payload : c)));
-        }
+        const res = await adminMutate<TerminalCommand>({
+          table: 'terminal_commands',
+          action: 'update',
+          data: payload,
+          match: { id: editingItem.id },
+        });
+        if (!res.success) throw new Error(res.error);
+        setCommands((prev) => prev.map((c) => (c.id === editingItem.id ? payload : c)));
       }
 
       setFeedback({ type: 'success', text: `Command "${cleanCommand}" saved successfully.` });
       setEditingItem(null);
       setTimeout(() => setFeedback(null), 3000);
-    } catch {
-      setFeedback({ type: 'error', text: 'Error saving command to database.' });
+    } catch (err) {
+      setFeedback({ type: 'error', text: `Failed to save: ${err instanceof Error ? err.message : 'Database error'}` });
     } finally {
       setSaving(false);
     }

@@ -9,6 +9,7 @@ import {
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -78,10 +79,13 @@ export default function GalleryAdminPage() {
 
   const performDeleteImage = async (id: string) => {
     try {
-      const supabase = createClient();
-      await supabase.from('gallery_images').delete().eq('id', id);
+      await adminMutate<GalleryImage>({
+        table: 'gallery_images',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setImages((prev) => prev.filter((i) => i.id !== id));
     setFeedback({ type: 'success', text: 'Photo deleted successfully.' });
@@ -100,10 +104,13 @@ export default function GalleryAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('gallery_images').upsert(editingImage);
+      await adminMutate<GalleryImage>({
+        table: 'gallery_images',
+        action: 'upsert',
+        data: editingImage,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingImage(null);
@@ -130,10 +137,13 @@ export default function GalleryAdminPage() {
 
   const performDeleteCategory = async (id: string) => {
     try {
-      const supabase = createClient();
-      await supabase.from('gallery_categories').delete().eq('id', id);
+      await adminMutate<GalleryCategory>({
+        table: 'gallery_categories',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setCategories((prev) => prev.filter((c) => c.id !== id));
     setFeedback({ type: 'success', text: 'Album category removed.' });
@@ -155,10 +165,13 @@ export default function GalleryAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('gallery_categories').upsert(payload);
+      await adminMutate<GalleryCategory>({
+        table: 'gallery_categories',
+        action: 'upsert',
+        data: payload,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingCategory(null);
@@ -180,12 +193,16 @@ export default function GalleryAdminPage() {
     setImages(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('gallery_images').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<GalleryImage>({
+          table: 'gallery_images',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

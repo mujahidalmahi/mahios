@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -14,6 +14,7 @@ import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
 import { BlogPost } from '@/types/database';
+import { adminMutate } from '@/lib/api/adminMutate';
 
 export default function BlogAdminPage() {
   const [posts, setPosts] = useState<BlogPost[]>(fallbackBiographyData.blogPosts);
@@ -74,10 +75,13 @@ export default function BlogAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this dev note / article?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('blog_posts').delete().eq('id', id);
+      await adminMutate<BlogPost>({
+        table: 'blog_posts',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setPosts((prev) => prev.filter((p) => p.id !== id));
     setFeedback({ type: 'success', text: 'Article deleted.' });
@@ -97,6 +101,7 @@ export default function BlogAdminPage() {
       ...editingPost,
       slug: autoSlug,
       read_time_minutes: computedReadTime,
+      updated_at: new Date().toISOString(),
     };
 
     if (isNew) {
@@ -106,10 +111,13 @@ export default function BlogAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('blog_posts').upsert(payload);
+      await adminMutate<BlogPost>({
+        table: 'blog_posts',
+        action: 'upsert',
+        data: payload,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingPost(null);
@@ -151,12 +159,16 @@ export default function BlogAdminPage() {
     setPosts(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('blog_posts').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<BlogPost>({
+          table: 'blog_posts',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 
@@ -228,8 +240,8 @@ export default function BlogAdminPage() {
             className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-slate-700 transition-all shadow-lg group"
           >
             <div className="flex items-start gap-4 min-w-0 flex-1">
-              {/* Cover Photo */}
-              <div className="w-20 h-20 rounded-xl bg-slate-950 border border-slate-800 shrink-0 overflow-hidden relative">
+              {/* Cover Photo (16:9 Ratio) */}
+              <div className="w-28 sm:w-32 aspect-video rounded-xl bg-slate-950 border border-slate-800 shrink-0 overflow-hidden relative">
                 {post.cover_image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover" />

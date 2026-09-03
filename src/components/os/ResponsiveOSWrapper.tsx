@@ -35,10 +35,15 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       }
     };
 
+    // If deep-link is requested, bypass boot screen for instant visitor access
+    if (typeof window !== 'undefined' && window.location.search.includes('app=')) {
+      finishBoot();
+    }
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [finishBoot]);
 
   if (!mounted) {
     return (

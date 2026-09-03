@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -73,10 +74,13 @@ export default function EducationAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this education entry?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('education').delete().eq('id', id);
+      await adminMutate<Education>({
+        table: 'education',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setEducationList((prev) => prev.filter((e) => e.id !== id));
     setFeedback({ type: 'success', text: 'Education entry removed.' });
@@ -95,10 +99,13 @@ export default function EducationAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('education').upsert(editingEdu);
+      await adminMutate<Education>({
+        table: 'education',
+        action: 'upsert',
+        data: editingEdu,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingEdu(null);
@@ -137,12 +144,16 @@ export default function EducationAdminPage() {
     setEducationList(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('education').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<Education>({
+          table: 'education',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

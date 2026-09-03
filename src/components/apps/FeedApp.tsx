@@ -1,26 +1,78 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Radio, Heart, MessageSquare, Send, Sparkles, Clock, Share2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Radio, Heart, MessageSquare, Send, Sparkles, Clock, Share2, Check } from 'lucide-react';
 import { FeedPost } from '@/types/database';
+import { useSystemStore } from '@/stores/systemStore';
 
 interface FeedAppProps {
   feedPosts: FeedPost[];
 }
 
 export default function FeedApp({ feedPosts }: FeedAppProps) {
+  const { playSound } = useSystemStore();
   const [likes, setLikes] = useState<Record<string, number>>(() =>
     feedPosts.reduce((acc, p) => ({ ...acc, [p.id]: p.likes_count }), {})
   );
   const [userLiked, setUserLiked] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Restore liked status from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = JSON.parse(localStorage.getItem('mahios_feed_likes') || '{}');
+        setUserLiked(saved);
+      } catch {
+        // safety
+      }
+    }
+  }, []);
 
   const toggleLike = (id: string) => {
+    playSound('success');
     const isLiked = !!userLiked[id];
-    setUserLiked((prev) => ({ ...prev, [id]: !isLiked }));
+    const newLiked = !isLiked;
+
+    const updatedUserLiked = { ...userLiked, [id]: newLiked };
+    setUserLiked(updatedUserLiked);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mahios_feed_likes', JSON.stringify(updatedUserLiked));
+    }
+
     setLikes((prev) => ({
       ...prev,
-      [id]: isLiked ? (prev[id] || 1) - 1 : (prev[id] || 0) + 1,
+      [id]: isLiked ? Math.max(0, (prev[id] || 1) - 1) : (prev[id] || 0) + 1,
     }));
+
+    // Persist real count to Supabase database
+    fetch('/api/reactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entityType: 'feed',
+        entityId: id,
+        action: isLiked ? 'unlike' : 'like',
+      }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && typeof res.likes_count === 'number') {
+          setLikes((prev) => ({ ...prev, [id]: res.likes_count }));
+        }
+      })
+      .catch(() => {});
+  };
+
+  const handleShareFeed = (post: FeedPost) => {
+    playSound('click');
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
+    const text = `"${post.content}" — Mujahid Al Mahi (${origin}/?app=feed)`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    setCopiedId(post.id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -83,18 +135,30 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
 
             {/* Interaction Footer */}
             <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
-              <button
-                type="button"
-                onClick={() => toggleLike(post.id)}
-                className={`px-2.5 py-1 rounded-2xs flex items-center gap-1.5 cursor-pointer transition-all ${
-                  userLiked[post.id]
-                    ? 'bg-rose-100 text-rose-700 retro-box-inset font-bold'
-                    : 'bg-[#d4d0c8] text-gray-800 retro-box-outset hover:bg-[#e4e4e4]'
-                }`}
-              >
-                <Heart className={`w-3.5 h-3.5 ${userLiked[post.id] ? 'fill-rose-600 text-rose-600' : 'text-gray-600'}`} />
-                <span className="text-[11px] font-mono">{likes[post.id] || 0}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleLike(post.id)}
+                  className={`px-2.5 py-1 rounded-2xs flex items-center gap-1.5 cursor-pointer transition-all active:retro-btn-pressed select-none ${
+                    userLiked[post.id]
+                      ? 'bg-rose-100 text-rose-700 retro-box-inset font-bold'
+                      : 'bg-[#d4d0c8] text-gray-800 retro-box-outset hover:bg-[#e4e4e4]'
+                  }`}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${userLiked[post.id] ? 'fill-rose-600 text-rose-600' : 'text-gray-600'}`} />
+                  <span className="text-[11px] font-mono">{likes[post.id] || 0}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleShareFeed(post)}
+                  className="px-2 py-1 bg-[#d4d0c8] text-gray-700 retro-box-outset hover:bg-[#e4e4e4] active:retro-btn-pressed rounded-2xs flex items-center gap-1 text-[11px] cursor-pointer select-none"
+                  title="Share Broadcast"
+                >
+                  {copiedId === post.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Share2 className="w-3 h-3" />}
+                  <span>{copiedId === post.id ? 'Copied' : 'Share'}</span>
+                </button>
+              </div>
 
               <span className="text-[10px] font-mono text-gray-400">
                 PULSE_ID: {post.id}

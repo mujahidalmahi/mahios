@@ -12,6 +12,7 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -81,10 +82,13 @@ export default function ProjectsAdminPage() {
 
   const performDelete = async (id: string) => {
     try {
-      const supabase = createClient();
-      await supabase.from('projects').delete().eq('id', id);
+      await adminMutate<Project>({
+        table: 'projects',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setFeedback({ type: 'success', text: 'Project deleted successfully.' });
@@ -109,10 +113,13 @@ export default function ProjectsAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('projects').upsert(payload);
+      await adminMutate<Project>({
+        table: 'projects',
+        action: 'upsert',
+        data: payload,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingProject(null);
@@ -154,12 +161,16 @@ export default function ProjectsAdminPage() {
     setProjects(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('projects').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<Project>({
+          table: 'projects',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

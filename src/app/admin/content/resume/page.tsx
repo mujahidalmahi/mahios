@@ -9,6 +9,7 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import { SkeletonFormPage } from '@/components/admin/SkeletonLoader';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 
 interface ResumeConfig {
   id?: string;
@@ -77,10 +78,13 @@ export default function ResumeAdminPage() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const supabase = createClient();
       const updated = { ...config, updated_at: new Date().toISOString() };
-      const { error } = await supabase.from('resume_config').upsert(updated);
-      if (error) throw error;
+      const res = await adminMutate<ResumeConfig>({
+        table: 'resume_config',
+        action: 'upsert',
+        data: updated,
+      });
+      if (!res.success) throw new Error(res.error);
       setOriginal(updated);
       setFeedback({ type: 'success', text: 'Resume configuration saved successfully!' });
     } catch (err) {

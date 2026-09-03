@@ -1,39 +1,104 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Clock, Eye, Calendar, Heart, Share2, Check,
-  ExternalLink, Printer, Bookmark, Tag, User, BookOpen
+  ExternalLink, Printer, Bookmark, Tag, User, BookOpen, Sparkles
 } from 'lucide-react';
 import { BlogPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import { parseBlogReactions } from '@/lib/data/blogReactions';
 
 interface BlogPostReaderAppProps {
   post: BlogPost;
 }
 
 export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
+  const parsed = parseBlogReactions(post.content_html);
   const [readingTheme, setReadingTheme] = useState<'normal' | 'sepia' | 'terminal' | 'cyber'>('normal');
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
-  const [likes, setLikes] = useState(0);
+  const [likes, setLikes] = useState(parsed.applause);
+  const [views, setViews] = useState(post.views_count || 1);
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
   const { playSound } = useSystemStore();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingApplauseRef = useRef(0);
 
-  const handleLike = () => {
+  // Restore bookmark state & trigger view increment on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isBookmarked = localStorage.getItem(`mahios_blog_bookmark_${post.id}`) === 'true';
+      setBookmarked(isBookmarked);
+
+      // Increment persistent view count in background
+      fetch('/api/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entityType: 'blog_view', entityId: post.id }),
+      })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.views_count) {
+            setViews(res.views_count);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [post.id]);
+
+  const handleLike = (e: React.MouseEvent<HTMLButtonElement>) => {
     playSound('success');
     setLikes((prev) => prev + 1);
+    pendingApplauseRef.current += 1;
+
+    // Floating particle animation
+    const rect = e.currentTarget.getBoundingClientRect();
+    const newHeart = {
+      id: Date.now() + Math.random(),
+      x: e.clientX - rect.left - 10,
+      y: e.clientY - rect.top - 20,
+    };
+    setFloatingHearts((prev) => [...prev, newHeart]);
+    setTimeout(() => {
+      setFloatingHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
+    }, 1000);
+
+    // Debounced sync to database so rapid clicking doesn't flood the network
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      const countToSend = pendingApplauseRef.current;
+      pendingApplauseRef.current = 0;
+
+      fetch('/api/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entityType: 'blog', entityId: post.id, count: countToSend }),
+      })
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && typeof res.applause === 'number') {
+            setLikes(res.applause);
+          }
+        })
+        .catch(() => {});
+    }, 500);
   };
 
   const handleToggleBookmark = () => {
     playSound('click');
-    setBookmarked((prev) => !prev);
+    const newState = !bookmarked;
+    setBookmarked(newState);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`mahios_blog_bookmark_${post.id}`, String(newState));
+    }
   };
 
   const handleShare = () => {
     playSound('click');
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
-    const url = `${origin}/#note-${post.slug}`;
+    const url = `${origin}/?app=blog&post=${post.slug}`;
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(url);
     }
@@ -153,13 +218,13 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
 
       {/* Main Reading Area */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5">
-        {/* Article Cover Image (if available) */}
+        {/* Article Cover Image (Strict 16:9 Aspect Ratio) */}
         {post.cover_image_url && (
-          <div className="w-full max-h-72 retro-box-inset bg-black/10 overflow-hidden">
+          <div className="w-full aspect-video retro-box-inset bg-black/10 overflow-hidden">
             <img
               src={post.cover_image_url}
               alt={post.title}
-              className="w-full h-full object-cover max-h-72"
+              className="w-full h-full object-cover"
             />
           </div>
         )}
@@ -182,7 +247,7 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
             </div>
             <div className="flex items-center gap-1">
               <Eye className="w-3.5 h-3.5" />
-              <span>{post.views_count + likes} views</span>
+              <span>{views} views</span>
             </div>
             {post.published_at && (
               <div className="flex items-center gap-1">
@@ -208,29 +273,41 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
           )}
         </div>
 
-        {/* Formatted HTML Article Content with Safe Hyperlinks */}
+        {/* Formatted HTML Article Content with Safe Hyperlinks & 16:9 Image Enforcement */}
         <div
           onClick={handleContentClick}
-          dangerouslySetInnerHTML={{ __html: post.content_html }}
-          className={`prose prose-sm sm:prose max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} [&_a]:text-blue-600 [&_a]:underline [&_a]:font-bold [&_a]:cursor-pointer [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:bg-black/10 [&_code]:px-1 [&_code]:rounded-xs [&_code]:font-mono`}
+          dangerouslySetInnerHTML={{ __html: parsed.cleanContentHtml }}
+          className={`prose prose-sm sm:prose max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} [&_a]:text-blue-600 [&_a]:underline [&_a]:font-bold [&_a]:cursor-pointer [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:bg-black/10 [&_code]:px-1 [&_code]:rounded-xs [&_code]:font-mono [&_img]:aspect-video [&_img]:w-full [&_img]:object-cover [&_img]:retro-box-inset [&_img]:my-4 [&_figure]:my-4 [&_figure_img]:aspect-video [&_figure_img]:w-full [&_figure_img]:object-cover`}
         />
 
         {/* Interactive Bottom Bar */}
         <div className="pt-6 border-t border-gray-400/50 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleLike}
-              className="retro-btn px-3 py-1 font-bold text-red-700 flex items-center gap-1.5 cursor-pointer hover:bg-red-50"
-            >
-              <Heart className="w-4 h-4 fill-red-600 text-red-600" />
-              <span>Applaud ({likes})</span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleLike}
+                className="retro-btn px-3 py-1 font-bold text-red-700 flex items-center gap-1.5 cursor-pointer hover:bg-red-50 active:retro-btn-pressed select-none"
+              >
+                <Heart className="w-4 h-4 fill-red-600 text-red-600" />
+                <span>Applaud ({likes})</span>
+              </button>
+
+              {floatingHearts.map((heart) => (
+                <span
+                  key={heart.id}
+                  style={{ left: `${heart.x}px`, top: `${heart.y}px` }}
+                  className="absolute pointer-events-none text-red-600 font-bold text-xs animate-bounce select-none whitespace-nowrap"
+                >
+                  +1 ❤️
+                </span>
+              ))}
+            </div>
 
             <button
               type="button"
               onClick={handleToggleBookmark}
-              className="retro-btn px-3 py-1 font-bold text-amber-800 flex items-center gap-1.5 cursor-pointer hover:bg-amber-50"
+              className="retro-btn px-3 py-1 font-bold text-amber-800 flex items-center gap-1.5 cursor-pointer hover:bg-amber-50 active:retro-btn-pressed select-none"
             >
               <Bookmark className={`w-4 h-4 ${bookmarked ? 'fill-amber-600 text-amber-600' : ''}`} />
               <span>{bookmarked ? 'Bookmarked' : 'Bookmark'}</span>

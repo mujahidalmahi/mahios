@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -62,10 +63,13 @@ export default function SocialsAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this social link endpoint?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('social_links').delete().eq('id', id);
+      await adminMutate<SocialLinkItem>({
+        table: 'social_links',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setLinks((prev) => prev.filter((l) => l.id !== id));
     setFeedback({ type: 'success', text: 'Social endpoint removed.' });
@@ -84,10 +88,13 @@ export default function SocialsAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('social_links').upsert(editingLink);
+      await adminMutate<SocialLinkItem>({
+        table: 'social_links',
+        action: 'upsert',
+        data: editingLink,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingLink(null);
@@ -109,12 +116,16 @@ export default function SocialsAdminPage() {
     setLinks(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('social_links').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<SocialLinkItem>({
+          table: 'social_links',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

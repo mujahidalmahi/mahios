@@ -1,51 +1,32 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   User, MapPin, Coffee, Code2, Award, Sparkles, Quote,
   Copy, Check, Clock, Download, Lightbulb, Compass,
   BookOpen, HelpCircle, HeartHandshake, ShieldCheck
 } from 'lucide-react';
-import { AboutContent } from '@/types/database';
+import { AboutContent, PhilosophyItem } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import { parseAboutExtras } from '@/lib/data/aboutExtras';
 
 interface AboutAppProps {
   about: AboutContent;
+  philosophies?: PhilosophyItem[];
 }
 
-const philosophyItems = [
-  {
-    title: 'Simplicity Over Complexity',
-    description: 'Clean, explicit code with well-defined boundaries always outperforms overly clever abstraction layers.',
-  },
-  {
-    title: 'User-Obsessed Latency',
-    description: 'A 50ms improvement in interaction latency fundamentally elevates how natural and tactile software feels.',
-  },
-  {
-    title: 'Resilient Architecture',
-    description: 'Systems should gracefully degrade without crashing. Fallbacks, optimistic states, and caching are first-class citizens.',
-  },
-  {
-    title: 'Craft & Delight',
-    description: 'Software is a craft. Infusing personality, creative aesthetics, and tactile micro-interactions turns tools into memorable experiences.',
-  },
-];
-
-const triviaQuestions = [
-  { q: 'What was Mahi’s first programming language?', a: 'C / C++ before diving deep into JavaScript, TypeScript, and Rust.' },
-  { q: 'What is Mahi’s favorite mechanical keyboard switch?', a: 'Tactile Holy Pandas with custom lubed stabilizers.' },
-  { q: 'How does Mahi take his coffee?', a: 'Black pour-over with single-origin medium roast beans.' },
-  { q: 'What is Mahi’s ideal engineering stack?', a: 'Next.js 16, TypeScript, Supabase PostgreSQL, Tailwind CSS 4, and Cloudflare/Vercel Edge.' },
-];
-
-export default function AboutApp({ about }: AboutAppProps) {
+export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
   const [activeTab, setActiveTab] = useState<'story' | 'principles' | 'radar' | 'trivia'>('story');
   const [copied, setCopied] = useState(false);
   const [dhakaTime, setDhakaTime] = useState('');
   const [isAwake, setIsAwake] = useState(true);
   const [openTrivia, setOpenTrivia] = useState<number | null>(null);
   const { playSound } = useSystemStore();
+
+  // Extract dynamic extras (Tech Radar and Trivia) from bio_html metadata
+  const { cleanBioHtml, techRadar, trivia } = useMemo(() => {
+    return parseAboutExtras(about.bio_html);
+  }, [about.bio_html]);
 
   useEffect(() => {
     const updateDhakaTime = () => {
@@ -218,7 +199,7 @@ END:VCARD`;
         >
           <span className="flex items-center gap-1">
             <Compass className="w-3.5 h-3.5" />
-            <span>Principles</span>
+            <span>Principles ({philosophies.length})</span>
           </span>
         </button>
 
@@ -231,7 +212,7 @@ END:VCARD`;
         >
           <span className="flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Tech Radar</span>
+            <span>Tech Radar ({techRadar.length})</span>
           </span>
         </button>
 
@@ -244,7 +225,7 @@ END:VCARD`;
         >
           <span className="flex items-center gap-1">
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>Trivia & Q&A</span>
+            <span>Trivia & Q&A ({trivia.length})</span>
           </span>
         </button>
       </div>
@@ -254,7 +235,7 @@ END:VCARD`;
         <div className="space-y-3">
           <div className="p-3 sm:p-4 bg-white retro-box-inset">
             <div
-              dangerouslySetInnerHTML={{ __html: about.bio_html }}
+              dangerouslySetInnerHTML={{ __html: cleanBioHtml }}
               className="prose prose-sm max-w-none text-gray-800 leading-relaxed text-xs break-words"
             />
           </div>
@@ -264,7 +245,7 @@ END:VCARD`;
             <div className="p-3 bg-[#fffbeb] border-l-4 border-[#f59e0b] retro-box-inset rounded-xs text-xs text-amber-900 italic flex items-start gap-2">
               <Quote className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
               <div className="min-w-0 flex-1 break-words">
-                <p>"{about.quote}"</p>
+                <p>&ldquo;{about.quote}&rdquo;</p>
                 {about.quote_author && (
                   <p className="font-semibold font-sans not-italic text-amber-800 mt-1">— {about.quote_author}</p>
                 )}
@@ -274,22 +255,25 @@ END:VCARD`;
         </div>
       )}
 
-      {/* Tab 2: Engineering Principles */}
+      {/* Tab 2: Engineering Principles (Dynamic from philosophies table) */}
       {activeTab === 'principles' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {philosophyItems.map((item, idx) => (
-            <div key={idx} className="p-3 bg-white retro-box-inset space-y-1">
+          {philosophies.map((item, idx) => (
+            <div key={item.id || idx} className="p-3 bg-white retro-box-inset space-y-1">
               <div className="flex items-center gap-1.5 text-[#000080] font-bold text-xs">
                 <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span className="break-words">{item.title}</span>
               </div>
               <p className="text-gray-700 text-xs leading-relaxed break-words">{item.description}</p>
+              {item.axiom && (
+                <p className="text-[11px] font-mono text-gray-500 italic pt-1 border-t border-gray-100">&ldquo;{item.axiom}&rdquo;</p>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Tab 3: Tech Radar */}
+      {/* Tab 3: Tech Radar (Dynamic) */}
       {activeTab === 'radar' && (
         <div className="p-3 sm:p-4 bg-white retro-box-inset space-y-2.5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 border-b border-gray-200 pb-1 flex items-center gap-1.5">
@@ -298,40 +282,24 @@ END:VCARD`;
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            <div className="p-2.5 bg-[#f9fafb] border border-gray-300 rounded-2xs space-y-0.5">
-              <span className="text-[10px] font-mono text-emerald-700 font-bold uppercase">[ADOPT / PRODUCTION]</span>
-              <div className="font-bold text-xs text-gray-900 break-words">Next.js 16 App Router & Turbopack</div>
-              <p className="text-[11px] text-gray-600 break-words">Full-stack React server components with micro-caching.</p>
-            </div>
-
-            <div className="p-2.5 bg-[#f9fafb] border border-gray-300 rounded-2xs space-y-0.5">
-              <span className="text-[10px] font-mono text-blue-700 font-bold uppercase">[TRIAL / BUILDING]</span>
-              <div className="font-bold text-xs text-gray-900 break-words">Autonomous AI Agents & MCP Protocols</div>
-              <p className="text-[11px] text-gray-600 break-words">Integrating agentic tooling and model context protocols in web architectures.</p>
-            </div>
-
-            <div className="p-2.5 bg-[#f9fafb] border border-gray-300 rounded-2xs space-y-0.5">
-              <span className="text-[10px] font-mono text-amber-700 font-bold uppercase">[EVALUATING]</span>
-              <div className="font-bold text-xs text-gray-900 break-words">Rust WebAssembly & Edge Workers</div>
-              <p className="text-[11px] text-gray-600 break-words">Offloading compute-heavy tasks to native Wasm binaries on the edge.</p>
-            </div>
-
-            <div className="p-2.5 bg-[#f9fafb] border border-gray-300 rounded-2xs space-y-0.5">
-              <span className="text-[10px] font-mono text-purple-700 font-bold uppercase">[SPECIAL INTEREST]</span>
-              <div className="font-bold text-xs text-gray-900 break-words">Retro UI & Web Audio Synthesizers</div>
-              <p className="text-[11px] text-gray-600 break-words">Blending spatial computing memories with modern web performance.</p>
-            </div>
+            {techRadar.map((item, idx) => (
+              <div key={item.id || idx} className="p-2.5 bg-[#f9fafb] border border-gray-300 rounded-2xs space-y-0.5">
+                <span className="text-[10px] font-mono text-emerald-700 font-bold uppercase">{item.status}</span>
+                <div className="font-bold text-xs text-gray-900 break-words">{item.title}</div>
+                <p className="text-[11px] text-gray-600 break-words">{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Tab 4: Trivia & Q&A */}
+      {/* Tab 4: Trivia & Q&A (Dynamic) */}
       {activeTab === 'trivia' && (
         <div className="space-y-2">
-          {triviaQuestions.map((item, idx) => {
+          {trivia.map((item, idx) => {
             const isOpen = openTrivia === idx;
             return (
-              <div key={idx} className="p-2.5 sm:p-3 bg-white retro-box-inset space-y-1">
+              <div key={item.id || idx} className="p-2.5 sm:p-3 bg-white retro-box-inset space-y-1">
                 <button
                   type="button"
                   onClick={() => {

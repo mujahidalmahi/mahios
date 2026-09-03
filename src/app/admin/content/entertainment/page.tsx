@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -9,6 +9,7 @@ import CategoryPicker from '@/components/admin/CategoryPicker';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -63,10 +64,13 @@ export default function EntertainmentAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this media item?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('entertainment_items').delete().eq('id', id);
+      await adminMutate<EntertainmentItem>({
+        table: 'entertainment_items',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setItems((prev) => prev.filter((i) => i.id !== id));
     setFeedback({ type: 'success', text: 'Media item deleted.' });
@@ -85,10 +89,13 @@ export default function EntertainmentAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('entertainment_items').upsert(editingItem);
+      await adminMutate<EntertainmentItem>({
+        table: 'entertainment_items',
+        action: 'upsert',
+        data: editingItem,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingItem(null);
@@ -110,12 +117,16 @@ export default function EntertainmentAdminPage() {
     setItems(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('entertainment_items').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<EntertainmentItem>({
+          table: 'entertainment_items',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

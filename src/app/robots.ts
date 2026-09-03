@@ -11,10 +11,23 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/admin/', '/api', '/api/'],
       },
       {
-        userAgent: ['GPTBot', 'ChatGPT-User', 'CCBot', 'Bytespider', 'anthropic-ai', 'Claude-Web'],
+        userAgent: [
+          'Googlebot',
+          'Bingbot',
+          'Slurp',
+          'DuckDuckBot',
+          'Baiduspider',
+          'YandexBot',
+          'Applebot',
+          'Twitterbot',
+          'facebookexternalhit',
+          'LinkedInBot',
+        ],
+        allow: '/',
         disallow: ['/admin', '/admin/', '/api', '/api/'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

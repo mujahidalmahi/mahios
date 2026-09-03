@@ -47,8 +47,9 @@ export default function BlogApp({ posts }: BlogAppProps) {
     });
   }, [posts, searchQuery, selectedTag]);
 
-  // Open blog article in its own separate window
-  const handleOpenPost = (post: BlogPost, index: number) => {
+  // Open blog article in its own separate window in front
+  const handleOpenPost = (e: React.MouseEvent, post: BlogPost, index: number) => {
+    e.stopPropagation();
     playSound('open');
     openWindow({
       id: `blog-${post.id}`,
@@ -149,13 +150,13 @@ export default function BlogApp({ posts }: BlogAppProps) {
             {filteredPosts.map((post, idx) => (
               <div
                 key={post.id}
-                onClick={() => handleOpenPost(post, idx)}
+                onClick={(e) => handleOpenPost(e, post, idx)}
                 className="retro-box-outset bg-[#d4d0c8] p-3 flex flex-col justify-between hover:bg-white transition-all cursor-pointer group shadow-sm hover:shadow-md"
               >
                 <div className="space-y-2.5">
-                  {/* Thumbnail Cover */}
+                  {/* Thumbnail Cover (Strict 16:9 Aspect Ratio) */}
                   {post.cover_image_url ? (
-                    <div className="w-full h-36 retro-box-inset bg-black/5 overflow-hidden">
+                    <div className="w-full aspect-video retro-box-inset bg-black/5 overflow-hidden">
                       <img
                         src={post.cover_image_url}
                         alt={post.title}
@@ -163,7 +164,7 @@ export default function BlogApp({ posts }: BlogAppProps) {
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-24 retro-box-inset bg-[#000080]/10 flex items-center justify-center text-[#000080]">
+                    <div className="w-full aspect-video retro-box-inset bg-[#000080]/10 flex items-center justify-center text-[#000080]">
                       <FileText className="w-8 h-8 opacity-60" />
                     </div>
                   )}
@@ -217,8 +218,7 @@ export default function BlogApp({ posts }: BlogAppProps) {
                   <button
                     type="button"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenPost(post, idx);
+                      handleOpenPost(e, post, idx);
                     }}
                     className="retro-btn px-2.5 py-1 font-bold text-[#000080] flex items-center gap-1.5 text-xs cursor-pointer hover:bg-blue-50"
                   >

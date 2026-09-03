@@ -105,7 +105,7 @@ export default function BootScreen({ bootLogs, settings, onBootComplete }: BootS
         finishBoot();
         onBootComplete();
       }}
-      className="fixed inset-0 z-50 bg-black text-[#00ff66] font-mono p-4 sm:p-8 flex flex-col justify-between select-none cursor-pointer overflow-hidden crt-scanlines"
+      className="fixed inset-0 z-[9999] bg-black text-[#00ff66] font-mono p-4 sm:p-8 flex flex-col justify-between select-none cursor-pointer overflow-hidden crt-scanlines"
     >
       {/* Background Matrix Rain */}
       {settings.matrix_rain_enabled && <MatrixRain opacity={0.35} />}

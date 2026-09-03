@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FolderGit2, ExternalLink, Star, FileCode, X,
   Layers, Search, LayoutGrid, List, SlidersHorizontal,
@@ -21,7 +21,55 @@ export default function ProjectsApp({ projects }: ProjectsAppProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'featured' | 'name'>('featured');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [projectStars, setProjectStars] = useState<Record<string, number>>(() =>
+    projects.reduce((acc, p) => ({ ...acc, [p.id]: p.stats?.stars || 0 }), {})
+  );
+  const [userStarred, setUserStarred] = useState<Record<string, boolean>>({});
   const { playSound } = useSystemStore();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = JSON.parse(localStorage.getItem('mahios_project_stars') || '{}');
+        setUserStarred(saved);
+      } catch {}
+    }
+  }, []);
+
+  const handleToggleStar = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    playSound('success');
+    const isStarred = !userStarred[id];
+    const newStarred = isStarred;
+
+    const updated = { ...userStarred, [id]: newStarred };
+    setUserStarred(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mahios_project_stars', JSON.stringify(updated));
+    }
+
+    setProjectStars((prev) => ({
+      ...prev,
+      [id]: !newStarred ? Math.max(0, (prev[id] || 1) - 1) : (prev[id] || 0) + 1,
+    }));
+
+    fetch('/api/reactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entityType: 'project',
+        entityId: id,
+        action: newStarred ? 'star' : 'unstar',
+      }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && typeof res.stars === 'number') {
+          setProjectStars((prev) => ({ ...prev, [id]: res.stars }));
+        }
+      })
+      .catch(() => {});
+  };
 
   const categories = ['All', ...Array.from(new Set(projects.map((p) => p.category).filter(Boolean)))];
 
@@ -45,7 +93,7 @@ export default function ProjectsApp({ projects }: ProjectsAppProps) {
 
   const handleCopyLink = (project: Project) => {
     playSound('click');
-    const url = `${window.location.origin}/#project-${project.slug}`;
+    const url = `${window.location.origin}/?app=projects&id=${project.slug}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -193,7 +241,20 @@ export default function ProjectsApp({ projects }: ProjectsAppProps) {
               </div>
 
               <div className="pt-2 mt-2 border-t border-gray-300 flex items-center justify-between text-[10px] text-gray-500 font-mono">
-                <span className="text-[#000080] font-semibold">Inspect Specifications &gt;</span>
+                <button
+                  type="button"
+                  onClick={(e) => handleToggleStar(p.id, e)}
+                  className={`px-2 py-0.5 rounded-2xs flex items-center gap-1 cursor-pointer transition-all active:retro-btn-pressed select-none ${
+                    userStarred[p.id]
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300 font-bold'
+                      : 'hover:bg-black/5 text-gray-700'
+                  }`}
+                  title="Star this Project"
+                >
+                  <Star className={`w-3 h-3 ${userStarred[p.id] ? 'fill-amber-500 text-amber-500' : 'text-gray-400'}`} />
+                  <span>{projectStars[p.id] || 0}</span>
+                </button>
+
                 <div className="flex items-center gap-1.5">
                   {p.live_url && <ExternalLink className="w-3 h-3 text-blue-700" />}
                   {p.github_url && <GithubIcon className="w-3 h-3 text-gray-700" />}
@@ -300,6 +361,19 @@ export default function ProjectsApp({ projects }: ProjectsAppProps) {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleToggleStar(selectedProject.id)}
+                  className={`retro-btn px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none active:retro-btn-pressed ${
+                    userStarred[selectedProject.id]
+                      ? 'bg-amber-100 text-amber-900 border-amber-400 font-bold'
+                      : 'text-gray-800'
+                  }`}
+                >
+                  <Star className={`w-3.5 h-3.5 ${userStarred[selectedProject.id] ? 'fill-amber-500 text-amber-500' : 'text-gray-500'}`} />
+                  <span>{userStarred[selectedProject.id] ? 'Starred' : 'Star Project'} ({projectStars[selectedProject.id] || 0})</span>
+                </button>
+
                 {selectedProject.live_url && (
                   <a
                     href={selectedProject.live_url}

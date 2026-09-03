@@ -85,10 +85,46 @@ export default function Desktop({ data }: DesktopProps) {
       setDesktopBgColor(data.settings.desktop_background_color);
     }
 
-    // Auto-open About Me window strictly ONCE on first boot
+    // Auto-open deep-linked app or fallback to About Me window on first boot
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;
-      if (data.apps.length > 0) {
+      let targetOpened = false;
+
+      if (typeof window !== 'undefined' && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const reqApp = params.get('app');
+        const reqPost = params.get('post');
+
+        if (reqApp === 'blog' && reqPost) {
+          const post = data.blogPosts.find((p) => p.slug === reqPost || p.id === reqPost);
+          if (post) {
+            openWindow({
+              id: `blog-${post.id}`,
+              app_id: `blog-${post.id}`,
+              title: post.title,
+              icon_name: 'FileText',
+              component_key: 'BlogPostReaderApp',
+              default_x: 80,
+              default_y: 50,
+              default_width: 840,
+              default_height: 600,
+              is_system_app: false,
+              is_visible: true,
+              sort_order: 99,
+              category: 'Dev Notes',
+            });
+            targetOpened = true;
+          }
+        } else if (reqApp) {
+          const found = data.apps.find((a) => a.app_id === reqApp || a.app_id.includes(reqApp));
+          if (found) {
+            openWindow(found);
+            targetOpened = true;
+          }
+        }
+      }
+
+      if (!targetOpened && data.apps.length > 0) {
         const aboutApp = data.apps.find((a) => a.app_id === 'about') || data.apps[0];
         if (aboutApp) openWindow(aboutApp);
       }
@@ -188,7 +224,7 @@ export default function Desktop({ data }: DesktopProps) {
 
     switch (componentKey) {
       case 'AboutApp':
-        return <AboutApp about={data.about} />;
+        return <AboutApp about={data.about} philosophies={data.philosophies} />;
       case 'ExperienceApp':
         return <ExperienceApp experiences={data.experiences} />;
       case 'ProjectsApp':
@@ -354,12 +390,14 @@ export default function Desktop({ data }: DesktopProps) {
         </div>
       </div>
 
-      {/* Render All Open Draggable Windows */}
-      {windows.map((win) => (
-        <Window key={win.id} window={win}>
-          {renderAppContent(win.componentKey, win.appId)}
-        </Window>
-      ))}
+      {/* Render All Open Draggable Windows sorted strictly by zIndex ascending */}
+      {[...windows]
+        .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+        .map((win) => (
+          <Window key={win.id} window={win}>
+            {renderAppContent(win.componentKey, win.appId)}
+          </Window>
+        ))}
 
       {/* Authentic Tabbed App Properties Dialog Sheet */}
       {activeAppProperties && (

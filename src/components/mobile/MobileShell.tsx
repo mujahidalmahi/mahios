@@ -148,7 +148,7 @@ export default function MobileShell({ data }: MobileShellProps) {
 
   const renderAppContent = (componentKey: string) => {
     switch (componentKey) {
-      case 'AboutApp': return <AboutApp about={data.about} />;
+      case 'AboutApp': return <AboutApp about={data.about} philosophies={data.philosophies} />;
       case 'ExperienceApp': return <ExperienceApp experiences={data.experiences} />;
       case 'ProjectsApp': return <ProjectsApp projects={data.projects} />;
       case 'SkillsApp': return <SkillsApp categories={data.categories} skills={data.skills} />;

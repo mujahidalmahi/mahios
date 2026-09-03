@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -79,10 +80,13 @@ export default function ExperienceAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this career experience entry?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('experiences').delete().eq('id', id);
+      await adminMutate<Experience>({
+        table: 'experiences',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setExperiences((prev) => prev.filter((e) => e.id !== id));
     setFeedback({ type: 'success', text: 'Experience deleted successfully.' });
@@ -101,10 +105,13 @@ export default function ExperienceAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('experiences').upsert(editingExp);
+      await adminMutate<Experience>({
+        table: 'experiences',
+        action: 'upsert',
+        data: editingExp,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingExp(null);
@@ -163,12 +170,16 @@ export default function ExperienceAdminPage() {
     setExperiences(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('experiences').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<Experience>({
+          table: 'experiences',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

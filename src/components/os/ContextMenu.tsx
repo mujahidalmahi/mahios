@@ -82,7 +82,7 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
     <div
       ref={menuRef}
       style={{ top: `${adjustedY}px`, left: `${adjustedX}px` }}
-      className="fixed z-50 w-52 bg-[#c0c0c0] retro-box-outset p-0.5 text-xs text-black font-sans shadow-2xl select-none"
+      className="fixed z-[1100] w-52 bg-[#c0c0c0] retro-box-outset p-0.5 text-xs text-black font-sans shadow-2xl select-none"
     >
       {targetApp ? (
         /* APPLICATION ICON CONTEXT MENU */

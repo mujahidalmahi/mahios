@@ -19,7 +19,7 @@ export default function AppPropertiesDialog({ app, onClose }: AppPropertiesDialo
   const sizeMb = (approxBytes / (1024 * 1024)).toFixed(2);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 select-none font-sans text-xs">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4 select-none font-sans text-xs">
       <div className="w-full max-w-[390px] bg-[#c0c0c0] retro-box-outset shadow-2xl border-2 border-white">
         {/* Title Bar */}
         <div className="bg-[#000080] text-white px-2 py-1 flex items-center justify-between font-bold text-xs select-none">

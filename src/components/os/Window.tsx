@@ -111,7 +111,11 @@ export default function Window({ window: win, children }: WindowProps) {
 
   return (
     <div
-      onClick={() => focusWindow(win.appId)}
+      onMouseDown={() => {
+        if (activeWindowId !== win.appId) {
+          focusWindow(win.appId);
+        }
+      }}
       style={{
         position: 'absolute',
         left: win.isMaximized ? 0 : `${win.position.x}px`,
@@ -131,6 +135,10 @@ export default function Window({ window: win, children }: WindowProps) {
       {/* Title Bar */}
       <div
         onMouseDown={handleMouseDownTitle}
+        onDoubleClick={() => {
+          playSound('click');
+          maximizeWindow(win.appId);
+        }}
         className={`h-7 px-2 flex items-center justify-between cursor-move text-xs font-bold shrink-0 ${
           isActive ? 'retro-titlebar' : 'retro-titlebar-inactive'
         }`}

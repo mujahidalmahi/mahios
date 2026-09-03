@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -59,10 +60,13 @@ export default function DreamAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this vision manifesto?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('dream_items').delete().eq('id', id);
+      await adminMutate<DreamItem>({
+        table: 'dream_items',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setDreams((prev) => prev.filter((d) => d.id !== id));
     setFeedback({ type: 'success', text: 'Vision manifesto deleted.' });
@@ -81,10 +85,13 @@ export default function DreamAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('dream_items').upsert(editingDream);
+      await adminMutate<DreamItem>({
+        table: 'dream_items',
+        action: 'upsert',
+        data: editingDream,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingDream(null);
@@ -106,12 +113,16 @@ export default function DreamAdminPage() {
     setDreams(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('dream_items').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<DreamItem>({
+          table: 'dream_items',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

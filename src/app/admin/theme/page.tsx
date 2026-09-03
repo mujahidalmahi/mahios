@@ -9,6 +9,7 @@ import { SkeletonFormPage } from '@/components/admin/SkeletonLoader';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SiteSettings } from '@/types/database';
 
 const presetWallpapers = [
@@ -65,9 +66,12 @@ export default function ThemeSettingsPage() {
     const updated = { ...settings, updated_at: new Date().toISOString() };
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from('site_settings').upsert(updated);
-      if (error) throw error;
+      const res = await adminMutate<SiteSettings>({
+        table: 'site_settings',
+        action: 'upsert',
+        data: updated,
+      });
+      if (!res.success) throw new Error(res.error);
       setOriginal(updated);
       setFeedback({ type: 'success', text: 'Theme & CRT effects updated successfully across MahiOS!' });
     } catch (err) {

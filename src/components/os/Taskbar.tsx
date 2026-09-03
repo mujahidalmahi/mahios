@@ -104,7 +104,7 @@ export default function Taskbar({ apps }: TaskbarProps) {
   ];
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-8 retro-taskbar flex items-center justify-between px-1 z-40 select-none text-xs text-black font-sans">
+    <div className="absolute bottom-0 left-0 right-0 h-8 retro-taskbar flex items-center justify-between px-1 z-[900] select-none text-xs text-black font-sans">
       {/* Start Button & Window Tabs */}
       <div className="flex items-center gap-1 min-w-0 flex-1 h-full py-0.5">
         {/* Start Button with Custom Transparent Logo */}

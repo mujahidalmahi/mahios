@@ -8,6 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { DesktopApp } from '@/types/database';
 
 export default function DesktopAppsManagerPage() {
@@ -59,10 +60,13 @@ export default function DesktopAppsManagerPage() {
   const handleDeleteApp = async (id: string) => {
     if (!confirm('Are you sure you want to remove this desktop application?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('desktop_apps').delete().eq('id', id);
+      await adminMutate<DesktopApp>({
+        table: 'desktop_apps',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setApps(apps.filter((a) => a.id !== id));
     setNotification('Application removed from desktop');
@@ -73,10 +77,14 @@ export default function DesktopAppsManagerPage() {
     const updated = apps.map((a) => (a.id === app.id ? { ...a, is_visible: !a.is_visible } : a));
     setApps(updated);
     try {
-      const supabase = createClient();
-      await supabase.from('desktop_apps').update({ is_visible: !app.is_visible }).eq('id', app.id);
+      await adminMutate<DesktopApp>({
+        table: 'desktop_apps',
+        action: 'update',
+        match: { id: app.id },
+        data: { is_visible: !app.is_visible },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 
@@ -91,10 +99,13 @@ export default function DesktopAppsManagerPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('desktop_apps').upsert(editingApp);
+      await adminMutate<DesktopApp>({
+        table: 'desktop_apps',
+        action: 'upsert',
+        data: editingApp,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingApp(null);
@@ -115,12 +126,16 @@ export default function DesktopAppsManagerPage() {
     setApps(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('desktop_apps').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<DesktopApp>({
+          table: 'desktop_apps',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -60,10 +61,13 @@ export default function PhilosophyAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this principle?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('philosophies').delete().eq('id', id);
+      await adminMutate<PhilosophyItem>({
+        table: 'philosophies',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setItems((prev) => prev.filter((i) => i.id !== id));
     setFeedback({ type: 'success', text: 'Principle deleted.' });
@@ -82,10 +86,13 @@ export default function PhilosophyAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('philosophies').upsert(editingItem);
+      await adminMutate<PhilosophyItem>({
+        table: 'philosophies',
+        action: 'upsert',
+        data: editingItem,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingItem(null);
@@ -107,12 +114,16 @@ export default function PhilosophyAdminPage() {
     setItems(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('philosophies').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<PhilosophyItem>({
+          table: 'philosophies',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

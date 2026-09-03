@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,6 +10,7 @@ import confetti from 'canvas-confetti';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
+import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -67,10 +68,13 @@ export default function AchievementsAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this achievement?')) return;
     try {
-      const supabase = createClient();
-      await supabase.from('achievements').delete().eq('id', id);
+      await adminMutate<Achievement>({
+        table: 'achievements',
+        action: 'delete',
+        match: { id },
+      });
     } catch {
-      // Local
+      // Local fallback
     }
     setAchievements((prev) => prev.filter((a) => a.id !== id));
     setFeedback({ type: 'success', text: 'Achievement removed.' });
@@ -89,10 +93,13 @@ export default function AchievementsAdminPage() {
     }
 
     try {
-      const supabase = createClient();
-      await supabase.from('achievements').upsert(editingItem);
+      await adminMutate<Achievement>({
+        table: 'achievements',
+        action: 'upsert',
+        data: editingItem,
+      });
     } catch {
-      // Local
+      // Local fallback
     }
 
     setEditingItem(null);
@@ -122,12 +129,16 @@ export default function AchievementsAdminPage() {
     setAchievements(updated);
 
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('achievements').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate<Achievement>({
+          table: 'achievements',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
-      // Local
+      // Local fallback
     }
   };
 

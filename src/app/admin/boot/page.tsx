@@ -125,9 +125,13 @@ export default function BootAdminPage() {
 
     // Save to Supabase
     try {
-      const supabase = createClient();
       updated.forEach(async (item) => {
-        await supabase.from('boot_logs').update({ sort_order: item.sort_order }).eq('id', item.id);
+        await adminMutate({
+          table: 'boot_logs',
+          action: 'update',
+          match: { id: item.id },
+          data: { sort_order: item.sort_order },
+        });
       });
     } catch {
       // Ignore
