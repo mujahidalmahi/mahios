@@ -64,6 +64,24 @@ export default function Taskbar({ apps }: TaskbarProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Close Start Menu on any click outside
+  useEffect(() => {
+    if (!startMenuOpen) return;
+    const handleOutsideClick = (e: MouseEvent | PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        !target.closest('button[data-start-btn="true"]') &&
+        !target.closest('[data-start-menu="true"]')
+      ) {
+        setStartMenuOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleOutsideClick, true);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideClick, true);
+    };
+  }, [startMenuOpen]);
+
   const handleWindowTabClick = (appId: string, isMinimized: boolean) => {
     playSound('click');
     if (activeWindowId === appId && !isMinimized) {
@@ -97,17 +115,17 @@ export default function Taskbar({ apps }: TaskbarProps) {
             playSound('click');
             setStartMenuOpen(!startMenuOpen);
           }}
-          className={`h-full px-2.5 flex items-center gap-1.5 font-bold font-sans text-xs cursor-pointer ${
+          className={`h-full px-2 flex items-center gap-1.5 font-bold font-sans text-xs cursor-pointer ${
             startMenuOpen ? 'retro-btn-pressed' : 'retro-btn'
           }`}
         >
-          {/* Custom MahiOS Logo */}
+          {/* Custom MahiOS Logo (Bigger) */}
           <img
             src="/images/mahios-logo.png"
             alt="MahiOS Logo"
-            className="w-4 h-4 object-contain shrink-0 drop-shadow-xs"
+            className="w-5 h-5 object-contain shrink-0 drop-shadow-xs"
           />
-          <span>Start</span>
+          <span className="font-bold tracking-wide">MahiOS</span>
         </button>
 
         {/* Start Menu Popover */}

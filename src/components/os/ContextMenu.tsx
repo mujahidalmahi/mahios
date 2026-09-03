@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   RotateCcw, Settings, Terminal,
   FolderOpen, Layers, Rows, Columns, Minus,
-  FileCode, FileEdit, ExternalLink
+  FileCode, FileEdit, ExternalLink, ShieldCheck
 } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
@@ -100,16 +100,18 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
             <span className="truncate">Open {targetApp.title}</span>
           </button>
 
+          {/* Run as Administrator (Issue 4) */}
           <button
             type="button"
             onClick={() => {
-              playSound('click');
+              playSound('open');
+              openWindow(targetApp);
               onClose();
             }}
-            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer"
+            className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer font-medium text-black"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Create Shortcut</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-900" />
+            <span>Run as Administrator</span>
           </button>
 
           <div className="border-t border-gray-400 my-0.5" />
@@ -160,7 +162,7 @@ export default function ContextMenu({ x, y, targetApp, apps, onClose }: ContextM
             className="w-full px-3 py-1 text-left flex items-center gap-2 hover:bg-[#000080] hover:text-white cursor-pointer"
           >
             <Terminal className="w-3.5 h-3.5 text-black" />
-            <span>Open MS-DOS Prompt</span>
+            <span>Open Terminal</span>
           </button>
 
           <div className="border-t border-gray-400 my-0.5" />

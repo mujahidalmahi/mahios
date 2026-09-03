@@ -111,7 +111,7 @@ export default function BootScreen({ bootLogs, settings, onBootComplete }: BootS
               <span className="w-2 h-2 rounded-full bg-[#00ff66] animate-pulse" />
             </div>
             <div className="text-xs text-[#00cc55] opacity-80">
-              {settings.boot_subtitle || 'Copyright (C) 1995-2026, Mahi Interactive Systems Inc.'}
+              {settings.boot_subtitle || 'Copyright (C) 2005-2026, Mahi Interactive Systems Inc.'}
             </div>
           </div>
           <div className="text-left sm:text-right">

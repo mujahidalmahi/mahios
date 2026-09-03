@@ -190,7 +190,7 @@ export default function Desktop({ data }: DesktopProps) {
       case 'EducationApp':
         return <EducationApp education={data.education} />;
       case 'TerminalApp':
-        return <TerminalApp commands={data.terminalCommands} />;
+        return <TerminalApp commands={data.terminalCommands} data={data} />;
       case 'GalleryApp':
         return <GalleryApp categories={data.galleryCategories} images={data.galleryImages} />;
       case 'AchievementsApp':

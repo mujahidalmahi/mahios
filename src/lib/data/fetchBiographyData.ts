@@ -93,7 +93,11 @@ export async function getBiographyData(): Promise<BiographyDatabaseData> {
     if (Array.isArray(rawApps)) {
       rawApps.forEach((a: DesktopApp) => {
         if (appsMap.has(a.app_id)) {
-          appsMap.set(a.app_id, { ...appsMap.get(a.app_id)!, ...a });
+          const updated = { ...appsMap.get(a.app_id)!, ...a };
+          if (a.app_id === 'terminal' && (a.title === 'MS-DOS Prompt' || a.title === 'MS_Dos Prompt')) {
+            updated.title = 'Terminal';
+          }
+          appsMap.set(a.app_id, updated);
         } else {
           appsMap.set(a.app_id, a);
         }
