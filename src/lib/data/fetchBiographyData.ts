@@ -1,10 +1,24 @@
-import { BiographyDatabaseData } from '@/types/database';
+import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { fallbackBiographyData } from './initialData';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 
+// Helper to safely extract data from a PromiseSettledResult
+function getResultData<T>(
+  result: PromiseSettledResult<{ data: T | null; error?: unknown }>,
+  fallback: T
+): T {
+  if (result.status === 'fulfilled' && result.value?.data) {
+    const data = result.value.data;
+    if (Array.isArray(data)) {
+      return (data.length > 0 ? data : fallback) as T;
+    }
+    return data;
+  }
+  return fallback;
+}
+
 export async function getBiographyData(): Promise<BiographyDatabaseData> {
   try {
-    // Check if Supabase credentials look real
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     if (!url || url.includes('placeholder')) {
       return fallbackBiographyData;
@@ -12,33 +26,8 @@ export async function getBiographyData(): Promise<BiographyDatabaseData> {
 
     const supabase = createAdminSupabaseClient();
 
-    const [
-      settingsRes,
-      appsRes,
-      aboutRes,
-      categoriesRes,
-      skillsRes,
-      experiencesRes,
-      educationRes,
-      projectsRes,
-      achievementsRes,
-      galleryCategoriesRes,
-      galleryImagesRes,
-      blogPostsRes,
-      bootLogsRes,
-      terminalCommandsRes,
-      resumeConfigRes,
-      philosophiesRes,
-      feedRes,
-      bioRes,
-      socialsRes,
-      ideologiesRes,
-      entertainmentRes,
-      aimsRes,
-      dreamsRes,
-      wishesRes,
-      favouritesRes,
-    ] = await Promise.all([
+    // Query all 26 tables in parallel with full fault tolerance
+    const results = await Promise.allSettled([
       supabase.from('site_settings').select('*').single(),
       supabase.from('desktop_apps').select('*').order('sort_order', { ascending: true }),
       supabase.from('about_content').select('*').single(),
@@ -66,32 +55,79 @@ export async function getBiographyData(): Promise<BiographyDatabaseData> {
       supabase.from('favourite_items').select('*').order('sort_order', { ascending: true }),
     ]);
 
+    const [
+      settingsRes,
+      appsRes,
+      aboutRes,
+      categoriesRes,
+      skillsRes,
+      experiencesRes,
+      educationRes,
+      projectsRes,
+      achievementsRes,
+      galleryCategoriesRes,
+      galleryImagesRes,
+      blogPostsRes,
+      bootLogsRes,
+      terminalCommandsRes,
+      resumeConfigRes,
+      philosophiesRes,
+      feedRes,
+      bioRes,
+      socialsRes,
+      ideologiesRes,
+      entertainmentRes,
+      aimsRes,
+      dreamsRes,
+      wishesRes,
+      favouritesRes,
+    ] = results;
+
+    const rawApps = getResultData(appsRes, fallbackBiographyData.apps);
+
+    // Merge Supabase apps with all 28 default apps to guarantee complete 28-app alignment
+    const appsMap = new Map<string, DesktopApp>();
+    // First seed with full 28 fallback apps
+    fallbackBiographyData.apps.forEach((a) => appsMap.set(a.app_id, a));
+    // Overlay any admin updates from Supabase
+    if (Array.isArray(rawApps)) {
+      rawApps.forEach((a: DesktopApp) => {
+        if (appsMap.has(a.app_id)) {
+          appsMap.set(a.app_id, { ...appsMap.get(a.app_id)!, ...a });
+        } else {
+          appsMap.set(a.app_id, a);
+        }
+      });
+    }
+
+    const mergedApps = Array.from(appsMap.values());
+
     return {
-      settings: settingsRes.data || fallbackBiographyData.settings,
-      apps: appsRes.data && appsRes.data.length > 0 ? appsRes.data : fallbackBiographyData.apps,
-      about: aboutRes.data || fallbackBiographyData.about,
-      categories: categoriesRes.data && categoriesRes.data.length > 0 ? categoriesRes.data : fallbackBiographyData.categories,
-      skills: skillsRes.data && skillsRes.data.length > 0 ? skillsRes.data : fallbackBiographyData.skills,
-      experiences: experiencesRes.data && experiencesRes.data.length > 0 ? experiencesRes.data : fallbackBiographyData.experiences,
-      education: educationRes.data && educationRes.data.length > 0 ? educationRes.data : fallbackBiographyData.education,
-      projects: projectsRes.data && projectsRes.data.length > 0 ? projectsRes.data : fallbackBiographyData.projects,
-      achievements: achievementsRes.data && achievementsRes.data.length > 0 ? achievementsRes.data : fallbackBiographyData.achievements,
-      galleryCategories: galleryCategoriesRes.data && galleryCategoriesRes.data.length > 0 ? galleryCategoriesRes.data : fallbackBiographyData.galleryCategories,
-      galleryImages: galleryImagesRes.data && galleryImagesRes.data.length > 0 ? galleryImagesRes.data : fallbackBiographyData.galleryImages,
-      blogPosts: blogPostsRes.data && blogPostsRes.data.length > 0 ? blogPostsRes.data : fallbackBiographyData.blogPosts,
-      bootLogs: bootLogsRes.data && bootLogsRes.data.length > 0 ? bootLogsRes.data : fallbackBiographyData.bootLogs,
-      terminalCommands: terminalCommandsRes.data && terminalCommandsRes.data.length > 0 ? terminalCommandsRes.data : fallbackBiographyData.terminalCommands,
-      resumeConfig: resumeConfigRes.data || fallbackBiographyData.resumeConfig,
-      philosophies: philosophiesRes.data && philosophiesRes.data.length > 0 ? philosophiesRes.data : fallbackBiographyData.philosophies,
-      feedPosts: feedRes.data && feedRes.data.length > 0 ? feedRes.data : fallbackBiographyData.feedPosts,
-      biographyTimeline: bioRes.data && bioRes.data.length > 0 ? bioRes.data : fallbackBiographyData.biographyTimeline,
-      socialLinks: socialsRes.data && socialsRes.data.length > 0 ? socialsRes.data : fallbackBiographyData.socialLinks,
-      ideologies: ideologiesRes.data && ideologiesRes.data.length > 0 ? ideologiesRes.data : fallbackBiographyData.ideologies,
-      entertainment: entertainmentRes.data && entertainmentRes.data.length > 0 ? entertainmentRes.data : fallbackBiographyData.entertainment,
-      aims: aimsRes.data && aimsRes.data.length > 0 ? aimsRes.data : fallbackBiographyData.aims,
-      dreams: dreamsRes.data && dreamsRes.data.length > 0 ? dreamsRes.data : fallbackBiographyData.dreams,
-      wishes: wishesRes.data && wishesRes.data.length > 0 ? wishesRes.data : fallbackBiographyData.wishes,
-      favourites: favouritesRes.data && favouritesRes.data.length > 0 ? favouritesRes.data : fallbackBiographyData.favourites,
+      settings: getResultData(settingsRes, fallbackBiographyData.settings),
+      apps: mergedApps,
+      about: getResultData(aboutRes, fallbackBiographyData.about),
+      categories: getResultData(categoriesRes, fallbackBiographyData.categories),
+      skills: getResultData(skillsRes, fallbackBiographyData.skills),
+      experiences: getResultData(experiencesRes, fallbackBiographyData.experiences),
+      education: getResultData(educationRes, fallbackBiographyData.education),
+      projects: getResultData(projectsRes, fallbackBiographyData.projects),
+      achievements: getResultData(achievementsRes, fallbackBiographyData.achievements),
+      galleryCategories: getResultData(galleryCategoriesRes, fallbackBiographyData.galleryCategories),
+      galleryImages: getResultData(galleryImagesRes, fallbackBiographyData.galleryImages),
+      blogPosts: getResultData(blogPostsRes, fallbackBiographyData.blogPosts),
+      bootLogs: getResultData(bootLogsRes, fallbackBiographyData.bootLogs),
+      terminalCommands: getResultData(terminalCommandsRes, fallbackBiographyData.terminalCommands),
+      resumeConfig: getResultData(resumeConfigRes, fallbackBiographyData.resumeConfig),
+      philosophies: getResultData(philosophiesRes, fallbackBiographyData.philosophies),
+      feedPosts: getResultData(feedRes, fallbackBiographyData.feedPosts),
+      biographyTimeline: getResultData(bioRes, fallbackBiographyData.biographyTimeline),
+      socialLinks: getResultData(socialsRes, fallbackBiographyData.socialLinks),
+      ideologies: getResultData(ideologiesRes, fallbackBiographyData.ideologies),
+      entertainment: getResultData(entertainmentRes, fallbackBiographyData.entertainment),
+      aims: getResultData(aimsRes, fallbackBiographyData.aims),
+      dreams: getResultData(dreamsRes, fallbackBiographyData.dreams),
+      wishes: getResultData(wishesRes, fallbackBiographyData.wishes),
+      favourites: getResultData(favouritesRes, fallbackBiographyData.favourites),
     };
   } catch (error) {
     console.warn('Failed to fetch from Supabase, falling back to local dataset:', error);

@@ -1,7 +1,7 @@
 {
   "name": "mahios",
   "version": "2.0.0",
-  "description": "A 1990s retro desktop OS biography & digital portfolio built with Next.js 16, React 19, Supabase, TipTap, Web Audio API, CRT shaders, and a dynamic Admin CMS Control Center.",
+  "description": "A 1990s retro desktop OS biography & portfolio engineered by Mujahid Al Mahi. Built with Next.js 16, React 19, Supabase PostgreSQL, and Tailwind CSS v4. Features authentic window multitasking, GPU CRT scanline shaders, Web Audio 8-bit chimes, MS-DOS terminal CLI, and a real-time Admin CMS Control Center with telemetry. Visit live at mujahidmahi.me!",
   "author": "Mujahid Al Mahi <mujahidmahi.official@gmail.com> (https://mujahidmahi.me)",
   "license": "MIT",
   "homepage": "https://mujahidmahi.me",

@@ -26,6 +26,9 @@ interface SystemStore {
   // Selection & UI
   selectedIconId: string | null;
   osStartTime: number;
+  activeAppProperties: import('@/types/database').DesktopApp | null;
+  desktopSortBy: 'name' | 'category' | 'order';
+  desktopIconSize: 'normal' | 'large' | 'small';
 
   // Actions
   toggleCrtMonitorFrame: () => void;
@@ -48,6 +51,9 @@ interface SystemStore {
   setTimeFormat: (format: TimeFormat) => void;
   setShowSeconds: (val: boolean) => void;
   setSelectedIconId: (id: string | null) => void;
+  setActiveAppProperties: (app: import('@/types/database').DesktopApp | null) => void;
+  setDesktopSortBy: (sort: 'name' | 'category' | 'order') => void;
+  setDesktopIconSize: (size: 'normal' | 'large' | 'small') => void;
 
   resetToDefaults: () => void;
   playSound: (soundType: 'click' | 'open' | 'close' | 'boot' | 'error' | 'success') => void;
@@ -76,6 +82,9 @@ export const useSystemStore = create<SystemStore>((set, get) => {
     // Selection & Telemetry
     selectedIconId: null,
     osStartTime: Date.now(),
+    activeAppProperties: null,
+    desktopSortBy: 'order',
+    desktopIconSize: 'normal',
 
     // Actions
     toggleCrtMonitorFrame: () => set((s) => ({ crtMonitorFrame: !s.crtMonitorFrame })),
@@ -98,6 +107,9 @@ export const useSystemStore = create<SystemStore>((set, get) => {
     setTimeFormat: (timeFormat) => set({ timeFormat }),
     setShowSeconds: (showSeconds) => set({ showSeconds }),
     setSelectedIconId: (selectedIconId) => set({ selectedIconId }),
+    setActiveAppProperties: (activeAppProperties) => set({ activeAppProperties }),
+    setDesktopSortBy: (desktopSortBy) => set({ desktopSortBy }),
+    setDesktopIconSize: (desktopIconSize) => set({ desktopIconSize }),
 
     resetToDefaults: () => set({
       crtMonitorFrame: false,

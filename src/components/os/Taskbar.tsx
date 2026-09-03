@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Monitor, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Volume2, VolumeX, Monitor, Clock, Database, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { DesktopApp } from '@/types/database';
@@ -17,15 +17,21 @@ export default function Taskbar({ apps }: TaskbarProps) {
     soundEnabled, toggleSound,
     crtMonitorFrame, toggleCrtMonitorFrame,
     timeFormat, showSeconds,
-    playSound
+    playSound, volume, setVolume
   } = useSystemStore();
 
   const [startMenuOpen, setStartMenuOpen] = useState(false);
+  const [clockPopoverOpen, setClockPopoverOpen] = useState(false);
+  const [volumePopoverOpen, setVolumePopoverOpen] = useState(false);
   const [timeString, setTimeString] = useState('');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  const trayRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
+      setCurrentDate(now);
       let hours = now.getHours();
       const minutes = now.getMinutes().toString().padStart(2, '0');
       const seconds = now.getSeconds().toString().padStart(2, '0');
@@ -47,6 +53,18 @@ export default function Taskbar({ apps }: TaskbarProps) {
     return () => clearInterval(interval);
   }, [timeFormat, showSeconds]);
 
+  // Handle outside click to close popovers
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (trayRef.current && !trayRef.current.contains(e.target as Node)) {
+        setClockPopoverOpen(false);
+        setVolumePopoverOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleWindowTabClick = (appId: string, isMinimized: boolean) => {
     playSound('click');
     if (activeWindowId === appId && !isMinimized) {
@@ -55,6 +73,18 @@ export default function Taskbar({ apps }: TaskbarProps) {
       focusWindow(appId);
     }
   };
+
+  // Calendar days calculation
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayDate = currentDate.getDate();
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   return (
     <div className="absolute bottom-0 left-0 right-0 h-8 retro-taskbar flex items-center justify-between px-1 z-40 select-none text-xs text-black font-sans">
@@ -111,37 +141,160 @@ export default function Taskbar({ apps }: TaskbarProps) {
         </div>
       </div>
 
-      {/* System Tray */}
-      <div className="retro-box-inset px-2 py-0.5 flex items-center gap-2.5 h-[24px] shrink-0 ml-1">
-        {/* CRT Frame Toggle */}
-        <button
-          type="button"
-          onClick={() => {
-            playSound('click');
-            toggleCrtMonitorFrame();
-          }}
-          className={`hover:opacity-75 cursor-pointer ${crtMonitorFrame ? 'text-blue-800 font-bold' : 'text-gray-600'}`}
-          title={crtMonitorFrame ? 'Switch to Full-Screen OS Mode' : 'Mount Vintage CRT Monitor Housing'}
-        >
-          <Monitor className="w-3.5 h-3.5" />
-        </button>
+      {/* System Tray & Interactive Clock/Volume */}
+      <div ref={trayRef} className="relative flex items-center shrink-0 ml-1">
+        {/* RETRO VOLUME SLIDER POPOVER */}
+        {volumePopoverOpen && (
+          <div className="absolute bottom-9 right-16 w-32 bg-[#c0c0c0] retro-box-outset p-2 shadow-2xl z-50 text-center font-sans space-y-2">
+            <div className="bg-[#000080] text-white text-[11px] font-bold py-0.5 px-1 flex items-center justify-between">
+              <span>Volume</span>
+              <button
+                type="button"
+                onClick={() => setVolumePopoverOpen(false)}
+                className="hover:text-gray-300"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
 
-        {/* Sound Toggle */}
-        <button
-          type="button"
-          onClick={() => {
-            toggleSound();
-            playSound('click');
-          }}
-          className="hover:opacity-75 cursor-pointer text-gray-700"
-          title={soundEnabled ? 'Mute 8-Bit Audio' : 'Unmute 8-Bit Audio'}
-        >
-          {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-blue-700" /> : <VolumeX className="w-3.5 h-3.5 text-red-600" />}
-        </button>
+            <div className="flex items-center justify-center h-28">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={soundEnabled ? volume : 0}
+                onChange={(e) => {
+                  setVolume(parseFloat(e.target.value));
+                  if (!soundEnabled) toggleSound();
+                }}
+                className="w-24 -rotate-90 origin-center accent-[#000080] cursor-pointer"
+              />
+            </div>
 
-        {/* Digital Clock */}
-        <div className="flex items-center gap-1 font-mono text-[11px] font-semibold text-black">
-          <span>{timeString || '12:00 PM'}</span>
+            <div className="pt-1 border-t border-gray-400">
+              <label className="flex items-center justify-center gap-1.5 text-[11px] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!soundEnabled}
+                  onChange={() => toggleSound()}
+                  className="rounded-none cursor-pointer"
+                />
+                <span>Mute</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* RETRO CALENDAR & CLOCK POPOVER */}
+        {clockPopoverOpen && (
+          <div className="absolute bottom-9 right-0 w-64 bg-[#c0c0c0] retro-box-outset p-2.5 shadow-2xl z-50 font-sans space-y-2">
+            <div className="bg-[#000080] text-white text-[11px] font-bold py-0.5 px-1.5 flex items-center justify-between">
+              <span>Date / Time Properties</span>
+              <button
+                type="button"
+                onClick={() => setClockPopoverOpen(false)}
+                className="hover:text-gray-300"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* Current Time Display */}
+            <div className="bg-white border-2 border-[#808080] retro-box-inset p-1.5 text-center font-mono text-sm font-bold text-[#000080]">
+              {timeString}
+            </div>
+
+            {/* Month & Year Header */}
+            <div className="flex items-center justify-between font-bold text-xs px-1">
+              <span>{monthNames[month]} {year}</span>
+            </div>
+
+            {/* Days Grid */}
+            <div className="bg-white border-2 border-[#808080] retro-box-inset p-1">
+              <div className="grid grid-cols-7 text-center font-bold text-[10px] text-gray-600 border-b border-gray-200 pb-0.5">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                  <span key={i}>{d}</span>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 text-center text-[10px] font-mono gap-y-0.5 pt-1">
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <span key={`empty-${i}`} />
+                ))}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const isToday = day === todayDate;
+                  return (
+                    <span
+                      key={day}
+                      className={`p-0.5 rounded-2xs ${
+                        isToday ? 'bg-[#000080] text-white font-bold' : 'text-black hover:bg-blue-100'
+                      }`}
+                    >
+                      {day}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="text-[10px] text-gray-600 font-mono text-center">
+              MahiOS Real-Time Clock Subsystem
+            </div>
+          </div>
+        )}
+
+        {/* System Tray Bar */}
+        <div className="retro-box-inset px-2 py-0.5 flex items-center gap-2.5 h-[24px]">
+          {/* Live Database Heartbeat */}
+          <div
+            className="flex items-center gap-1 cursor-help text-emerald-700"
+            title="Supabase PostgreSQL: Connected & Synchronized in Real-Time"
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
+
+          {/* CRT Frame Housing Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              toggleCrtMonitorFrame();
+            }}
+            className={`hover:opacity-75 cursor-pointer ${crtMonitorFrame ? 'text-blue-800 font-bold' : 'text-gray-600'}`}
+            title={crtMonitorFrame ? 'Switch to Full-Screen OS Mode' : 'Mount Vintage CRT Monitor Housing'}
+          >
+            <Monitor className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Volume Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              setVolumePopoverOpen(!volumePopoverOpen);
+              setClockPopoverOpen(false);
+            }}
+            className="hover:opacity-75 cursor-pointer text-gray-700"
+            title="Adjust Master Volume"
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-blue-700" /> : <VolumeX className="w-3.5 h-3.5 text-red-600" />}
+          </button>
+
+          {/* Digital Clock Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              setClockPopoverOpen(!clockPopoverOpen);
+              setVolumePopoverOpen(false);
+            }}
+            className="flex items-center gap-1 font-mono text-[11px] font-semibold text-black hover:bg-gray-200 px-1 rounded-2xs cursor-pointer"
+            title="Click to view Date & Calendar"
+          >
+            <span>{timeString || '12:00 PM'}</span>
+          </button>
         </div>
       </div>
     </div>

@@ -14,6 +14,11 @@ interface WindowStore {
   updateWindowPosition: (appId: string, position: { x: number; y: number }) => void;
   updateWindowSize: (appId: string, size: { width: number; height: number }) => void;
   closeAllWindows: () => void;
+  cascadeWindows: () => void;
+  tileHorizontally: () => void;
+  tileVertically: () => void;
+  minimizeAllWindows: () => void;
+  restoreAllWindows: () => void;
 }
 
 export const useWindowStore = create<WindowStore>((set, get) => ({
@@ -191,5 +196,107 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
 
   closeAllWindows: () => {
     set({ windows: [], activeWindowId: null });
+  },
+
+  cascadeWindows: () => {
+    const { windows, highestZIndex } = get();
+    const visible = windows.filter((w) => !w.isMinimized);
+    if (visible.length === 0) return;
+
+    let currentZ = highestZIndex;
+    const cascaded = windows.map((w) => {
+      const idx = visible.findIndex((v) => v.id === w.id);
+      if (idx !== -1) {
+        currentZ += 1;
+        return {
+          ...w,
+          isMaximized: false,
+          isMinimized: false,
+          zIndex: currentZ,
+          position: {
+            x: 40 + (idx * 28),
+            y: 40 + (idx * 28),
+          },
+          size: {
+            width: Math.min(w.size.width, 740),
+            height: Math.min(w.size.height, 520),
+          },
+        };
+      }
+      return w;
+    });
+
+    set({
+      windows: cascaded,
+      highestZIndex: currentZ,
+      activeWindowId: visible[visible.length - 1]?.appId || null,
+    });
+  },
+
+  tileHorizontally: () => {
+    const { windows } = get();
+    const visible = windows.filter((w) => !w.isMinimized);
+    if (visible.length === 0) return;
+
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const vh = typeof window !== 'undefined' ? window.innerHeight - 36 : 764;
+    const rowHeight = Math.floor(vh / visible.length);
+
+    const tiled = windows.map((w) => {
+      const idx = visible.findIndex((v) => v.id === w.id);
+      if (idx !== -1) {
+        return {
+          ...w,
+          isMaximized: false,
+          isMinimized: false,
+          position: { x: 10, y: 10 + (idx * rowHeight) },
+          size: { width: Math.max(320, vw - 20), height: Math.max(200, rowHeight - 12) },
+        };
+      }
+      return w;
+    });
+
+    set({ windows: tiled });
+  },
+
+  tileVertically: () => {
+    const { windows } = get();
+    const visible = windows.filter((w) => !w.isMinimized);
+    if (visible.length === 0) return;
+
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const vh = typeof window !== 'undefined' ? window.innerHeight - 36 : 764;
+    const colWidth = Math.floor(vw / visible.length);
+
+    const tiled = windows.map((w) => {
+      const idx = visible.findIndex((v) => v.id === w.id);
+      if (idx !== -1) {
+        return {
+          ...w,
+          isMaximized: false,
+          isMinimized: false,
+          position: { x: 10 + (idx * colWidth), y: 10 },
+          size: { width: Math.max(280, colWidth - 14), height: Math.max(280, vh - 20) },
+        };
+      }
+      return w;
+    });
+
+    set({ windows: tiled });
+  },
+
+  minimizeAllWindows: () => {
+    const { windows } = get();
+    set({
+      windows: windows.map((w) => ({ ...w, isMinimized: true })),
+      activeWindowId: null,
+    });
+  },
+
+  restoreAllWindows: () => {
+    const { windows } = get();
+    set({
+      windows: windows.map((w) => ({ ...w, isMinimized: false })),
+    });
   },
 }));
