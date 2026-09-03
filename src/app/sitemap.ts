@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((post) => post.is_published)
     .forEach((post) => {
       routes.push({
-        url: `${baseUrl}/?app=blog&post=${post.slug}`,
+        url: `${baseUrl}/?app=blog&amp;post=${encodeURIComponent(post.slug)}`,
         lastModified: post.updated_at ? new Date(post.updated_at) : (post.published_at ? new Date(post.published_at) : new Date()),
         changeFrequency: 'weekly',
         priority: 0.9,
@@ -49,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 4. Every Engineering Project Case Study Deep-Link
   (data.projects || []).forEach((proj) => {
     routes.push({
-      url: `${baseUrl}/?app=projects&id=${proj.slug}`,
+      url: `${baseUrl}/?app=projects&amp;id=${encodeURIComponent(proj.slug)}`,
       lastModified: proj.updated_at ? new Date(proj.updated_at) : new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
