@@ -43,6 +43,7 @@ import CalculatorApp from '@/components/apps/CalculatorApp';
 import NotepadApp from '@/components/apps/NotepadApp';
 import PaintApp from '@/components/apps/PaintApp';
 import TaskManagerApp from '@/components/apps/TaskManagerApp';
+import BlogPostReaderApp from '@/components/apps/BlogPostReaderApp';
 
 interface DesktopProps {
   data: BiographyDatabaseData;
@@ -177,7 +178,14 @@ export default function Desktop({ data }: DesktopProps) {
     if (selectionBox) setSelectionBox(null);
   };
 
-  const renderAppContent = (componentKey: string) => {
+  const renderAppContent = (componentKey: string, appId?: string) => {
+    // Separate dedicated blog post reader window
+    if (componentKey === 'BlogPostReaderApp' || appId?.startsWith('blog-')) {
+      const postId = appId ? appId.replace('blog-', '') : '';
+      const post = data.blogPosts.find((p) => p.id === postId || p.slug === postId) || data.blogPosts[0];
+      if (post) return <BlogPostReaderApp post={post} />;
+    }
+
     switch (componentKey) {
       case 'AboutApp':
         return <AboutApp about={data.about} />;
@@ -349,7 +357,7 @@ export default function Desktop({ data }: DesktopProps) {
       {/* Render All Open Draggable Windows */}
       {windows.map((win) => (
         <Window key={win.id} window={win}>
-          {renderAppContent(win.componentKey)}
+          {renderAppContent(win.componentKey, win.appId)}
         </Window>
       ))}
 

@@ -45,6 +45,7 @@ import CalculatorApp from '@/components/apps/CalculatorApp';
 import NotepadApp from '@/components/apps/NotepadApp';
 import PaintApp from '@/components/apps/PaintApp';
 import TaskManagerApp from '@/components/apps/TaskManagerApp';
+import BlogPostReaderApp from '@/components/apps/BlogPostReaderApp';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   User, Briefcase, FolderGit2, Cpu, GraduationCap,
@@ -175,6 +176,11 @@ export default function MobileShell({ data }: MobileShellProps) {
       case 'NotepadApp': return <NotepadApp />;
       case 'PaintApp': return <PaintApp />;
       case 'TaskManagerApp': return <TaskManagerApp />;
+      case 'BlogPostReaderApp': {
+        const postId = activeApp?.app_id?.replace('blog-', '') || '';
+        const post = data.blogPosts.find((p) => p.id === postId || p.slug === postId) || data.blogPosts[0];
+        return <BlogPostReaderApp post={post} />;
+      }
       default: return <AboutApp about={data.about} />;
     }
   };
