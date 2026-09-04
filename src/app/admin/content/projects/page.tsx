@@ -272,8 +272,8 @@ export default function ProjectsAdminPage() {
             className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all shadow-lg group"
           >
             <div>
-              {/* Thumbnail Media */}
-              <div className="h-44 bg-slate-950 border-b border-slate-800 relative overflow-hidden">
+              {/* Thumbnail Media (1:1 Ratio) */}
+              <div className="w-full aspect-square bg-slate-950 border-b border-slate-800 relative overflow-hidden">
                 {p.thumbnail_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -452,17 +452,18 @@ export default function ProjectsAdminPage() {
                 </label>
               </div>
 
-              {/* Thumbnail Media Uploader */}
+              {/* Thumbnail Media Uploader (1:1 Ratio) */}
               <div className="bg-slate-950 p-4 border border-slate-800 rounded-xl space-y-2">
                 <label className="font-semibold text-slate-300 uppercase flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-blue-400" />
-                  <span>Project Thumbnail & Screenshot</span>
+                  <span>Project Photo (1:1 Square Ratio)</span>
                 </label>
                 <MediaUploader
                   value={editingProject.thumbnail_url}
                   onChange={(url) => setEditingProject({ ...editingProject, thumbnail_url: url })}
-                  label="Upload Project Image"
+                  label="Upload Project Photo (1:1 Square Ratio)"
                   folder="mahios/projects"
+                  helperText="Upload a 1:1 square image (e.g. 600x600, 800x800). Displayed in 1:1 aspect ratio across MahiOS."
                 />
               </div>
 

@@ -246,8 +246,8 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
               className="p-2.5 sm:p-3 bg-[#f9fafb] retro-box-outset hover:bg-[#edf2f7] cursor-pointer group flex flex-col justify-between transition-all min-w-0"
             >
               <div className="space-y-2 min-w-0">
-                {/* Thumbnail */}
-                <div className="h-32 bg-gray-200 retro-box-inset overflow-hidden relative">
+                {/* Thumbnail (1:1 Ratio) */}
+                <div className="w-full aspect-square bg-gray-200 retro-box-inset overflow-hidden relative">
                   {p.thumbnail_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -376,9 +376,11 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
             {/* Modal Sunken Content */}
             <div className="retro-box-inset bg-white p-3 sm:p-5 m-1 overflow-y-auto space-y-3 sm:space-y-4 flex-1 text-xs break-words">
               {selectedProject.thumbnail_url && (
-                <div className="h-40 sm:h-52 bg-gray-100 rounded-2xs overflow-hidden border border-gray-300">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={selectedProject.thumbnail_url} alt={selectedProject.title} className="w-full h-full object-cover" />
+                <div className="flex justify-center">
+                  <div className="w-48 h-48 sm:w-60 sm:h-60 aspect-square bg-gray-100 rounded-2xs overflow-hidden border border-gray-300 retro-box-inset">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={selectedProject.thumbnail_url} alt={selectedProject.title} className="w-full h-full object-cover" />
+                  </div>
                 </div>
               )}
 
