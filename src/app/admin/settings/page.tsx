@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Settings, Save, CheckCircle2, AlertCircle, Terminal, Globe, User,
   Image as ImageIcon, Sparkles, Mail, Phone, MapPin, Hash,
@@ -22,7 +22,15 @@ export default function SiteSettingsPage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [newKeyword, setNewKeyword] = useState('');
 
-  const isDirty = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+  const isDirty = useMemo(() => {
+    const normalize = (s: SiteSettings) => {
+      const copy: Record<string, any> = { ...s };
+      delete copy.updated_at;
+      return copy;
+    };
+    return JSON.stringify(normalize(settings)) !== JSON.stringify(normalize(originalSettings));
+  }, [settings, originalSettings]);
+
   useUnsavedChanges(isDirty);
 
   useEffect(() => {
@@ -51,7 +59,9 @@ export default function SiteSettingsPage() {
         data: updated,
       });
       if (!res.success) throw new Error(res.error);
-      setOriginalSettings(updated);
+      const saved = (res.data as SiteSettings) || updated;
+      setSettings(saved);
+      setOriginalSettings(saved);
       setFeedback({ type: 'success', text: 'All site settings saved successfully!' });
     } catch (err) {
       setFeedback({ type: 'error', text: `Save failed: ${err instanceof Error ? err.message : 'Unknown error'}` });

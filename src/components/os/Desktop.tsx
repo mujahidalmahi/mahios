@@ -226,7 +226,7 @@ export default function Desktop({ data }: DesktopProps) {
       case 'BlogApp':
         return <BlogApp posts={data.blogPosts} />;
       case 'ResumeApp':
-        return <ResumeApp resume={data.resumeConfig} />;
+        return <ResumeApp resume={data.resumeConfig} data={data} />;
       case 'ContactApp':
         return <ContactApp />;
       case 'SettingsApp':

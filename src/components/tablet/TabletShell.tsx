@@ -193,7 +193,7 @@ export default function TabletShell({ data }: TabletShellProps) {
       case 'GalleryApp': return <GalleryApp categories={data.galleryCategories} images={data.galleryImages} />;
       case 'AchievementsApp': return <AchievementsApp achievements={data.achievements} />;
       case 'BlogApp': return <BlogApp posts={data.blogPosts} />;
-      case 'ResumeApp': return <ResumeApp resume={data.resumeConfig} />;
+      case 'ResumeApp': return <ResumeApp resume={data.resumeConfig} data={data} />;
       case 'ContactApp': return <ContactApp />;
       case 'SettingsApp': return <SettingsApp />;
       case 'PhilosophyApp': return <PhilosophyApp philosophies={data.philosophies} />;

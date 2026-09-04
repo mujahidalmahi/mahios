@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FileBadge, Save, CheckCircle2, AlertCircle, Download,
-  Upload, ExternalLink, Loader2, Copy, Check, Calendar, FileText, Sparkles
+  Upload, ExternalLink, Loader2, Copy, Check, Calendar, FileText, Sparkles,
+  Bold, Italic, List, ListOrdered, Link2, Code, Quote, Eye
 } from 'lucide-react';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { SkeletonFormPage } from '@/components/admin/SkeletonLoader';
@@ -12,6 +13,7 @@ import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
 import { ResumeConfig } from '@/types/database';
 import { fallbackBiographyData } from '@/lib/data/initialData';
+import { renderMarkdownToHtml } from '@/lib/utils/markdownRenderer';
 
 export default function ResumeAdminPage() {
   const [config, setConfig] = useState<ResumeConfig>(fallbackBiographyData.resumeConfig);
@@ -19,9 +21,23 @@ export default function ResumeAdminPage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [previewTab, setPreviewTab] = useState<'rendered' | 'raw'>('rendered');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const isDirty = JSON.stringify(config) !== JSON.stringify(original);
+  // Normalize fields to prevent timestamp discrepancies from falsely triggering "unsaved changes"
+  const isDirty = useMemo(() => {
+    const normalize = (c: ResumeConfig) => ({
+      pdf_url: (c.pdf_url || '').trim(),
+      download_filename: (c.download_filename || '').trim(),
+      last_updated_date: (c.last_updated_date || '').trim(),
+      summary_markdown: (c.summary_markdown || '').trim(),
+      is_active: Boolean(c.is_active),
+      preview_image_url: (c.preview_image_url || '').trim(),
+    });
+    return JSON.stringify(normalize(config)) !== JSON.stringify(normalize(original));
+  }, [config, original]);
+
   useUnsavedChanges(isDirty);
 
   useEffect(() => {
@@ -56,7 +72,11 @@ export default function ResumeAdminPage() {
         data: updated,
       });
       if (!res.success) throw new Error(res.error);
-      setOriginal(updated);
+
+      // Keep both current config and original in exact lockstep
+      const savedRecord = (res.data as ResumeConfig) || updated;
+      setConfig(savedRecord);
+      setOriginal(savedRecord);
       setFeedback({ type: 'success', text: 'Resume configuration synchronized successfully with Supabase!' });
     } catch (err) {
       setFeedback({ type: 'error', text: `Save failed: ${err instanceof Error ? err.message : 'Unknown error'}` });
@@ -71,6 +91,24 @@ export default function ResumeAdminPage() {
     navigator.clipboard.writeText(config.summary_markdown);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Helper to insert markdown syntax at current cursor position
+  const insertMarkdown = (prefix: string, suffix: string = '') => {
+    if (!textareaRef.current) return;
+    const el = textareaRef.current;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const currentText = config.summary_markdown || '';
+    const selectedText = currentText.substring(start, end);
+    const replacement = `${prefix}${selectedText || 'text'}${suffix}`;
+    const nextValue = currentText.substring(0, start) + replacement + currentText.substring(end);
+    setConfig({ ...config, summary_markdown: nextValue });
+
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + prefix.length, start + prefix.length + (selectedText.length || 4));
+    }, 0);
   };
 
   if (loading) return <SkeletonFormPage />;
@@ -250,28 +288,146 @@ export default function ResumeAdminPage() {
             </div>
 
             <p className="text-[11px] text-slate-500">
-              This summary powers the <strong>Copy Text</strong> ATS feature in the desktop Resume application.
+              This summary supports full Markdown formatting (headings, bold, lists, links, code). It powers both the formatted CV preview and the <strong>Copy Text</strong> ATS feature in the desktop Resume application.
             </p>
 
-            <textarea
-              rows={8}
-              value={config.summary_markdown}
-              onChange={(e) => setConfig({ ...config, summary_markdown: e.target.value })}
-              placeholder="Paste plain-text ATS summary or markdown profile..."
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs font-mono text-white focus:outline-none focus:border-blue-500 resize-y leading-relaxed"
-            />
+            {/* Markdown Toolbar */}
+            <div className="space-y-0">
+              <div className="flex flex-wrap items-center gap-1 p-1.5 bg-slate-950 border border-slate-800 rounded-t-lg border-b-0 text-slate-400">
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('**', '**')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer font-bold flex items-center gap-1"
+                  title="Bold (**text**)"
+                >
+                  <Bold className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('*', '*')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer italic"
+                  title="Italic (*text*)"
+                >
+                  <Italic className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('### ')}
+                  className="px-1.5 py-0.5 hover:text-white hover:bg-slate-800 rounded text-[11px] cursor-pointer font-bold font-mono"
+                  title="Heading 3 (### Heading)"
+                >
+                  H3
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('#### ')}
+                  className="px-1.5 py-0.5 hover:text-white hover:bg-slate-800 rounded text-[11px] cursor-pointer font-bold font-mono"
+                  title="Heading 4 (#### Subheading)"
+                >
+                  H4
+                </button>
+                <span className="h-3.5 w-px bg-slate-800 mx-0.5" />
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('- ')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer"
+                  title="Bullet List (- Item)"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('1. ')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer"
+                  title="Numbered List (1. Item)"
+                >
+                  <ListOrdered className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('[', '](https://...)')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer"
+                  title="Hyperlink ([title](url))"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('`', '`')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer"
+                  title="Inline Code (`code`)"
+                >
+                  <Code className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdown('> ')}
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer"
+                  title="Blockquote (> Quote)"
+                >
+                  <Quote className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <textarea
+                ref={textareaRef}
+                rows={9}
+                value={config.summary_markdown}
+                onChange={(e) => setConfig({ ...config, summary_markdown: e.target.value })}
+                placeholder="Paste plain-text ATS summary or markdown profile (e.g. ### Profile, **bold**, - bullet)..."
+                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-b-lg rounded-t-none text-xs font-mono text-white focus:outline-none focus:border-blue-500 resize-y leading-relaxed"
+              />
+            </div>
 
             {/* Live ATS Preview Box */}
             <div className="pt-2 border-t border-slate-800 space-y-2">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-cyan-400" />
-                Live Preview (What Visitors See & Copy)
-              </span>
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 font-sans leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
-                {config.summary_markdown || (
-                  <span className="text-slate-600 italic">Summary is currently empty. Enter details above.</span>
-                )}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  Live Preview (What Visitors See & Copy)
+                </span>
+                <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTab('rendered')}
+                    className={`px-2 py-0.5 text-[10px] rounded cursor-pointer transition-colors ${
+                      previewTab === 'rendered'
+                        ? 'bg-blue-600 text-white font-semibold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Markdown Rendered
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTab('raw')}
+                    className={`px-2 py-0.5 text-[10px] rounded cursor-pointer transition-colors ${
+                      previewTab === 'raw'
+                        ? 'bg-blue-600 text-white font-semibold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Raw ATS Text
+                  </button>
+                </div>
               </div>
+
+              {previewTab === 'rendered' ? (
+                <div
+                  className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 font-sans leading-relaxed max-h-60 overflow-y-auto space-y-2"
+                  dangerouslySetInnerHTML={{
+                    __html: config.summary_markdown
+                      ? renderMarkdownToHtml(config.summary_markdown, 'dark')
+                      : '<span class="text-slate-600 italic">Summary is currently empty. Enter markdown details above.</span>',
+                  }}
+                />
+              ) : (
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 font-mono leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto">
+                  {config.summary_markdown || (
+                    <span className="text-slate-600 italic">Summary is currently empty. Enter details above.</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

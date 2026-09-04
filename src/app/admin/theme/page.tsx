@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Palette, Save, CheckCircle2, AlertCircle, Monitor, Sparkles,
   Volume2, VolumeX, Eye, Sliders, RefreshCw, Loader2
@@ -39,7 +39,15 @@ export default function ThemeSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const isDirty = JSON.stringify(settings) !== JSON.stringify(original);
+  const isDirty = useMemo(() => {
+    const normalize = (s: SiteSettings) => {
+      const copy: Record<string, any> = { ...s };
+      delete copy.updated_at;
+      return copy;
+    };
+    return JSON.stringify(normalize(settings)) !== JSON.stringify(normalize(original));
+  }, [settings, original]);
+
   useUnsavedChanges(isDirty);
 
   useEffect(() => {
@@ -72,7 +80,9 @@ export default function ThemeSettingsPage() {
         data: updated,
       });
       if (!res.success) throw new Error(res.error);
-      setOriginal(updated);
+      const saved = (res.data as SiteSettings) || updated;
+      setSettings(saved);
+      setOriginal(saved);
       setFeedback({ type: 'success', text: 'Theme & CRT effects updated successfully across MahiOS!' });
     } catch (err) {
       setFeedback({ type: 'error', text: `Failed to save: ${err instanceof Error ? err.message : 'Database error'}` });

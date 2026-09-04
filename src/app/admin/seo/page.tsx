@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search, Save, CheckCircle2, AlertCircle, Globe, Image as ImageIcon,
   Share2, Hash, Eye, Loader2, Sparkles, ExternalLink, RefreshCw,
@@ -24,7 +24,15 @@ export default function SeoSettingsPage() {
   const [showPreview, setShowPreview] = useState<'serp' | 'og' | 'twitter'>('serp');
   const [newKeyword, setNewKeyword] = useState('');
 
-  const isDirty = JSON.stringify(settings) !== JSON.stringify(original);
+  const isDirty = useMemo(() => {
+    const normalize = (s: SiteSettings) => {
+      const copy: Record<string, any> = { ...s };
+      delete copy.updated_at;
+      return copy;
+    };
+    return JSON.stringify(normalize(settings)) !== JSON.stringify(normalize(original));
+  }, [settings, original]);
+
   useUnsavedChanges(isDirty);
 
   useEffect(() => {
@@ -57,7 +65,9 @@ export default function SeoSettingsPage() {
       });
 
       if (!res.success) throw new Error(res.error);
-      setOriginal(updated);
+      const saved = (res.data as SiteSettings) || updated;
+      setSettings(saved);
+      setOriginal(saved);
       setFeedback({ type: 'success', text: 'SEO settings saved! Changes and sitemap take effect immediately.' });
     } catch (err) {
       setFeedback({ type: 'error', text: `Save failed: ${err instanceof Error ? err.message : 'Unknown error'}` });

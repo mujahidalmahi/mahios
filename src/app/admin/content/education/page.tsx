@@ -51,8 +51,9 @@ export default function EducationAdminPage() {
 
   const openNew = () => {
     setIsNew(true);
+    const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `edu-${Date.now()}`;
     setEditingEdu({
-      id: `edu-${Date.now()}`,
+      id: newId,
       institution: '',
       degree: 'Bachelor of Science',
       field_of_study: 'Computer Science & Engineering',
@@ -93,25 +94,38 @@ export default function EducationAdminPage() {
     if (!editingEdu) return;
     setSaving(true);
 
-    if (isNew) {
-      setEducationList((prev) => [...prev, editingEdu]);
+    const isCreating = isNew;
+    const savedRecord = { ...editingEdu };
+
+    if (isCreating) {
+      setEducationList((prev) => [...prev, savedRecord]);
     } else {
-      setEducationList((prev) => prev.map((e) => (e.id === editingEdu.id ? editingEdu : e)));
+      setEducationList((prev) => prev.map((e) => (e.id === savedRecord.id ? savedRecord : e)));
     }
 
     try {
-      await adminMutate<Education>({
+      const res = await adminMutate<Education>({
         table: 'education',
-        action: 'upsert',
-        data: editingEdu,
+        action: isCreating ? 'insert' : 'update',
+        match: isCreating ? undefined : { id: savedRecord.id },
+        data: savedRecord,
       });
+
+      if (res.success && res.data) {
+        const dbRecord = (Array.isArray(res.data) ? res.data[0] : res.data) as Education;
+        if (dbRecord && dbRecord.id) {
+          setEducationList((prev) =>
+            prev.map((e) => (e.id === savedRecord.id ? dbRecord : e))
+          );
+        }
+      }
     } catch {
       // Local fallback
     }
 
     setEditingEdu(null);
     setSaving(false);
-    setFeedback({ type: 'success', text: `Education at "${editingEdu.institution}" saved successfully!` });
+    setFeedback({ type: 'success', text: `Education at "${savedRecord.institution}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };
 
