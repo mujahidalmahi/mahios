@@ -13,6 +13,7 @@ import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { resolveDeepLink } from '@/lib/utils/deepLinks';
+import { getWallpaperStyle } from '@/lib/utils/wallpaper';
 
 // All 28 Applications
 import AboutApp from '@/components/apps/AboutApp';
@@ -227,7 +228,10 @@ export default function TabletShell({ data }: TabletShellProps) {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#008080] text-black font-sans flex flex-col justify-between select-none overflow-hidden p-2">
+    <div
+      style={getWallpaperStyle(data.settings?.desktop_background_color)}
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] text-black font-sans flex flex-col justify-between select-none overflow-hidden p-2"
+    >
       {/* Background Vintage Dither Pattern */}
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:4px_4px]" />
 

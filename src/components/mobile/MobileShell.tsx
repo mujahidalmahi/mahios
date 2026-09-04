@@ -14,6 +14,7 @@ import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { useWindowStore } from '@/stores/windowStore';
 import { resolveDeepLink } from '@/lib/utils/deepLinks';
+import { getWallpaperStyle } from '@/lib/utils/wallpaper';
 
 // All 28 Applications
 import AboutApp from '@/components/apps/AboutApp';
@@ -266,8 +267,8 @@ export default function MobileShell({ data }: MobileShellProps) {
   return (
     <div
       onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] bg-[#008080] text-black font-sans flex flex-col justify-between select-none overflow-hidden"
+      style={getWallpaperStyle(data.settings?.desktop_background_color)}
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] text-black font-sans flex flex-col justify-between select-none overflow-hidden"
     >
       {/* ========================================================= */}
       {/* 1. RETRO POCKET PC TOP STATUS BAR                         */}

@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 w-full h-[100dvh] bg-black text-[#00ff66] font-mono p-6 sm:p-12 flex flex-col justify-between select-none overflow-hidden crt-scanlines z-[9999]">
+    <div className="fixed inset-0 w-full h-[100dvh] bg-black text-[#00ff66] font-mono p-6 sm:p-12 flex flex-col justify-between select-none overflow-hidden z-[9999]">
       <div className="space-y-2 text-xs sm:text-sm max-w-3xl">
         <div className="text-white font-bold text-sm sm:text-base border-b border-[#00ff66]/40 pb-1 flex justify-between items-center">
           <span>MAHI QUANTUM BIOS v4.08 (C) 2005-2026</span>

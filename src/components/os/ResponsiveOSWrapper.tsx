@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { BiographyDatabaseData } from '@/types/database';
 import { ViewportMode } from '@/types/os';
 import { useBootStore } from '@/stores/bootStore';
-import { useSystemStore } from '@/stores/systemStore';
-import CRTMonitor from './CRTMonitor';
 import Desktop from './Desktop';
 import MobileShell from '@/components/mobile/MobileShell';
 import TabletShell from '@/components/tablet/TabletShell';
@@ -19,7 +17,6 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
   const [viewportMode, setViewportMode] = useState<ViewportMode>('crt-desktop');
   const [mounted, setMounted] = useState(false);
   const { isBooting, finishBoot } = useBootStore();
-  const { crtMonitorFrame, crtScanlines, crtCurvature, crtFlicker } = useSystemStore();
 
   useEffect(() => {
     setMounted(true);

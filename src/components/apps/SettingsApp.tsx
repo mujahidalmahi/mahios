@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Settings, Monitor, Volume2, Palette,
   Clock, Cpu, ShieldCheck, RotateCcw,
-  Sparkles, CheckCircle2, Sliders, MousePointer
+  Sparkles, CheckCircle2, Sliders, MousePointer,
+  Image as ImageIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSystemStore, CursorStyle, TimeFormat } from '@/stores/systemStore';
+import { getWallpaperStyle, isImageWallpaper } from '@/lib/utils/wallpaper';
 
 const wallpaperPresets = [
   { name: 'Windows 95 Teal', hex: '#008080' },
@@ -20,15 +22,34 @@ const wallpaperPresets = [
   { name: 'Forest Moss', hex: '#13391b' },
 ];
 
+const imageWallpaperPresets = [
+  {
+    name: 'Windows 95 Bliss & Clouds',
+    url: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    name: 'Cyberpunk Grid',
+    url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    name: 'Retro Synthwave Sun',
+    url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    name: 'Deep Space Nebula',
+    url: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1920&auto=format&fit=crop',
+  },
+  {
+    name: 'Dark Minimal Architecture',
+    url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop',
+  },
+];
+
 export default function SettingsApp() {
   const [activeTab, setActiveTab] = useState<'display' | 'audio' | 'time' | 'system' | 'admin'>('display');
   const [uptimeStr, setUptimeStr] = useState('0s');
 
   const {
-    crtMonitorFrame, toggleCrtMonitorFrame, setCrtMonitorFrame,
-    crtScanlines, toggleScanlines,
-    crtCurvature, toggleCurvature,
-    crtFlicker, toggleFlicker,
     soundEnabled, toggleSound,
     volume, setVolume,
     desktopBgColor, setDesktopBgColor,
@@ -39,6 +60,11 @@ export default function SettingsApp() {
     osStartTime, resetToDefaults,
     playSound
   } = useSystemStore();
+
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  const [wallpaperType, setWallpaperType] = useState<'color' | 'image'>(
+    isImageWallpaper(desktopBgColor) ? 'image' : 'color'
+  );
 
   useEffect(() => {
     const updateUptime = () => {
@@ -91,8 +117,8 @@ export default function SettingsApp() {
           }`}
         >
           <span className="flex items-center gap-1.5">
-            <Monitor className="w-3.5 h-3.5" />
-            <span>Display & CRT</span>
+            <Palette className="w-3.5 h-3.5" />
+            <span>Wallpaper & Display</span>
           </span>
         </button>
 
@@ -159,122 +185,160 @@ export default function SettingsApp() {
 
       {/* Tab Body Contents */}
       <div className="flex-1 min-h-0 overflow-y-auto p-3 bg-[#f9fafb] retro-box-inset space-y-4">
-        {/* TAB 1: DISPLAY & APPEARANCE */}
+        {/* TAB 1: WALLPAPER & APPEARANCE */}
         {activeTab === 'display' && (
           <div className="space-y-4">
-            {/* Display Mode Selection */}
-            <div className="p-3 bg-white retro-box-inset space-y-2">
-              <h3 className="font-bold text-xs text-[#000080] uppercase flex items-center gap-1.5">
-                <Monitor className="w-4 h-4 text-blue-700" />
-                <span>Primary Screen Enclosure Mode</span>
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <label
-                  onClick={() => { playSound('click'); setCrtMonitorFrame(false); }}
-                  className={`p-2.5 flex items-start gap-2.5 border cursor-pointer ${
-                    !crtMonitorFrame ? 'border-[#000080] bg-blue-50/60 font-bold' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="displayMode"
-                    checked={!crtMonitorFrame}
-                    onChange={() => {}}
-                    className="mt-0.5"
-                  />
-                  <div>
-                    <div className="text-xs text-gray-900">Native Full-Screen Web OS (Default)</div>
-                    <div className="text-[10px] text-gray-500 font-normal">Sleek, edge-to-edge desktop experience optimized for high-res monitors.</div>
-                  </div>
-                </label>
-
-                <label
-                  onClick={() => { playSound('click'); setCrtMonitorFrame(true); }}
-                  className={`p-2.5 flex items-start gap-2.5 border cursor-pointer ${
-                    crtMonitorFrame ? 'border-[#000080] bg-blue-50/60 font-bold' : 'border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="displayMode"
-                    checked={crtMonitorFrame}
-                    onChange={() => {}}
-                    className="mt-0.5"
-                  />
-                  <div>
-                    <div className="text-xs text-gray-900">Vintage 90s CRT Monitor Housing</div>
-                    <div className="text-[10px] text-gray-500 font-normal">Authentic physical beige plastic monitor casing with degauss buttons & green LED.</div>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            {/* CRT Tube Visual Effects */}
-            <div className="p-3 bg-white retro-box-inset space-y-2">
-              <h3 className="font-bold text-xs text-[#000080] uppercase">Cathode Ray Tube Optical Filters</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
-                  <span>Horizontal Scanlines</span>
-                  <input
-                    type="checkbox"
-                    checked={crtScanlines}
-                    onChange={() => { playSound('click'); toggleScanlines(); }}
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
-                  <span>3D Curved Glass Distortion</span>
-                  <input
-                    type="checkbox"
-                    checked={crtCurvature}
-                    onChange={() => { playSound('click'); toggleCurvature(); }}
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
-                  <span>Cathode Power Flicker</span>
-                  <input
-                    type="checkbox"
-                    checked={crtFlicker}
-                    onChange={() => { playSound('click'); toggleFlicker(); }}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* Wallpaper Color Palette */}
-            <div className="p-3 bg-white retro-box-inset space-y-2">
+            {/* Desktop Wallpaper Studio */}
+            <div className="p-3 bg-white retro-box-inset space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-xs text-[#000080] uppercase flex items-center gap-1.5">
                   <Palette className="w-4 h-4 text-blue-700" />
-                  <span>Desktop Background Color</span>
+                  <span>Desktop Wallpaper & Theme</span>
                 </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono">Custom Color:</span>
-                  <input
-                    type="color"
-                    value={desktopBgColor}
-                    onChange={(e) => setDesktopBgColor(e.target.value)}
-                    className="w-6 h-6 border border-gray-400 p-0 cursor-pointer"
-                  />
+                <span className="text-[10px] text-gray-500 font-mono">
+                  {isImageWallpaper(desktopBgColor) ? 'Custom Image Mode' : 'Solid Color Mode'}
+                </span>
+              </div>
+
+              {/* Mode Switcher */}
+              <div className="flex gap-1 border-b border-gray-200 pb-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('click');
+                    setWallpaperType('color');
+                    if (isImageWallpaper(desktopBgColor)) {
+                      setDesktopBgColor('#008080');
+                    }
+                  }}
+                  className={`retro-btn px-3 py-1 flex items-center gap-1.5 cursor-pointer ${
+                    wallpaperType === 'color' ? 'retro-btn-pressed font-bold text-[#000080]' : ''
+                  }`}
+                >
+                  <Palette className="w-3.5 h-3.5" />
+                  <span>Solid Color</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('click');
+                    setWallpaperType('image');
+                    if (!isImageWallpaper(desktopBgColor)) {
+                      setDesktopBgColor(imageWallpaperPresets[0].url);
+                    }
+                  }}
+                  className={`retro-btn px-3 py-1 flex items-center gap-1.5 cursor-pointer ${
+                    wallpaperType === 'image' ? 'retro-btn-pressed font-bold text-[#000080]' : ''
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>Image Wallpaper</span>
+                </button>
+              </div>
+
+              {/* Preview Box */}
+              <div className="p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs flex items-center gap-3">
+                <div
+                  className="w-16 h-10 border-2 border-black/40 rounded-2xs shadow-inner shrink-0"
+                  style={getWallpaperStyle(desktopBgColor)}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-bold text-gray-800 truncate">
+                    Active Background: {isImageWallpaper(desktopBgColor) ? 'Image Wallpaper' : desktopBgColor}
+                  </div>
+                  <div className="text-[10px] text-gray-500 truncate font-mono">
+                    {isImageWallpaper(desktopBgColor) ? desktopBgColor : '90s High-Contrast Desktop Canvas'}
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                {wallpaperPresets.map((p) => (
-                  <button
-                    key={p.hex}
-                    type="button"
-                    onClick={() => { playSound('click'); setDesktopBgColor(p.hex); }}
-                    className={`retro-btn px-2 py-1.5 flex items-center gap-2 text-xs text-left cursor-pointer ${
-                      desktopBgColor.toLowerCase() === p.hex.toLowerCase() ? 'retro-btn-pressed font-bold' : ''
-                    }`}
-                  >
-                    <span className="w-4 h-4 border border-black shrink-0 rounded-2xs shadow-2xs" style={{ backgroundColor: p.hex }} />
-                    <span className="truncate">{p.name}</span>
-                  </button>
-                ))}
-              </div>
+              {/* Solid Color Options */}
+              {wallpaperType === 'color' && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-gray-700">Palette Presets:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono">Custom Color:</span>
+                      <input
+                        type="color"
+                        value={isImageWallpaper(desktopBgColor) ? '#008080' : desktopBgColor}
+                        onChange={(e) => setDesktopBgColor(e.target.value)}
+                        className="w-6 h-6 border border-gray-400 p-0 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {wallpaperPresets.map((p) => (
+                      <button
+                        key={p.hex}
+                        type="button"
+                        onClick={() => { playSound('click'); setDesktopBgColor(p.hex); }}
+                        className={`retro-btn px-2 py-1.5 flex items-center gap-2 text-xs text-left cursor-pointer ${
+                          desktopBgColor.toLowerCase() === p.hex.toLowerCase() ? 'retro-btn-pressed font-bold' : ''
+                        }`}
+                      >
+                        <span className="w-4 h-4 border border-black shrink-0 rounded-2xs shadow-2xs" style={{ backgroundColor: p.hex }} />
+                        <span className="truncate">{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Image Wallpaper Options */}
+              {wallpaperType === 'image' && (
+                <div className="space-y-3 pt-1">
+                  <div>
+                    <span className="text-[11px] font-semibold text-gray-700">Curated Aesthetic Presets:</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1.5">
+                      {imageWallpaperPresets.map((wp) => (
+                        <button
+                          key={wp.name}
+                          type="button"
+                          onClick={() => { playSound('click'); setDesktopBgColor(wp.url); }}
+                          className={`p-2 flex items-center gap-2 border text-left cursor-pointer transition-all rounded-2xs ${
+                            desktopBgColor === wp.url ? 'border-[#000080] bg-blue-50/80 font-bold' : 'border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div
+                            className="w-10 h-7 border border-black/30 rounded-2xs shrink-0 bg-cover bg-center"
+                            style={{ backgroundImage: `url("${wp.url}")` }}
+                          />
+                          <span className="text-[11px] truncate text-gray-800">{wp.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom URL Input */}
+                  <div className="pt-2 border-t border-gray-200">
+                    <label className="text-[11px] font-semibold text-gray-700 block mb-1">
+                      Direct Image URL:
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="https://example.com/wallpaper.jpg"
+                        value={customImageUrl}
+                        onChange={(e) => setCustomImageUrl(e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border border-gray-400 font-mono bg-white rounded-2xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customImageUrl.trim()) {
+                            playSound('click');
+                            setDesktopBgColor(customImageUrl.trim());
+                          }
+                        }}
+                        className="retro-btn px-3 py-1 font-bold text-xs cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Wallpaper Pattern */}

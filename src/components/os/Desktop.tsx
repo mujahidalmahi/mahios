@@ -10,6 +10,7 @@ import Taskbar from './Taskbar';
 import ContextMenu from './ContextMenu';
 import AppPropertiesDialog from './AppPropertiesDialog';
 import { resolveDeepLink } from '@/lib/utils/deepLinks';
+import { getWallpaperStyle } from '@/lib/utils/wallpaper';
 
 // Import All 28 Application Views
 import AboutApp from '@/components/apps/AboutApp';
@@ -290,7 +291,7 @@ export default function Desktop({ data }: DesktopProps) {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      style={{ backgroundColor: desktopBgColor }}
+      style={getWallpaperStyle(desktopBgColor)}
       className={`w-full h-full relative overflow-hidden select-none ${getCursorClass()}`}
     >
       {/* 90s Wallpaper Dither Pattern */}

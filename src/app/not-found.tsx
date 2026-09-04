@@ -36,7 +36,7 @@ export default function NotFoundPage() {
   }, [playSound, router]);
 
   return (
-    <div className="fixed inset-0 w-full h-[100dvh] bg-[#000080] text-white font-mono flex flex-col justify-between p-6 sm:p-12 select-none overflow-hidden crt-scanlines z-[9999]">
+    <div className="fixed inset-0 w-full h-[100dvh] bg-[#000080] text-white font-mono flex flex-col justify-between p-6 sm:p-12 select-none overflow-hidden z-[9999]">
       {/* Top Banner */}
       <div className="space-y-4 max-w-4xl mx-auto w-full">
         <div className="inline-block bg-[#c0c0c0] text-[#000080] font-bold px-3 py-1 text-sm sm:text-base">

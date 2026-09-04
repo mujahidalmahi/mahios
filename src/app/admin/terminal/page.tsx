@@ -44,7 +44,7 @@ export default function TerminalAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingItem({
-      id: `tc-${Date.now()}`,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : '',
       command: '',
       response_text: '',
       description: '',
@@ -81,28 +81,24 @@ export default function TerminalAdminPage() {
     setFeedback(null);
 
     const cleanCommand = editingItem.command.trim().toLowerCase();
+    const finalId = editingItem.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : '');
     const payload = {
       ...editingItem,
+      id: finalId,
       command: cleanCommand,
     };
 
     try {
+      const res = await adminMutate<TerminalCommand>({
+        table: 'terminal_commands',
+        action: 'upsert',
+        data: payload,
+      });
+      if (!res.success) throw new Error(res.error);
+
       if (isNew) {
-        const res = await adminMutate<TerminalCommand>({
-          table: 'terminal_commands',
-          action: 'insert',
-          data: payload,
-        });
-        if (!res.success) throw new Error(res.error);
         setCommands((prev) => [...prev, payload]);
       } else {
-        const res = await adminMutate<TerminalCommand>({
-          table: 'terminal_commands',
-          action: 'update',
-          data: payload,
-          match: { id: editingItem.id },
-        });
-        if (!res.success) throw new Error(res.error);
         setCommands((prev) => prev.map((c) => (c.id === editingItem.id ? payload : c)));
       }
 
@@ -130,7 +126,7 @@ export default function TerminalAdminPage() {
             <span>MS-DOS Terminal Commands</span>
           </h1>
           <p className="text-xs text-slate-400">
-            Define dynamic CLI commands, responses, and easter eggs executable in the MahiOS command prompt.
+            Define dynamic CLI commands, custom responses, and easter eggs executable in the MahiOS command prompt.
           </p>
         </div>
 
@@ -142,6 +138,17 @@ export default function TerminalAdminPage() {
           <Plus className="w-4 h-4" />
           <span>Add New Command</span>
         </button>
+      </div>
+
+      {/* Real-time sync information callout */}
+      <div className="p-3.5 bg-blue-950/40 border border-blue-800/60 rounded-xl text-xs text-blue-200 flex items-start gap-3">
+        <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="font-semibold text-white">Live Data Synchronization Active</p>
+          <p className="text-slate-300 text-[11px] leading-relaxed">
+            Core CLI commands (<code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">contact</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">about</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">skills</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">projects</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">experience</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">resume</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">theme</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">show</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">cat</code>) are automatically synchronized in real-time with your admin changes. The table below lets you define additional custom terminal commands, jokes, and easter eggs.
+          </p>
+        </div>
       </div>
 
       {feedback && (
