@@ -16,12 +16,27 @@ interface AboutAppProps {
 }
 
 export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
-  const [activeTab, setActiveTab] = useState<'story' | 'principles' | 'radar' | 'trivia'>('story');
+  const [activeTab, setActiveTab] = useState<'story' | 'interests' | 'principles' | 'radar' | 'trivia'>('story');
   const [copied, setCopied] = useState(false);
   const [dhakaTime, setDhakaTime] = useState('');
   const [isAwake, setIsAwake] = useState(true);
   const [openTrivia, setOpenTrivia] = useState<number | null>(null);
   const { playSound } = useSystemStore();
+
+  // Normalize interests from database
+  const interestsList = useMemo(() => {
+    if (!about.interests) return [];
+    if (Array.isArray(about.interests)) return about.interests;
+    if (typeof about.interests === 'string') {
+      try {
+        const parsed = JSON.parse(about.interests);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        return (about.interests as string).split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  }, [about.interests]);
 
   // Extract dynamic extras (Tech Radar and Trivia) from bio_html metadata
   const { cleanBioHtml, techRadar, trivia } = useMemo(() => {
@@ -192,6 +207,19 @@ END:VCARD`;
 
         <button
           type="button"
+          onClick={() => { playSound('click'); setActiveTab('interests'); }}
+          className={`px-2.5 py-1 font-bold text-[11px] sm:text-xs cursor-pointer ${
+            activeTab === 'interests' ? 'retro-btn-pressed bg-[#e5e7eb] text-[#000080]' : 'retro-btn text-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Interests ({interestsList.length})</span>
+          </span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => { playSound('click'); setActiveTab('principles'); }}
           className={`px-2.5 py-1 font-bold text-[11px] sm:text-xs cursor-pointer ${
             activeTab === 'principles' ? 'retro-btn-pressed bg-[#e5e7eb] text-[#000080]' : 'retro-btn text-gray-700'
@@ -240,6 +268,33 @@ END:VCARD`;
             />
           </div>
 
+          {/* Interests & Specializations Preview */}
+          {interestsList.length > 0 && (
+            <div className="p-3 sm:p-4 bg-white retro-box-inset space-y-2.5">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-1.5">
+                <div className="flex items-center gap-1.5 text-[#000080] font-bold text-xs">
+                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Interests & Specializations</span>
+                </div>
+                <span className="text-[10px] font-mono text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 border border-gray-300 rounded-2xs">
+                  {interestsList.length} Domains
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {interestsList.map((interest, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 bg-[#f9fafb] border border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-xs font-semibold text-gray-800 rounded-2xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-default"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-700 shrink-0" />
+                    <span>{interest}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Favorite Quote */}
           {about.quote && (
             <div className="p-3 bg-[#fffbeb] border-l-4 border-[#f59e0b] retro-box-inset rounded-xs text-xs text-amber-900 italic flex items-start gap-2">
@@ -252,6 +307,41 @@ END:VCARD`;
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tab: Dedicated Interests & Specializations */}
+      {activeTab === 'interests' && (
+        <div className="p-3 sm:p-4 bg-white retro-box-inset space-y-3">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+            <div className="flex items-center gap-2 text-[#000080] font-bold text-xs sm:text-sm">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Core Specializations & Personal Research Interests</span>
+            </div>
+            <span className="text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 border border-gray-300 rounded-2xs">
+              {interestsList.length} Tracked Focus Areas
+            </span>
+          </div>
+
+          <p className="text-xs text-gray-600 leading-relaxed">
+            Key technology domains, architectural disciplines, and engineering hobbies actively explored, researched, and practiced.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+            {interestsList.map((interest, idx) => (
+              <div
+                key={idx}
+                className="p-3 bg-[#f9fafb] border border-gray-300 hover:border-[#000080] rounded-2xs flex items-center gap-2.5 shadow-2xs transition-all hover:bg-blue-50/50"
+              >
+                <div className="w-6 h-6 rounded-2xs bg-[#000080] text-white flex items-center justify-center text-[10px] font-bold font-mono shrink-0">
+                  {idx + 1}
+                </div>
+                <div className="font-semibold text-xs text-gray-900 break-words leading-tight">
+                  {interest}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
