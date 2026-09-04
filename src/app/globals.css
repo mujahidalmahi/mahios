@@ -152,6 +152,219 @@ html, body {
   font-weight: 600;
 }
 
+/* Universal Rich Text / TipTap Rendered Content Styles for Desktop Windows */
+.rich-text-content,
+.prose:not(.prose-invert) {
+  color: #1f2937;
+  line-height: 1.65;
+}
+
+.rich-text-content h1,
+.prose:not(.prose-invert) h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #000080;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.rich-text-content h2,
+.prose:not(.prose-invert) h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #000080;
+  margin-top: 0.9rem;
+  margin-bottom: 0.35rem;
+  line-height: 1.35;
+}
+
+.rich-text-content h3,
+.prose:not(.prose-invert) h3 {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #000080;
+  margin-top: 0.85rem;
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
+}
+
+.rich-text-content h4,
+.prose:not(.prose-invert) h4,
+.rich-text-content h5,
+.prose:not(.prose-invert) h5,
+.rich-text-content h6,
+.prose:not(.prose-invert) h6 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.rich-text-content p,
+.prose:not(.prose-invert) p {
+  margin-top: 0 !important;
+  margin-bottom: 0.65rem !important;
+  line-height: 1.65 !important;
+}
+
+.rich-text-content p:last-child,
+.prose:not(.prose-invert) p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.rich-text-content strong,
+.prose:not(.prose-invert) strong,
+.rich-text-content b,
+.prose:not(.prose-invert) b {
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+.rich-text-content em,
+.prose:not(.prose-invert) em,
+.rich-text-content i,
+.prose:not(.prose-invert) i {
+  font-style: italic !important;
+}
+
+.rich-text-content u,
+.prose:not(.prose-invert) u {
+  text-decoration: underline !important;
+}
+
+.rich-text-content s,
+.prose:not(.prose-invert) s {
+  text-decoration: line-through !important;
+}
+
+.rich-text-content ul,
+.prose:not(.prose-invert) ul {
+  list-style-type: disc !important;
+  padding-left: 1.35rem !important;
+  margin-top: 0.35rem !important;
+  margin-bottom: 0.75rem !important;
+  display: block !important;
+}
+
+.rich-text-content ol,
+.prose:not(.prose-invert) ol {
+  list-style-type: decimal !important;
+  padding-left: 1.35rem !important;
+  margin-top: 0.35rem !important;
+  margin-bottom: 0.75rem !important;
+  display: block !important;
+}
+
+.rich-text-content li,
+.prose:not(.prose-invert) li {
+  display: list-item !important;
+  list-style: inherit !important;
+  margin-bottom: 0.25rem !important;
+  padding-left: 0.15rem !important;
+}
+
+.rich-text-content li > p,
+.prose:not(.prose-invert) li > p {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+.rich-text-content blockquote,
+.prose:not(.prose-invert) blockquote {
+  border-left: 3px solid #000080 !important;
+  padding: 0.4rem 0.75rem !important;
+  margin: 0.75rem 0 !important;
+  background-color: #f8fafc !important;
+  border-top: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  font-style: italic !important;
+  color: #1e293b !important;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.rich-text-content blockquote p,
+.prose:not(.prose-invert) blockquote p {
+  margin-bottom: 0 !important;
+  display: inline !important;
+}
+
+.rich-text-content code,
+.prose:not(.prose-invert) code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 0.85em !important;
+  background-color: #f1f5f9 !important;
+  color: #991b1b !important;
+  padding: 0.15rem 0.35rem !important;
+  border-radius: 0.2rem !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.rich-text-content pre,
+.prose:not(.prose-invert) pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 0.85em !important;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0.25rem !important;
+  overflow-x: auto !important;
+  margin: 0.75rem 0 !important;
+}
+
+.rich-text-content pre code,
+.prose:not(.prose-invert) pre code {
+  background: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.rich-text-content a,
+.prose:not(.prose-invert) a {
+  color: #000080 !important;
+  text-decoration: underline !important;
+  font-weight: 600 !important;
+}
+
+.rich-text-content a:hover,
+.prose:not(.prose-invert) a:hover {
+  color: #2563eb !important;
+}
+
+.rich-text-content table,
+.prose:not(.prose-invert) table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 0.75rem 0 !important;
+  font-size: 0.825rem !important;
+}
+
+.rich-text-content th,
+.prose:not(.prose-invert) th,
+.rich-text-content td,
+.prose:not(.prose-invert) td {
+  border: 1px solid #d1d5db !important;
+  padding: 0.35rem 0.55rem !important;
+  text-align: left !important;
+}
+
+.rich-text-content th,
+.prose:not(.prose-invert) th {
+  background-color: #f3f4f6 !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+.rich-text-content hr,
+.prose:not(.prose-invert) hr {
+  border: none !important;
+  border-top: 1px solid #d1d5db !important;
+  margin: 0.85rem 0 !important;
+}
+
 /* Print Media Styles */
 @media print {
   @page {

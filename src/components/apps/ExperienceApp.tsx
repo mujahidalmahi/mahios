@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import {
   Briefcase, Calendar, MapPin, CheckCircle2,
-  ExternalLink, Search, Filter, Layers,
-  ChevronDown, ChevronUp, Sparkles
+  ExternalLink, Search, Filter, Layers, Sparkles
 } from 'lucide-react';
 import { Experience } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -16,18 +15,12 @@ interface ExperienceAppProps {
 export default function ExperienceApp({ experiences }: ExperienceAppProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTech, setSelectedTech] = useState<string>('All');
-  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
   const { playSound } = useSystemStore();
 
   // Extract unique tech tags
   const allTechs = ['All', ...Array.from(
     new Set(experiences.flatMap((e) => e.technologies || []))
   )];
-
-  const toggleExpand = (id: string) => {
-    playSound('click');
-    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const filteredExperiences = experiences.filter((exp) => {
     const matchesSearch =
@@ -57,25 +50,6 @@ export default function ExperienceApp({ experiences }: ExperienceAppProps) {
             </span>
           </div>
         </div>
-
-        {/* Global Expand/Collapse Toggle */}
-        <button
-          type="button"
-          onClick={() => {
-            playSound('click');
-            const allExpanded = Object.keys(expandedIds).length === experiences.length;
-            if (allExpanded) {
-              setExpandedIds({});
-            } else {
-              const newMap: Record<string, boolean> = {};
-              experiences.forEach((e) => { newMap[e.id] = true; });
-              setExpandedIds(newMap);
-            }
-          }}
-          className="retro-btn px-2.5 py-1 text-[11px] font-bold text-gray-800 flex items-center gap-1 cursor-pointer shrink-0"
-        >
-          <span>{Object.keys(expandedIds).length === experiences.length ? 'Collapse Details' : 'Expand All'}</span>
-        </button>
       </div>
 
       {/* Filter & Search Toolbar */}
@@ -126,8 +100,6 @@ export default function ExperienceApp({ experiences }: ExperienceAppProps) {
       {/* Experience Timeline */}
       <div className="space-y-4">
         {filteredExperiences.map((exp, idx) => {
-          const isExpanded = expandedIds[exp.id] ?? true; // default expanded
-
           return (
             <div key={exp.id || idx} className="p-4 bg-[#f9fafb] retro-box-inset rounded-xs space-y-3">
               {/* Role Header */}
@@ -175,65 +147,56 @@ export default function ExperienceApp({ experiences }: ExperienceAppProps) {
                       </div>
                     )}
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(exp.id)}
-                    className="retro-btn p-1 text-gray-700 cursor-pointer"
-                    title={isExpanded ? 'Collapse' : 'Expand'}
-                  >
-                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
                 </div>
               </div>
 
-              {/* Collapsible Content */}
-              {isExpanded && (
-                <div className="space-y-3 pt-1">
-                  {/* Description */}
+              {/* Role Details */}
+              <div className="space-y-3 pt-1">
+                {/* Description */}
+                {exp.description_html && (
                   <div
                     dangerouslySetInnerHTML={{ __html: exp.description_html }}
-                    className="prose prose-sm max-w-none text-gray-800 text-xs leading-relaxed"
+                    className="rich-text-content prose prose-sm max-w-none text-xs leading-relaxed"
                   />
+                )}
 
-                  {/* Achievements */}
-                  {exp.achievements && exp.achievements.length > 0 && (
-                    <div className="space-y-1.5 pt-1">
-                      <div className="text-[11px] font-bold text-gray-700 uppercase flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-blue-700" />
-                        <span>Key Deliverables & Architectural Outcomes:</span>
-                      </div>
-                      <ul className="space-y-1 pl-1">
-                        {exp.achievements.map((ach, i) => (
-                          <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                            <span>{ach}</span>
-                          </li>
-                        ))}
-                      </ul>
+                {/* Achievements */}
+                {exp.achievements && exp.achievements.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[11px] font-bold text-gray-700 uppercase flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Key Deliverables & Architectural Outcomes:</span>
                     </div>
-                  )}
-
-                  {/* Tech stack tags */}
-                  {exp.technologies && exp.technologies.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-200">
-                      {exp.technologies.map((tech, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            playSound('click');
-                            setSelectedTech(tech);
-                          }}
-                          className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-gray-300 rounded-2xs text-[10px] font-mono text-gray-800 cursor-pointer"
-                        >
-                          {tech}
-                        </button>
+                    <ul className="space-y-1 pl-1">
+                      {exp.achievements.map((ach, i) => (
+                        <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{ach}</span>
+                        </li>
                       ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Tech stack tags */}
+                {exp.technologies && exp.technologies.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-200">
+                    {exp.technologies.map((tech, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          playSound('click');
+                          setSelectedTech(tech);
+                        }}
+                        className="px-2 py-0.5 bg-white hover:bg-blue-50 border border-gray-300 rounded-2xs text-[10px] font-mono text-gray-800 cursor-pointer"
+                      >
+                        {tech}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

@@ -456,7 +456,7 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
                 <span className="text-[11px] font-bold text-gray-700 uppercase">Technical Specifications:</span>
                 <div
                   dangerouslySetInnerHTML={{ __html: selectedProject.description_html }}
-                  className="prose prose-sm max-w-none text-gray-800 text-xs leading-relaxed pt-1"
+                  className="rich-text-content prose prose-sm max-w-none text-xs leading-relaxed pt-1"
                 />
               </div>
             </div>
