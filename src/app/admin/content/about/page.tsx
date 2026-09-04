@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { AboutContent, PhilosophyItem } from '@/types/database';
@@ -48,6 +49,8 @@ export default function AboutEditorPage() {
   const [newPrincipleAxiom, setNewPrincipleAxiom] = useState('');
   const [newPrincipleDesc, setNewPrincipleDesc] = useState('');
   const [newPrincipleCategory, setNewPrincipleCategory] = useState('engineering');
+  const [editingPrinciple, setEditingPrinciple] = useState<PhilosophyItem | null>(null);
+  const [principleCategoryFilter, setPrincipleCategoryFilter] = useState<string>('all');
 
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -182,6 +185,28 @@ export default function AboutEditorPage() {
     }
   };
 
+  const handleUpdatePrinciple = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!editingPrinciple) return;
+    const res = await adminMutate<PhilosophyItem>({
+      table: 'philosophies',
+      action: 'update',
+      match: { id: editingPrinciple.id },
+      data: {
+        title: editingPrinciple.title,
+        axiom: editingPrinciple.axiom,
+        description: editingPrinciple.description,
+        category: editingPrinciple.category,
+      },
+    });
+    if (res.success) {
+      setPrinciples(principles.map((p) => (p.id === editingPrinciple.id ? editingPrinciple : p)));
+      setEditingPrinciple(null);
+    } else {
+      alert(`Failed to update principle: ${res.error}`);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -217,6 +242,11 @@ export default function AboutEditorPage() {
       setIsSaving(false);
     }
   };
+
+  const distinctPrincipleCategories = Array.from(new Set(principles.map((p) => p.category).filter(Boolean)));
+  const filteredPrinciples = principleCategoryFilter === 'all'
+    ? principles
+    : principles.filter((p) => p.category === principleCategoryFilter);
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
@@ -534,7 +564,7 @@ export default function AboutEditorPage() {
               <span>Add New Engineering Principle</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="text"
                 placeholder="Principle Title (e.g. Simplicity Over Complexity)"
@@ -549,16 +579,6 @@ export default function AboutEditorPage() {
                 onChange={(e) => setNewPrincipleAxiom(e.target.value)}
                 className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
               />
-              <select
-                value={newPrincipleCategory}
-                onChange={(e) => setNewPrincipleCategory(e.target.value)}
-                className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="engineering">Engineering</option>
-                <option value="design">Design</option>
-                <option value="architecture">Architecture</option>
-                <option value="craft">Craft & Ethics</option>
-              </select>
             </div>
 
             <textarea
@@ -569,45 +589,105 @@ export default function AboutEditorPage() {
               className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 resize-none"
             />
 
+            <CategoryPicker
+              value={newPrincipleCategory}
+              onChange={(cat) => setNewPrincipleCategory(cat)}
+              existingCategories={
+                distinctPrincipleCategories.length > 0
+                  ? distinctPrincipleCategories
+                  : ['engineering', 'design', 'architecture', 'craft', 'ethics', 'mindset']
+              }
+              label="Principle Category"
+              placeholder="Type any custom category or select from existing..."
+              helperText="Categorize this principle (e.g. engineering, design, architecture, craft, systems)..."
+            />
+
             <button
               type="button"
               onClick={handleAddPrinciple}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-600/20"
             >
               <Plus className="w-4 h-4" />
               <span>Add Principle to Database</span>
             </button>
           </div>
 
+          {/* Category Filter & Principle Count */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-mono text-slate-400 font-semibold uppercase mr-1">Filter Category:</span>
+              {['all', ...distinctPrincipleCategories].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setPrincipleCategoryFilter(cat)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono capitalize cursor-pointer transition-all ${
+                    principleCategoryFilter === cat
+                      ? 'bg-blue-600 text-white font-bold shadow-sm'
+                      : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  {cat} {cat !== 'all' && `(${principles.filter((p) => p.category === cat).length})`}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs font-mono text-slate-400">
+              Showing {filteredPrinciples.length} of {principles.length} Principles
+            </span>
+          </div>
+
           {/* Principle Cards List */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {principles.map((p) => (
+            {filteredPrinciples.map((p) => (
               <div
                 key={p.id}
-                className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 relative group hover:border-slate-700"
+                className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3 relative group hover:border-slate-700 transition-all flex flex-col justify-between"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="w-4 h-4 text-amber-400" />
-                    <h4 className="font-bold text-sm text-white">{p.title}</h4>
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />
+                      <h4 className="font-bold text-sm text-white">{p.title}</h4>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPrinciple({ ...p })}
+                        className="text-slate-400 hover:text-blue-400 p-1.5 cursor-pointer rounded hover:bg-slate-900 transition-colors"
+                        title="Edit Principle & Category"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePrinciple(p.id)}
+                        className="text-slate-500 hover:text-red-400 p-1.5 cursor-pointer rounded hover:bg-slate-900 transition-colors"
+                        title="Delete Principle"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePrinciple(p.id)}
-                    className="text-slate-500 hover:text-red-400 p-1 cursor-pointer"
-                    title="Delete Principle"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+
+                  <p className="text-xs text-slate-300 leading-relaxed">{p.description}</p>
+                  {p.axiom && (
+                    <p className="text-[11px] text-blue-400 font-mono italic">&ldquo;{p.axiom}&rdquo;</p>
+                  )}
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed">{p.description}</p>
-                {p.axiom && (
-                  <p className="text-[11px] text-blue-400 font-mono italic">&ldquo;{p.axiom}&rdquo;</p>
-                )}
-                <span className="inline-block px-2 py-0.5 bg-slate-900 text-slate-400 text-[10px] font-mono rounded">
-                  Category: {p.category}
-                </span>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] font-mono">
+                  <span className="px-2.5 py-0.5 bg-blue-950/80 border border-blue-800 text-blue-300 rounded font-semibold capitalize">
+                    Category: {p.category}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditingPrinciple({ ...p })}
+                    className="text-[11px] text-slate-400 hover:text-blue-300 cursor-pointer flex items-center gap-1 transition-colors"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>Change Category</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -775,6 +855,93 @@ export default function AboutEditorPage() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* EDIT PRINCIPLE & CATEGORY MODAL                           */}
+      {/* ========================================================= */}
+      {editingPrinciple && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Compass className="w-5 h-5 text-blue-400" />
+                <span>Edit Principle & Category</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingPrinciple(null)}
+                className="text-slate-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 uppercase">Principle Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editingPrinciple.title}
+                  onChange={(e) => setEditingPrinciple({ ...editingPrinciple, title: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 uppercase">Axiom / Summary Quote</label>
+                <input
+                  type="text"
+                  value={editingPrinciple.axiom || ''}
+                  onChange={(e) => setEditingPrinciple({ ...editingPrinciple, axiom: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300 uppercase">Detailed Description</label>
+                <textarea
+                  rows={3}
+                  value={editingPrinciple.description || ''}
+                  onChange={(e) => setEditingPrinciple({ ...editingPrinciple, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 resize-none"
+                />
+              </div>
+
+              <CategoryPicker
+                value={editingPrinciple.category}
+                onChange={(cat) => setEditingPrinciple({ ...editingPrinciple, category: cat })}
+                existingCategories={
+                  distinctPrincipleCategories.length > 0
+                    ? distinctPrincipleCategories
+                    : ['engineering', 'design', 'architecture', 'craft', 'ethics', 'mindset']
+                }
+                label="Principle Category"
+                placeholder="Type custom category or select..."
+                helperText="Change the category for this principle."
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingPrinciple(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdatePrinciple()}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold cursor-pointer flex items-center gap-1.5 shadow-md"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save Principle Changes</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

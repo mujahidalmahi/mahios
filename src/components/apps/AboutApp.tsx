@@ -324,9 +324,16 @@ END:VCARD`;
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {philosophies.map((item, idx) => (
             <div key={item.id || idx} className="p-3 bg-white retro-box-inset space-y-1">
-              <div className="flex items-center gap-1.5 text-[#000080] font-bold text-xs">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span className="break-words">{item.title}</span>
+              <div className="flex items-center justify-between gap-1.5 text-[#000080] font-bold text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span className="break-words">{item.title}</span>
+                </div>
+                {item.category && (
+                  <span className="text-[9px] font-mono uppercase bg-gray-100 text-gray-600 px-1.5 py-0.5 border border-gray-200 rounded-2xs shrink-0">
+                    {item.category}
+                  </span>
+                )}
               </div>
               <p className="text-gray-700 text-xs leading-relaxed break-words">{item.description}</p>
               {item.axiom && (

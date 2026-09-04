@@ -101,7 +101,7 @@ export default function PhilosophyAdminPage() {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= items.length) return;
 
@@ -114,13 +114,10 @@ export default function PhilosophyAdminPage() {
     setItems(updated);
 
     try {
-      updated.forEach(async (item) => {
-        await adminMutate<PhilosophyItem>({
-          table: 'philosophies',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
+      await adminMutate<PhilosophyItem[]>({
+        table: 'philosophies',
+        action: 'upsert',
+        data: updated,
       });
     } catch {
       // Local fallback
@@ -265,7 +262,7 @@ export default function PhilosophyAdminPage() {
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
               <span>RANK: #{item.sort_order || idx + 1}</span>
-              <span className="text-indigo-400 font-bold">â˜… Active Principle</span>
+              <span className="text-indigo-400 font-bold">★ Active Principle</span>
             </div>
           </div>
         ))}
