@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
@@ -22,6 +23,7 @@ export default function BlogAdminPage() {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTagFilter, setSelectedTagFilter] = useState('all');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -172,11 +174,16 @@ export default function BlogAdminPage() {
     }
   };
 
-  const filteredPosts = posts.filter((p) =>
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const allDistinctTags = Array.from(new Set(posts.flatMap((p) => p.tags || []).filter(Boolean)));
+
+  const filteredPosts = posts.filter((p) => {
+    const matchesSearch =
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.tags?.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesTag = selectedTagFilter === 'all' || p.tags?.includes(selectedTagFilter);
+    return matchesSearch && matchesTag;
+  });
 
   if (loading) return <SkeletonListPage rows={5} />;
 
@@ -231,6 +238,40 @@ export default function BlogAdminPage() {
         </div>
         <span className="text-xs font-mono text-slate-400">{filteredPosts.length} articles indexed</span>
       </div>
+
+      {/* Topic Filter Pills */}
+      {allDistinctTags.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1">
+          <button
+            type="button"
+            onClick={() => setSelectedTagFilter('all')}
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+              selectedTagFilter === 'all'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-slate-800/80 text-slate-400 hover:text-white'
+            }`}
+          >
+            All Topics ({posts.length})
+          </button>
+          {allDistinctTags.map((tag) => {
+            const count = posts.filter((p) => p.tags?.includes(tag)).length;
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setSelectedTagFilter(tag)}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                  selectedTagFilter === tag
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                }`}
+              >
+                #{tag} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Posts Stream */}
       <div className="space-y-4">
@@ -434,18 +475,18 @@ export default function BlogAdminPage() {
               <div className="space-y-2 bg-slate-950 p-4 border border-slate-800 rounded-xl">
                 <label className="font-semibold text-slate-300 uppercase">Article Topics (Tags)</label>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Add tag (e.g. Architecture, React, System Design)..."
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-                    className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                  />
+                  <div className="flex-1">
+                    <CategoryPicker
+                      value={newTag}
+                      onChange={(val) => setNewTag(val)}
+                      existingCategories={allDistinctTags}
+                      placeholder="Select existing topic or type new tag..."
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddTag}
-                    className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold cursor-pointer"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold cursor-pointer shrink-0"
                   >
                     Add Tag
                   </button>
@@ -458,9 +499,10 @@ export default function BlogAdminPage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
-                        className="text-slate-500 hover:text-red-400 ml-1"
+                        className="text-slate-500 hover:text-red-400 ml-1 cursor-pointer"
+                        title="Remove tag"
                       >
-                        âœ•
+                        ✕
                       </button>
                     </span>
                   ))}

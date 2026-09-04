@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import MediaUploader from '@/components/admin/MediaUploader';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
@@ -21,6 +22,7 @@ export default function AchievementsAdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<Achievement | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [selectedIssuerFilter, setSelectedIssuerFilter] = useState('all');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -44,6 +46,8 @@ export default function AchievementsAdminPage() {
     }
     loadData();
   }, []);
+
+  const distinctIssuers = Array.from(new Set(achievements.map((a) => a.issuer).filter(Boolean)));
 
   const openNew = () => {
     setIsNew(true);
@@ -192,9 +196,45 @@ export default function AchievementsAdminPage() {
         </div>
       )}
 
+      {/* Issuer Filter Pills */}
+      {distinctIssuers.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1">
+          <button
+            type="button"
+            onClick={() => setSelectedIssuerFilter('all')}
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+              selectedIssuerFilter === 'all'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'bg-slate-800/80 text-slate-400 hover:text-white'
+            }`}
+          >
+            All Issuers ({achievements.length})
+          </button>
+          {distinctIssuers.map((issuer) => {
+            const count = achievements.filter((a) => a.issuer === issuer).length;
+            return (
+              <button
+                key={issuer}
+                type="button"
+                onClick={() => setSelectedIssuerFilter(issuer)}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                  selectedIssuerFilter === issuer
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                }`}
+              >
+                {issuer} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Achievements Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {achievements.map((ach, idx) => (
+        {achievements
+          .filter((a) => selectedIssuerFilter === 'all' || a.issuer === selectedIssuerFilter)
+          .map((ach, idx) => (
           <div
             key={ach.id}
             className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-slate-700 transition-all shadow-lg"
@@ -209,7 +249,7 @@ export default function AchievementsAdminPage() {
                   <h3 className="text-sm font-bold text-white truncate">{ach.title}</h3>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-0.5">
                     <span className="font-semibold text-amber-400">{ach.issuer}</span>
-                    <span>â€¢</span>
+                    <span>•</span>
                     <span className="text-slate-400 font-mono text-[11px]">{ach.issue_date}</span>
                   </div>
                 </div>
@@ -303,13 +343,11 @@ export default function AchievementsAdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="font-semibold text-slate-300 uppercase">Issuing Organization</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. IEEE, Google, Microsoft"
+                  <CategoryPicker
                     value={editingItem.issuer}
-                    onChange={(e) => setEditingItem({ ...editingItem, issuer: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                    onChange={(issuer) => setEditingItem({ ...editingItem, issuer })}
+                    existingCategories={distinctIssuers.length > 0 ? distinctIssuers : ['IEEE', 'Google', 'Microsoft', 'Stanford', 'HackerRank']}
+                    placeholder="Select or enter issuing organization..."
                   />
                 </div>
 

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
@@ -296,7 +297,7 @@ export default function EducationAdminPage() {
                 <ul className="space-y-1 text-xs text-slate-300 pl-2">
                   {edu.activities.map((act, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">â€¢</span>
+                      <span className="text-blue-400 font-bold">•</span>
                       <span>{act}</span>
                     </li>
                   ))}
@@ -325,13 +326,11 @@ export default function EducationAdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="font-semibold text-slate-300 uppercase">Degree</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Bachelor of Science"
+                  <CategoryPicker
                     value={editingEdu.degree}
-                    onChange={(e) => setEditingEdu({ ...editingEdu, degree: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500 text-sm"
+                    onChange={(degree) => setEditingEdu({ ...editingEdu, degree })}
+                    existingCategories={Array.from(new Set(educationList.map((e) => e.degree).filter(Boolean)))}
+                    placeholder="Select or enter degree..."
                   />
                 </div>
 

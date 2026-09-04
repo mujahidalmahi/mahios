@@ -379,9 +379,14 @@ END:VCARD`;
                   }}
                   className="w-full flex items-center justify-between text-left font-bold text-xs text-[#000080] cursor-pointer gap-2"
                 >
-                  <span className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
                     <HelpCircle className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                     <span className="break-words">{item.q}</span>
+                    {item.category && (
+                      <span className="text-[9px] font-mono uppercase bg-gray-100 text-gray-600 px-1.5 py-0.5 border border-gray-200 rounded-2xs shrink-0">
+                        {item.category}
+                      </span>
+                    )}
                   </span>
                   <span className="text-gray-500 font-mono text-[10px] shrink-0">{isOpen ? '[-] Hide' : '[+] Reveal'}</span>
                 </button>

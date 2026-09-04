@@ -8,12 +8,11 @@ import {
 } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import MediaUploader from '@/components/admin/MediaUploader';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
-import ConfirmModal from '@/components/admin/ConfirmModal';
-import EmptyState from '@/components/admin/EmptyState';
 import { Experience } from '@/types/database';
 
 export default function ExperienceAdminPage() {
@@ -21,6 +20,7 @@ export default function ExperienceAdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingExp, setEditingExp] = useState<Experience | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [typeFilter, setTypeFilter] = useState('all');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -48,6 +48,11 @@ export default function ExperienceAdminPage() {
     }
     loadData();
   }, []);
+
+  const distinctTypes = Array.from(new Set(experiences.map((e) => e.employment_type).filter(Boolean)));
+  const filteredExperiences = typeFilter === 'all'
+    ? experiences
+    : experiences.filter((e) => e.employment_type === typeFilter);
 
   const openNew = () => {
     setIsNew(true);
@@ -222,9 +227,47 @@ export default function ExperienceAdminPage() {
         </div>
       )}
 
+      {/* Employment Type Filter Pills & Counter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-slate-400 font-medium mr-1">Filter Role Type:</span>
+          <button
+            type="button"
+            onClick={() => setTypeFilter('all')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+              typeFilter === 'all'
+                ? 'bg-blue-600 text-white shadow'
+                : 'bg-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            All ({experiences.length})
+          </button>
+          {distinctTypes.map((t) => {
+            const count = experiences.filter((e) => e.employment_type === t).length;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTypeFilter(t)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                  typeFilter === t
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                {t} ({count})
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-xs font-mono text-slate-400">
+          Showing {filteredExperiences.length} of {experiences.length} career positions
+        </span>
+      </div>
+
       {/* Experience Cards Stream with Live Card Previews */}
       <div className="space-y-4">
-        {experiences.map((exp, idx) => (
+        {filteredExperiences.map((exp, idx) => (
           <div
             key={exp.id}
             className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 hover:border-slate-700 transition-all shadow-lg"
@@ -254,7 +297,7 @@ export default function ExperienceAdminPage() {
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-0.5">
                     <span className="font-semibold text-blue-400">{exp.company}</span>
-                    <span>â€¢</span>
+                    <span>•</span>
                     <span className="text-slate-400">{exp.employment_type || 'Full-time'}</span>
                     {exp.company_url && (
                       <a href={exp.company_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white">
@@ -269,7 +312,7 @@ export default function ExperienceAdminPage() {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 mr-2">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{exp.start_date} â€“ {exp.end_date}</span>
+                  <span>{exp.start_date} – {exp.end_date}</span>
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -406,18 +449,19 @@ export default function ExperienceAdminPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300 uppercase">Employment Type</label>
-                  <select
-                    value={editingExp.employment_type}
-                    onChange={(e) => setEditingExp({ ...editingExp, employment_type: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="Full-time">Full-time</option>
-                    <option value="Contract">Contract / Freelance</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Internship">Internship</option>
-                  </select>
+                <div>
+                  <CategoryPicker
+                    value={editingExp.employment_type || 'Full-time'}
+                    onChange={(t) => setEditingExp({ ...editingExp, employment_type: t })}
+                    existingCategories={
+                      distinctTypes.length > 0
+                        ? distinctTypes
+                        : ['Full-time', 'Contract', 'Part-time', 'Internship', 'Co-founder', 'Advisor', 'Freelance']
+                    }
+                    label="Employment Type / Category"
+                    placeholder="Select or type role type..."
+                    helperText="Type of work engagement"
+                  />
                 </div>
 
                 <div className="space-y-1.5">

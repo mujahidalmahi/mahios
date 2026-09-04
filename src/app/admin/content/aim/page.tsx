@@ -46,7 +46,7 @@ export default function AimAdminPage() {
     setEditingAim({
       id: `aim-${Date.now()}`,
       goal_title: '',
-      timeline_target: '2026 â€“ 2027',
+      timeline_target: '2026 – 2027',
       category: allDistinctCategories[0] || 'engineering',
       progress_percentage: 50,
       status: 'in_progress',
@@ -203,20 +203,23 @@ export default function AimAdminPage() {
           All Domains ({aims.length})
         </button>
 
-        {allDistinctCategories.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => setCategoryFilter(cat)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 capitalize ${
-              categoryFilter.toLowerCase() === cat.toLowerCase()
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
-            }`}
-          >
-            {cat.replace('_', ' ')}
-          </button>
-        ))}
+        {allDistinctCategories.map((cat) => {
+          const count = aims.filter((a) => a.category?.toLowerCase() === cat.toLowerCase()).length;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setCategoryFilter(cat)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 capitalize ${
+                categoryFilter.toLowerCase() === cat.toLowerCase()
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-slate-800 text-slate-400 hover:text-white'
+              }`}
+            >
+              {cat.replace('_', ' ')} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Aims Stream */}
@@ -358,7 +361,7 @@ export default function AimAdminPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 2026 â€“ 2027"
+                    placeholder="e.g. 2026 – 2027"
                     value={editingAim.timeline_target}
                     onChange={(e) => setEditingAim({ ...editingAim, timeline_target: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"

@@ -6,18 +6,19 @@ import {
   CheckCircle2, AlertCircle, Sparkles, Globe
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
-import ConfirmModal from '@/components/admin/ConfirmModal';
-import EmptyState from '@/components/admin/EmptyState';
 import { WishItem } from '@/types/database';
 
 export default function WishesAdminPage() {
   const [wishes, setWishes] = useState<WishItem[]>(fallbackBiographyData.wishes);
   const [loading, setLoading] = useState(true);
   const [editingWish, setEditingWish] = useState<WishItem | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -36,8 +37,42 @@ export default function WishesAdminPage() {
     loadData();
   }, []);
 
+  const distinctCategories = Array.from(new Set(wishes.map((w) => w.category).filter(Boolean)));
+  const filteredWishes = categoryFilter === 'all'
+    ? wishes
+    : wishes.filter((w) => w.category === categoryFilter);
+
+  const openNew = () => {
+    setIsNew(true);
+    setEditingWish({
+      id: `wish-${Date.now()}`,
+      wish_number: wishes.length + 1,
+      title: '',
+      deep_reason: '',
+      impact_scope: 'Global Civilizational Progress',
+      category: distinctCategories[0] || 'Philosophy & Society',
+    });
+  };
+
   const openEdit = (w: WishItem) => {
+    setIsNew(false);
     setEditingWish({ ...w });
+  };
+
+  const handleDelete = async (id: string, wishNum: number) => {
+    if (!confirm(`Are you sure you want to delete Wish #${wishNum}?`)) return;
+    try {
+      await adminMutate<WishItem>({
+        table: 'wish_items',
+        action: 'delete',
+        match: { id },
+      });
+    } catch {
+      // Local fallback
+    }
+    setWishes((prev) => prev.filter((w) => w.id !== id));
+    setFeedback({ type: 'success', text: `Wish #${wishNum} removed.` });
+    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -45,8 +80,11 @@ export default function WishesAdminPage() {
     if (!editingWish) return;
     setSaving(true);
 
-    const updated = wishes.map((w) => (w.id === editingWish.id ? editingWish : w));
-    setWishes(updated);
+    if (isNew) {
+      setWishes((prev) => [...prev, editingWish]);
+    } else {
+      setWishes((prev) => prev.map((w) => (w.id === editingWish.id ? editingWish : w)));
+    }
 
     try {
       await adminMutate<WishItem>({
@@ -81,21 +119,31 @@ export default function WishesAdminPage() {
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <Flame className="w-5 h-5 text-amber-400" />
-            <span>The 3 Wishes for Humanity Studio</span>
+            <span>The Wishes for Humanity Studio</span>
           </h1>
           <p className="text-xs text-slate-400">
-            Articulate your three timeless wishes for the eradication of suffering, energy abundance, and civilizational peace.
+            Articulate your timeless wishes for the eradication of suffering, energy abundance, and civilizational peace.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={testWishConfetti}
-          className="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-        >
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>Test Wish Particles</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openNew}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Wish</span>
+          </button>
+          <button
+            type="button"
+            onClick={testWishConfetti}
+            className="px-4 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span>Test Wish Particles</span>
+          </button>
+        </div>
       </div>
 
       {feedback && (
@@ -111,9 +159,47 @@ export default function WishesAdminPage() {
         </div>
       )}
 
-      {/* 3 Wishes Cards */}
+      {/* Category Filter Pills & Counter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-slate-400 font-medium mr-1">Filter Domain:</span>
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('all')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+              categoryFilter === 'all'
+                ? 'bg-amber-600 text-white shadow'
+                : 'bg-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            All ({wishes.length})
+          </button>
+          {distinctCategories.map((cat) => {
+            const count = wishes.filter((w) => w.category === cat).length;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                  categoryFilter === cat
+                    ? 'bg-amber-600 text-white shadow'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                {cat} ({count})
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-xs font-mono text-slate-400">
+          Showing {filteredWishes.length} of {wishes.length} wishes
+        </span>
+      </div>
+
+      {/* Wishes Cards */}
       <div className="space-y-4">
-        {wishes.map((wish) => (
+        {filteredWishes.map((wish) => (
           <div
             key={wish.id}
             className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3.5 hover:border-slate-700 transition-all shadow-lg"
@@ -131,14 +217,24 @@ export default function WishesAdminPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => openEdit(wish)}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                <span>Edit Wish #{wish.wish_number}</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => openEdit(wish)}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit Wish #{wish.wish_number}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(wish.id, wish.wish_number)}
+                  className="p-1.5 bg-slate-800 hover:bg-red-950/60 hover:border-red-800 text-slate-400 hover:text-red-300 rounded-lg text-xs border border-transparent cursor-pointer transition-colors"
+                  title="Delete Wish"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1 text-xs text-slate-300">
@@ -151,20 +247,20 @@ export default function WishesAdminPage() {
                 <Globe className="w-3.5 h-3.5 text-blue-400" />
                 <span>Impact Scope: {wish.impact_scope}</span>
               </span>
-              <span className="text-amber-400 font-bold">â˜… Universal Tier</span>
+              <span className="text-amber-400 font-bold">★ Universal Tier</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ==================== EDIT MODAL ==================== */}
+      {/* ==================== EDIT / CREATE MODAL ==================== */}
       {editingWish && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <Flame className="w-5 h-5 text-amber-400" />
-                <span>Edit Wish #{editingWish.wish_number}</span>
+                <span>{isNew ? 'Create New Wish' : `Edit Wish #${editingWish.wish_number}`}</span>
               </h2>
               <button type="button" onClick={() => setEditingWish(null)} className="text-slate-400 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
@@ -186,14 +282,17 @@ export default function WishesAdminPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300 uppercase">Category</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Medicine & Biology"
+                  <CategoryPicker
                     value={editingWish.category}
-                    onChange={(e) => setEditingWish({ ...editingWish, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    onChange={(cat) => setEditingWish({ ...editingWish, category: cat })}
+                    existingCategories={
+                      distinctCategories.length > 0
+                        ? distinctCategories
+                        : ['Medicine & Biology', 'Clean Energy', 'Artificial Intelligence', 'Space Exploration', 'Philosophy & Society']
+                    }
+                    label="Category / Domain"
+                    placeholder="Select or type domain..."
+                    helperText="Categorization for this wish"
                   />
                 </div>
 

@@ -9,6 +9,7 @@ export interface TriviaItem {
   id: string;
   q: string;
   a: string;
+  category?: string;
 }
 
 export const defaultTechRadarItems: TechRadarItem[] = [
@@ -43,21 +44,25 @@ export const defaultTriviaItems: TriviaItem[] = [
     id: 'trivia-1',
     q: 'What was Mahi’s first programming language?',
     a: 'C / C++ before diving deep into JavaScript, TypeScript, and Rust.',
+    category: 'career',
   },
   {
     id: 'trivia-2',
     q: 'What is Mahi’s favorite mechanical keyboard switch?',
     a: 'Tactile Holy Pandas with custom lubed stabilizers.',
+    category: 'hardware',
   },
   {
     id: 'trivia-3',
     q: 'How does Mahi take his coffee?',
     a: 'Black pour-over with single-origin medium roast beans.',
+    category: 'lifestyle',
   },
   {
     id: 'trivia-4',
     q: 'What is Mahi’s ideal engineering stack?',
     a: 'Next.js 16, TypeScript, Supabase PostgreSQL, Tailwind CSS 4, and Cloudflare/Vercel Edge.',
+    category: 'architecture',
   },
 ];
 

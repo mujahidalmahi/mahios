@@ -7,6 +7,7 @@ import {
   ArrowUp, ArrowDown, Sparkles
 } from 'lucide-react';
 import MediaUploader from '@/components/admin/MediaUploader';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
@@ -75,6 +76,29 @@ export default function GalleryAdminPage() {
   const openEditImage = (img: GalleryImage) => {
     setIsNewImage(false);
     setEditingImage({ ...img });
+  };
+
+  const handleImageCategoryChange = (catName: string) => {
+    if (!editingImage) return;
+    const existing = categories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
+    if (existing) {
+      setEditingImage({ ...editingImage, category_id: existing.id });
+    } else {
+      const newCatId = `cat-${Date.now()}`;
+      const newCat: GalleryCategory = {
+        id: newCatId,
+        name: catName,
+        slug: catName.toLowerCase().replace(/\s+/g, '-'),
+        sort_order: categories.length + 1,
+      };
+      setCategories((prev) => [...prev, newCat]);
+      setEditingImage({ ...editingImage, category_id: newCatId });
+      adminMutate<GalleryCategory>({
+        table: 'gallery_categories',
+        action: 'insert',
+        data: newCat,
+      }).catch(() => {});
+    }
   };
 
   const performDeleteImage = async (id: string) => {
@@ -301,26 +325,29 @@ export default function GalleryAdminPage() {
               onClick={() => setSelectedCatFilter('all')}
               className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
                 selectedCatFilter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-800/80 text-slate-400 hover:text-white'
               }`}
             >
-              All Albums
+              All Albums ({images.length})
             </button>
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setSelectedCatFilter(c.id)}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
-                  selectedCatFilter === c.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                {c.name}
-              </button>
-            ))}
+            {categories.map((c) => {
+              const count = images.filter((img) => img.category_id === c.id).length;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCatFilter(c.id)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                    selectedCatFilter === c.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {c.name} ({count})
+                </button>
+              );
+            })}
           </div>
 
           {/* Photos Grid */}
@@ -512,17 +539,12 @@ export default function GalleryAdminPage() {
 
               <div className="space-y-1.5">
                 <label className="font-semibold text-slate-300 uppercase">Assigned Album / Category</label>
-                <select
-                  value={editingImage.category_id}
-                  onChange={(e) => setEditingImage({ ...editingImage, category_id: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                <CategoryPicker
+                  value={categories.find((c) => c.id === editingImage.category_id)?.name || categories[0]?.name || ''}
+                  onChange={handleImageCategoryChange}
+                  existingCategories={categories.map((c) => c.name)}
+                  placeholder="Select or enter album category..."
+                />
               </div>
 
               <div className="space-y-1.5">

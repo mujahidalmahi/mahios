@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   BookOpen, Plus, Edit2, Trash2, Save, X,
-  CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Calendar, MapPin, Sparkles
+  CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Calendar, MapPin, Sparkles, Loader2
 } from 'lucide-react';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
@@ -19,6 +20,7 @@ export default function BiographyAdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingChapter, setEditingChapter] = useState<BiographyMilestone | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [selectedPeriodFilter, setSelectedPeriodFilter] = useState('all');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -37,13 +39,15 @@ export default function BiographyAdminPage() {
     loadData();
   }, []);
 
+  const distinctPeriods = Array.from(new Set(chapters.map((c) => c.period).filter(Boolean)));
+
   const openNew = () => {
     setIsNew(true);
     setEditingChapter({
       id: `bio-ch-${Date.now()}`,
       chapter: `Chapter ${chapters.length + 1}: The Next Frontier`,
       title: '',
-      period: '2026 â€“ Future',
+      period: '2026 – Future',
       location: 'Dhaka / Global',
       story_html: '<p>Document this pivotal era of your life, breakthroughs, and memories...</p>',
       key_learning: '',
@@ -125,6 +129,26 @@ export default function BiographyAdminPage() {
     }
   };
 
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      const promises = chapters.map((ch, idx) =>
+        adminMutate<BiographyMilestone>({
+          table: 'biography_milestones',
+          action: 'upsert',
+          data: { ...ch, sort_order: idx + 1 },
+        })
+      );
+      await Promise.all(promises);
+      setFeedback({ type: 'success', text: 'All biography chapters and timeline structure saved successfully!' });
+    } catch {
+      setFeedback({ type: 'error', text: 'Failed to save timeline changes to database.' });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setFeedback(null), 3000);
+    }
+  };
+
   if (loading) return <SkeletonListPage rows={5} />;
 
   return (
@@ -141,14 +165,27 @@ export default function BiographyAdminPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={openNew}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Chapter</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={handleSaveAll}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-50 cursor-pointer"
+            title="Save all timeline chapters and chronological structure"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span>{saving ? 'Saving...' : 'Save Timeline'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={openNew}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/20 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Chapter</span>
+          </button>
+        </div>
       </div>
 
       {feedback && (
@@ -164,9 +201,45 @@ export default function BiographyAdminPage() {
         </div>
       )}
 
+      {/* Era / Period Filter Pills */}
+      {distinctPeriods.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1">
+          <button
+            type="button"
+            onClick={() => setSelectedPeriodFilter('all')}
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+              selectedPeriodFilter === 'all'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-slate-800/80 text-slate-400 hover:text-white'
+            }`}
+          >
+            All Eras ({chapters.length})
+          </button>
+          {distinctPeriods.map((period) => {
+            const count = chapters.filter((c) => c.period === period).length;
+            return (
+              <button
+                key={period}
+                type="button"
+                onClick={() => setSelectedPeriodFilter(period)}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                  selectedPeriodFilter === period
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-white'
+                }`}
+              >
+                {period} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Chapters Stream */}
       <div className="space-y-4">
-        {chapters.map((ch, idx) => (
+        {chapters
+          .filter((c) => selectedPeriodFilter === 'all' || c.period === selectedPeriodFilter)
+          .map((ch, idx) => (
           <div
             key={ch.id}
             className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3 hover:border-slate-700 transition-all shadow-lg"
@@ -247,6 +320,22 @@ export default function BiographyAdminPage() {
         ))}
       </div>
 
+      {/* Bottom Save Action Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-lg">
+        <div className="text-xs text-slate-400">
+          <span className="font-semibold text-white">{chapters.length} Chapters</span> configured in chronological biography timeline.
+        </div>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={handleSaveAll}
+          className="w-full sm:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-50 cursor-pointer"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>{saving ? 'Saving Timeline...' : 'Save Timeline Changes'}</span>
+        </button>
+      </div>
+
       {/* ==================== CHAPTER EDIT/CREATE MODAL ==================== */}
       {editingChapter && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
@@ -291,13 +380,11 @@ export default function BiographyAdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="font-semibold text-slate-300 uppercase">Timeline Period</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. 2014 â€“ 2018"
+                  <CategoryPicker
                     value={editingChapter.period}
-                    onChange={(e) => setEditingChapter({ ...editingChapter, period: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
+                    onChange={(period) => setEditingChapter({ ...editingChapter, period })}
+                    existingCategories={distinctPeriods.length > 0 ? distinctPeriods : ['2014 – 2018', '2019 – 2022', '2023 – 2026', '2026 – Future']}
+                    placeholder="e.g. 2026 – Future"
                   />
                 </div>
 

@@ -6,6 +6,7 @@ import {
   CheckCircle2, AlertCircle, Layers, Star,
   Search, SlidersHorizontal, ArrowUp, ArrowDown, Sparkles
 } from 'lucide-react';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
@@ -71,6 +72,31 @@ export default function SkillsAdminPage() {
   const openEditSkill = (s: Skill) => {
     setIsNewSkill(false);
     setEditingSkill({ ...s });
+  };
+
+  const handleSkillCategoryChange = async (catName: string) => {
+    if (!editingSkill) return;
+    const existing = categories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
+    if (existing) {
+      setEditingSkill({ ...editingSkill, category_id: existing.id });
+    } else {
+      const newCat: SkillCategory = {
+        id: `cat-${Date.now()}`,
+        name: catName,
+        sort_order: categories.length + 1,
+      };
+      setCategories((prev) => [...prev, newCat]);
+      setEditingSkill({ ...editingSkill, category_id: newCat.id });
+      try {
+        await adminMutate<SkillCategory>({
+          table: 'skill_categories',
+          action: 'upsert',
+          data: newCat,
+        });
+      } catch {
+        // Local fallback
+      }
+    }
   };
 
   const handleDeleteSkill = async (id: string) => {
@@ -461,20 +487,14 @@ export default function SkillsAdminPage() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-300 uppercase">Assigned Category</label>
-                <select
-                  value={editingSkill.category_id}
-                  onChange={(e) => setEditingSkill({ ...editingSkill, category_id: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CategoryPicker
+                value={categories.find((c) => c.id === editingSkill.category_id)?.name || 'Frontend'}
+                onChange={(catName) => handleSkillCategoryChange(catName)}
+                existingCategories={categories.map((c) => c.name)}
+                label="Assigned Category"
+                placeholder="Select category or type new..."
+                helperText="Select an existing category or type a new one to create it instantly."
+              />
 
               <div className="space-y-2 bg-slate-950 p-3.5 border border-slate-800 rounded-xl">
                 <div className="flex items-center justify-between">

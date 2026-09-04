@@ -5,12 +5,11 @@ import {
   Radio, Plus, Edit2, Trash2, Save, X,
   CheckCircle2, AlertCircle, ArrowUp, ArrowDown, Heart, Sparkles, Tag
 } from 'lucide-react';
+import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { adminMutate } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
-import ConfirmModal from '@/components/admin/ConfirmModal';
-import EmptyState from '@/components/admin/EmptyState';
 import { FeedPost } from '@/types/database';
 
 export default function FeedAdminPage() {
@@ -18,6 +17,7 @@ export default function FeedAdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [tagFilter, setTagFilter] = useState('all');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -36,14 +36,19 @@ export default function FeedAdminPage() {
     loadData();
   }, []);
 
+  const distinctTags = Array.from(new Set(posts.map((p) => p.tag).filter(Boolean)));
+  const filteredPosts = tagFilter === 'all'
+    ? posts
+    : posts.filter((p) => p.tag === tagFilter);
+
   const openNew = () => {
     setIsNew(true);
     setEditingPost({
       id: `feed-${Date.now()}`,
-      author_name: 'Mujahid Islam Mahi',
+      author_name: 'Mujahid Al Mahi',
       content: '',
       timestamp: 'Just now',
-      tag: '#Engineering',
+      tag: distinctTags[0] || '#Engineering',
       likes_count: 0,
       sort_order: posts.length + 1,
     });
@@ -162,9 +167,47 @@ export default function FeedAdminPage() {
         </div>
       )}
 
+      {/* Topic Filter Pills & Counter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-slate-400 font-medium mr-1">Filter Topic:</span>
+          <button
+            type="button"
+            onClick={() => setTagFilter('all')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+              tagFilter === 'all'
+                ? 'bg-cyan-600 text-white shadow'
+                : 'bg-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            All ({posts.length})
+          </button>
+          {distinctTags.map((t) => {
+            const count = posts.filter((p) => p.tag === t).length;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTagFilter(t)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                  tagFilter === t
+                    ? 'bg-cyan-600 text-white shadow'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                {t} ({count})
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-xs font-mono text-slate-400">
+          Showing {filteredPosts.length} of {posts.length} status updates
+        </span>
+      </div>
+
       {/* Feed Stream */}
       <div className="space-y-3.5">
-        {posts.map((post, idx) => (
+        {filteredPosts.map((post, idx) => (
           <div
             key={post.id}
             className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5 hover:border-slate-700 transition-all shadow-lg"
@@ -173,9 +216,9 @@ export default function FeedAdminPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                 <span className="text-xs font-bold text-white">{post.author_name}</span>
-                <span className="text-[11px] font-mono text-slate-400">â€¢ {post.timestamp}</span>
+                <span className="text-[11px] font-mono text-slate-400">• {post.timestamp}</span>
                 {post.tag && (
-                  <span className="px-2 py-0.2 rounded text-[10px] font-mono bg-slate-950 text-cyan-300 border border-slate-800">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-950 text-cyan-300 border border-slate-800">
                     {post.tag}
                   </span>
                 )}
@@ -193,7 +236,7 @@ export default function FeedAdminPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={idx === posts.length - 1}
+                  disabled={idx === filteredPosts.length - 1}
                   onClick={() => handleMove(idx, 'down')}
                   className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded disabled:opacity-30 cursor-pointer"
                   title="Move Down"
@@ -272,15 +315,19 @@ export default function FeedAdminPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-300 uppercase">Hashtag / Topic Tag</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. #Engineering, #Life, #Nextjs16"
-                    value={editingPost.tag || ''}
-                    onChange={(e) => setEditingPost({ ...editingPost, tag: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-blue-500"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                <div>
+                  <CategoryPicker
+                    value={editingPost.tag || '#Engineering'}
+                    onChange={(tag) => setEditingPost({ ...editingPost, tag })}
+                    existingCategories={
+                      distinctTags.length > 0
+                        ? distinctTags
+                        : ['#Engineering', '#Architecture', '#Nextjs', '#Milestone', '#Thoughts', '#Life']
+                    }
+                    label="Hashtag / Topic Tag"
+                    placeholder="Select or type tag..."
+                    helperText="Topic tag for feed broadcast"
                   />
                 </div>
 
