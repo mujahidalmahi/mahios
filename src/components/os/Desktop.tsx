@@ -412,7 +412,11 @@ export default function Desktop({ data }: DesktopProps) {
       )}
 
       {/* Taskbar at bottom */}
-      <Taskbar apps={visibleApps} />
+      <Taskbar
+        apps={visibleApps}
+        milestones={data.biographyTimeline}
+        blogPosts={data.blogPosts}
+      />
     </div>
   );
 }

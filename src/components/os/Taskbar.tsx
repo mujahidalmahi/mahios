@@ -4,14 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Database, X } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
-import { DesktopApp } from '@/types/database';
+import { DesktopApp, BiographyMilestone, BlogPost } from '@/types/database';
 import StartMenu from './StartMenu';
 
 interface TaskbarProps {
   apps: DesktopApp[];
+  milestones?: BiographyMilestone[];
+  blogPosts?: BlogPost[];
 }
 
-export default function Taskbar({ apps }: TaskbarProps) {
+export default function Taskbar({ apps, milestones = [], blogPosts = [] }: TaskbarProps) {
   const { windows, activeWindowId, focusWindow, minimizeWindow } = useWindowStore();
   const {
     soundEnabled, toggleSound,
@@ -133,6 +135,8 @@ export default function Taskbar({ apps }: TaskbarProps) {
           isOpen={startMenuOpen}
           onClose={() => setStartMenuOpen(false)}
           apps={apps}
+          milestones={milestones}
+          blogPosts={blogPosts}
         />
 
         {/* Divider */}

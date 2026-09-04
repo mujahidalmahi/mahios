@@ -46,17 +46,23 @@ export async function POST(req: NextRequest) {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
     let sanitizedData = data;
-    if (table === 'biography_milestones' && sanitizedData) {
+    if (sanitizedData && (action === 'upsert' || action === 'insert')) {
+      const sanitizeItem = (item: any) => {
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+          if ('id' in item && typeof item.id === 'string' && !isUuid(item.id)) {
+            return {
+              ...item,
+              id: crypto.randomUUID(),
+            };
+          }
+        }
+        return item;
+      };
+
       if (Array.isArray(sanitizedData)) {
-        sanitizedData = sanitizedData.map((item) => ({
-          ...item,
-          id: item.id && isUuid(item.id) ? item.id : crypto.randomUUID(),
-        }));
+        sanitizedData = sanitizedData.map(sanitizeItem);
       } else if (typeof sanitizedData === 'object') {
-        sanitizedData = {
-          ...sanitizedData,
-          id: sanitizedData.id && isUuid(sanitizedData.id) ? sanitizedData.id : crypto.randomUUID(),
-        };
+        sanitizedData = sanitizeItem(sanitizedData);
       }
     }
 
@@ -65,6 +71,10 @@ export async function POST(req: NextRequest) {
     } else if (action === 'insert') {
       queryResult = await supabase.from(table).insert(sanitizedData).select();
     } else if (action === 'update') {
+      if (match?.id && typeof match.id === 'string' && !isUuid(match.id)) {
+        // Non-UUID ID cannot exist in UUID column; return success gracefully
+        return NextResponse.json({ success: true, data: [] });
+      }
       let query = supabase.from(table).update(sanitizedData);
       if (match) {
         Object.entries(match).forEach(([k, v]) => {
@@ -73,6 +83,10 @@ export async function POST(req: NextRequest) {
       }
       queryResult = await query.select();
     } else if (action === 'delete') {
+      if (match?.id && typeof match.id === 'string' && !isUuid(match.id)) {
+        // Non-UUID ID cannot exist in UUID column; return success gracefully
+        return NextResponse.json({ success: true, data: [] });
+      }
       let query = supabase.from(table).delete();
       if (match) {
         Object.entries(match).forEach(([k, v]) => {

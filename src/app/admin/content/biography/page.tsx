@@ -76,16 +76,20 @@ export default function BiographyAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this biography chapter?')) return;
-    const res = await adminMutate<BiographyMilestone>({
-      table: 'biography_milestones',
-      action: 'delete',
-      match: { id },
-    });
     setChapters((prev) => prev.filter((c) => c.id !== id));
-    if (!res.success) {
-      setFeedback({ type: 'error', text: res.error || 'Failed to remove chapter from database.' });
+    if (isUuid(id)) {
+      const res = await adminMutate<BiographyMilestone>({
+        table: 'biography_milestones',
+        action: 'delete',
+        match: { id },
+      });
+      if (!res.success) {
+        setFeedback({ type: 'error', text: res.error || 'Failed to remove chapter from database.' });
+      } else {
+        setFeedback({ type: 'success', text: 'Chapter removed from database.' });
+      }
     } else {
-      setFeedback({ type: 'success', text: 'Chapter removed.' });
+      setFeedback({ type: 'success', text: 'Chapter removed from local list.' });
     }
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -156,6 +160,31 @@ export default function BiographyAdminPage() {
       }));
       setChapters(sanitizedChapters);
 
+      const activeIds = new Set(sanitizedChapters.map((c) => c.id));
+
+      // 1. Fetch current database IDs to reconcile removals
+      try {
+        const supabase = createClient();
+        const { data: existingRows } = await supabase.from('biography_milestones').select('id');
+        if (existingRows && existingRows.length > 0) {
+          const obsoleteIds = existingRows
+            .map((r: { id: string }) => r.id)
+            .filter((dbId: string) => !activeIds.has(dbId));
+
+          // Prune obsolete milestones from Supabase
+          for (const obsId of obsoleteIds) {
+            await adminMutate<BiographyMilestone>({
+              table: 'biography_milestones',
+              action: 'delete',
+              match: { id: obsId },
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Reconciliation query warning:', err);
+      }
+
+      // 2. Upsert all sanitized active chapters
       const promises = sanitizedChapters.map((ch) =>
         adminMutate<BiographyMilestone>({
           table: 'biography_milestones',
