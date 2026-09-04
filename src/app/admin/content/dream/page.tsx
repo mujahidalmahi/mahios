@@ -216,7 +216,7 @@ export default function DreamAdminPage() {
                   <span className="px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded text-[10px] font-mono uppercase">
                     {dream.horizon}
                   </span>
-                  <span>â€¢</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-500" />
                   <span>Impact Sphere: {dream.impact_area}</span>
                 </div>
               </div>

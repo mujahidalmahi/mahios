@@ -9,6 +9,7 @@ import Window from './Window';
 import Taskbar from './Taskbar';
 import ContextMenu from './ContextMenu';
 import AppPropertiesDialog from './AppPropertiesDialog';
+import { resolveDeepLink } from '@/lib/utils/deepLinks';
 
 // Import All 28 Application Views
 import AboutApp from '@/components/apps/AboutApp';
@@ -77,6 +78,7 @@ export default function Desktop({ data }: DesktopProps) {
     targetApp: DesktopApp | null;
   }>({ visible: false, x: 0, y: 0, targetApp: null });
 
+  const [deepLinkedProjectId, setDeepLinkedProjectId] = useState<string | undefined>();
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const desktopRef = useRef<HTMLDivElement | null>(null);
   const hasInitializedRef = useRef(false);
@@ -86,50 +88,39 @@ export default function Desktop({ data }: DesktopProps) {
       setDesktopBgColor(data.settings.desktop_background_color);
     }
 
+    const processDeepLink = () => {
+      const result = resolveDeepLink(data);
+      if (result) {
+        if (result.targetType === 'project' && result.project) {
+          setDeepLinkedProjectId(result.project.slug || result.project.id);
+        }
+        openWindow(result.targetApp);
+        return true;
+      }
+      return false;
+    };
+
     // Auto-open deep-linked app or fallback to About Me window on first boot
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true;
-      let targetOpened = false;
-
-      if (typeof window !== 'undefined' && window.location.search) {
-        const params = new URLSearchParams(window.location.search);
-        const reqApp = params.get('app');
-        const reqPost = params.get('post');
-
-        if (reqApp === 'blog' && reqPost) {
-          const post = data.blogPosts.find((p) => p.slug === reqPost || p.id === reqPost);
-          if (post) {
-            openWindow({
-              id: `blog-${post.id}`,
-              app_id: `blog-${post.id}`,
-              title: post.title,
-              icon_name: 'FileText',
-              component_key: 'BlogPostReaderApp',
-              default_x: 80,
-              default_y: 50,
-              default_width: 840,
-              default_height: 600,
-              is_system_app: false,
-              is_visible: true,
-              sort_order: 99,
-              category: 'Dev Notes',
-            });
-            targetOpened = true;
-          }
-        } else if (reqApp) {
-          const found = data.apps.find((a) => a.app_id === reqApp || a.app_id.includes(reqApp));
-          if (found) {
-            openWindow(found);
-            targetOpened = true;
-          }
-        }
-      }
+      const targetOpened = processDeepLink();
 
       if (!targetOpened && data.apps.length > 0) {
         const aboutApp = data.apps.find((a) => a.app_id === 'about') || data.apps[0];
         if (aboutApp) openWindow(aboutApp);
       }
     }
+
+    const handleRouteChange = () => {
+      processDeepLink();
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    window.addEventListener('hashchange', handleRouteChange);
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('hashchange', handleRouteChange);
+    };
   }, [data, openWindow, setDesktopBgColor]);
 
   // Visible applications filtered by admin toggle
@@ -221,7 +212,7 @@ export default function Desktop({ data }: DesktopProps) {
       case 'ExperienceApp':
         return <ExperienceApp experiences={data.experiences} />;
       case 'ProjectsApp':
-        return <ProjectsApp projects={data.projects} />;
+        return <ProjectsApp projects={data.projects} initialProjectId={deepLinkedProjectId} />;
       case 'SkillsApp':
         return <SkillsApp categories={data.categories} skills={data.skills} />;
       case 'EducationApp':

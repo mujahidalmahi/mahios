@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import { useWindowStore } from '@/stores/windowStore';
+import { resolveDeepLink } from '@/lib/utils/deepLinks';
 
 // All 28 Applications
 import AboutApp from '@/components/apps/AboutApp';
@@ -62,6 +64,7 @@ interface MobileShellProps {
 
 export default function MobileShell({ data }: MobileShellProps) {
   const [activeApp, setActiveApp] = useState<DesktopApp | null>(null);
+  const [deepLinkedProjectId, setDeepLinkedProjectId] = useState<string | undefined>();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [timeString, setTimeString] = useState('');
@@ -82,13 +85,70 @@ export default function MobileShell({ data }: MobileShellProps) {
       hours = hours ? hours : 12;
       setTimeString(`${hours}:${minutes} ${ampm}`);
 
-      const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+      const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
       setDateString(now.toLocaleDateString('en-US', options));
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const processDeepLink = () => {
+      const result = resolveDeepLink(data);
+      if (result) {
+        if (result.targetType === 'project' && result.project) {
+          setDeepLinkedProjectId(result.project.slug || result.project.id);
+        }
+        setActiveApp(result.targetApp);
+        return true;
+      }
+      return false;
+    };
+
+    processDeepLink();
+
+    const handleRouteChange = () => {
+      processDeepLink();
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    window.addEventListener('hashchange', handleRouteChange);
+
+    const unsub = useWindowStore.subscribe((state) => {
+      if (state.activeWindowId) {
+        const lastWin = state.windows.find((w) => w.appId === state.activeWindowId);
+        if (lastWin) {
+          const existingApp = data.apps.find((a) => a.app_id === lastWin.appId);
+          if (existingApp) {
+            setActiveApp(existingApp);
+          } else if (lastWin.componentKey === 'BlogPostReaderApp' || lastWin.componentKey === 'BiographyChapterReaderApp') {
+            setActiveApp({
+              id: lastWin.appId,
+              app_id: lastWin.appId,
+              title: lastWin.title,
+              icon_name: lastWin.iconName,
+              component_key: lastWin.componentKey,
+              default_x: 0,
+              default_y: 0,
+              default_width: 800,
+              default_height: 600,
+              is_system_app: false,
+              is_visible: true,
+              sort_order: 99,
+              category: lastWin.componentKey === 'BlogPostReaderApp' ? 'Dev Notes' : 'Biography',
+            });
+          }
+        }
+      }
+    });
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.removeEventListener('hashchange', handleRouteChange);
+      unsub();
+    };
+  }, [data]);
 
   // Sorted apps according to sort_order
   const sortedApps = useMemo(() => {
@@ -163,7 +223,7 @@ export default function MobileShell({ data }: MobileShellProps) {
     switch (componentKey) {
       case 'AboutApp': return <AboutApp about={data.about} philosophies={data.philosophies} />;
       case 'ExperienceApp': return <ExperienceApp experiences={data.experiences} />;
-      case 'ProjectsApp': return <ProjectsApp projects={data.projects} />;
+      case 'ProjectsApp': return <ProjectsApp projects={data.projects} initialProjectId={deepLinkedProjectId} />;
       case 'SkillsApp': return <SkillsApp categories={data.categories} skills={data.skills} />;
       case 'EducationApp': return <EducationApp education={data.education} />;
       case 'TerminalApp': return <TerminalApp commands={data.terminalCommands} data={data} />;

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { BookOpen, MapPin, Calendar, Sparkles, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, MapPin, Calendar, Sparkles, ArrowRight, Copy, Check } from 'lucide-react';
 import { BiographyMilestone } from '@/types/database';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
@@ -11,8 +11,21 @@ interface BiographyAppProps {
 }
 
 export default function BiographyApp({ biographyTimeline }: BiographyAppProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { openWindow } = useWindowStore();
   const { playSound } = useSystemStore();
+
+  const handleCopyLink = (e: React.MouseEvent, milestone: BiographyMilestone) => {
+    e.stopPropagation();
+    playSound('click');
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
+    const url = `${origin}/?app=biography&chapter=${milestone.id}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+    }
+    setCopiedId(milestone.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const handleOpenChapter = (e: React.MouseEvent, milestone: BiographyMilestone, index: number) => {
     e.stopPropagation();
@@ -120,15 +133,36 @@ export default function BiographyApp({ biographyTimeline }: BiographyAppProps) {
                   <span className="text-[10px] text-gray-400 font-mono">Full chronicle recorded</span>
                 )}
 
-                <button
-                  type="button"
-                  onClick={(e) => handleOpenChapter(e, milestone, idx)}
-                  className="retro-btn px-2.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 group-hover:bg-[#000080] group-hover:text-white transition-colors shrink-0 cursor-pointer"
-                >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  <span>Open Chapter</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => handleCopyLink(e, milestone)}
+                    className="retro-btn px-2 py-1 text-[10px] font-mono flex items-center gap-1 text-gray-700 hover:text-black cursor-pointer"
+                    title="Copy direct share link to this chapter"
+                  >
+                    {copiedId === milestone.id ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>Share</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleOpenChapter(e, milestone, idx)}
+                    className="retro-btn px-2.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 group-hover:bg-[#000080] group-hover:text-white transition-colors cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Open Chapter</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           );

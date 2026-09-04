@@ -72,7 +72,7 @@ export default function BlogApp({ posts }: BlogAppProps) {
     e.stopPropagation();
     playSound('click');
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
-    const url = `${origin}/#note-${post.slug}`;
+    const url = `${origin}/?app=blog&post=${post.slug}`;
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(url);
     }

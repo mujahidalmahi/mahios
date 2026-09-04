@@ -532,7 +532,7 @@ export default function ProjectsAdminPage() {
                         onClick={() => handleRemoveTag(tag)}
                         className="text-slate-500 hover:text-red-400 ml-1"
                       >
-                        âœ•
+                        &times;
                       </button>
                     </span>
                   ))}

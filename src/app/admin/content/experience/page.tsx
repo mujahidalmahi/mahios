@@ -370,7 +370,7 @@ export default function ExperienceAdminPage() {
                 <ul className="space-y-1 text-xs text-slate-300 pl-2">
                   {exp.achievements.map((ach, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">â€¢</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
                       <span>{ach}</span>
                     </li>
                   ))}
@@ -568,7 +568,7 @@ export default function ExperienceAdminPage() {
                 <div className="space-y-1.5 pt-2">
                   {editingExp.achievements?.map((ach, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800 text-slate-200">
-                      <span>â€¢ {ach}</span>
+                      <span>{ach}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveAchievement(idx)}
@@ -611,7 +611,7 @@ export default function ExperienceAdminPage() {
                         onClick={() => handleRemoveTech(tech)}
                         className="text-slate-500 hover:text-red-400 ml-1"
                       >
-                        âœ•
+                        &times;
                       </button>
                     </span>
                   ))}

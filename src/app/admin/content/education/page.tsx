@@ -223,12 +223,9 @@ export default function EducationAdminPage() {
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 mt-0.5">
                     <span className="font-semibold text-blue-400">{edu.institution}</span>
                     {edu.grade && (
-                      <>
-                        <span>â€¢</span>
-                        <span className="text-emerald-400 font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60 text-[10px]">
-                          {edu.grade}
-                        </span>
-                      </>
+                      <span className="text-emerald-400 font-mono font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60 text-[10px]">
+                        {edu.grade}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -237,7 +234,7 @@ export default function EducationAdminPage() {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 mr-2">
                   <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{edu.start_year} â€“ {edu.end_year}</span>
+                  <span>{edu.start_year} - {edu.end_year}</span>
                 </span>
 
                 <div className="flex items-center gap-1">
@@ -297,7 +294,7 @@ export default function EducationAdminPage() {
                 <ul className="space-y-1 text-xs text-slate-300 pl-2">
                   {edu.activities.map((act, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">•</span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />
                       <span>{act}</span>
                     </li>
                   ))}
@@ -449,7 +446,7 @@ export default function EducationAdminPage() {
                 <div className="space-y-1.5 pt-2">
                   {editingEdu.activities?.map((act, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800 text-slate-200">
-                      <span>â€¢ {act}</span>
+                      <span>{act}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveActivity(idx)}

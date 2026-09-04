@@ -12,9 +12,10 @@ import { useSystemStore } from '@/stores/systemStore';
 
 interface ProjectsAppProps {
   projects: Project[];
+  initialProjectId?: string;
 }
 
-export default function ProjectsApp({ projects }: ProjectsAppProps) {
+export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -26,6 +27,44 @@ export default function ProjectsApp({ projects }: ProjectsAppProps) {
   );
   const [userStarred, setUserStarred] = useState<Record<string, boolean>>({});
   const { playSound } = useSystemStore();
+
+  useEffect(() => {
+    // 1. If explicitly passed via prop
+    if (initialProjectId) {
+      const match = projects.find(
+        (p) =>
+          p.slug === initialProjectId ||
+          p.id === initialProjectId ||
+          p.slug.toLowerCase() === initialProjectId.toLowerCase()
+      );
+      if (match) {
+        setSelectedProject(match);
+        return;
+      }
+    }
+
+    // 2. Otherwise inspect window.location for query params or hash
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const reqId = searchParams.get('id') || searchParams.get('project') || searchParams.get('slug');
+      let hashTarget: string | null = null;
+      if (window.location.hash?.startsWith('#project-')) {
+        hashTarget = window.location.hash.replace('#project-', '');
+      }
+      const targetSlug = (reqId || hashTarget || '').toLowerCase().trim();
+      if (targetSlug) {
+        const match = projects.find(
+          (p) =>
+            p.slug.toLowerCase() === targetSlug ||
+            p.id.toLowerCase() === targetSlug ||
+            p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') === targetSlug
+        );
+        if (match) {
+          setSelectedProject(match);
+        }
+      }
+    }
+  }, [projects, initialProjectId]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

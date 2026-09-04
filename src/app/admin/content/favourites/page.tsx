@@ -269,7 +269,7 @@ export default function FavouritesAdminPage() {
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
               <span>ORDER: #{fav.sort_order || idx + 1}</span>
-              <span className="text-amber-400 font-bold">â˜… Hall of Fame</span>
+              <span className="text-amber-400 font-bold">&#9733; Hall of Fame</span>
             </div>
           </div>
         ))}
@@ -340,7 +340,7 @@ export default function FavouritesAdminPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-semibold text-slate-300 uppercase">Why Itâ€™s Beloved & Impact</label>
+                <label className="font-semibold text-slate-300 uppercase">Why It&apos;s Beloved &amp; Impact</label>
                 <textarea
                   rows={4}
                   required

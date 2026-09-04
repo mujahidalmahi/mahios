@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   BookOpen, Calendar, MapPin, Sparkles, Clock, Share2,
-  Check, Printer, ArrowLeft, ArrowRight, X
+  Check, Printer, ArrowLeft, ArrowRight, X, Copy
 } from 'lucide-react';
 import { BiographyMilestone } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -23,6 +23,7 @@ export default function BiographyChapterReaderApp({
   const [readingTheme, setReadingTheme] = useState<'normal' | 'sepia' | 'terminal' | 'cyber'>('normal');
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const { playSound } = useSystemStore();
   const { closeWindow, activeWindowId } = useWindowStore();
 
@@ -44,6 +45,17 @@ export default function BiographyChapterReaderApp({
     if (!nextMilestone) return;
     playSound('click');
     setCurrentMilestone(nextMilestone);
+  };
+
+  const handleShareLink = () => {
+    playSound('click');
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
+    const url = `${origin}/?app=biography&chapter=${currentMilestone.id}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+    }
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleCopy = () => {
@@ -147,12 +159,22 @@ export default function BiographyChapterReaderApp({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={handleCopy}
+            onClick={handleShareLink}
             className="retro-btn px-2 py-0.5 flex items-center gap-1 text-[11px] font-bold text-[#000080] cursor-pointer"
-            title="Copy full chapter text"
+            title="Copy direct share link to this chapter"
+          >
+            {copiedLink ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+            <span>{copiedLink ? 'Link Copied!' : 'Share Link'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="retro-btn px-2 py-0.5 flex items-center gap-1 text-[11px] text-gray-700 cursor-pointer"
+            title="Copy full chapter text to clipboard"
           >
             {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Share2 className="w-3 h-3" />}
-            <span>{copied ? 'Copied!' : 'Copy Text'}</span>
+            <span>{copied ? 'Text Copied!' : 'Copy Text'}</span>
           </button>
 
           <button

@@ -308,7 +308,7 @@ export default function AimAdminPage() {
                 <ul className="space-y-1 text-slate-300">
                   {aim.deliverables.map((del, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-blue-400 font-bold">â€¢</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0" />
                       <span>{del}</span>
                     </li>
                   ))}
@@ -421,7 +421,7 @@ export default function AimAdminPage() {
                 <div className="space-y-1.5 pt-2">
                   {editingAim.deliverables?.map((del, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-slate-900 rounded border border-slate-800 text-slate-200">
-                      <span>â€¢ {del}</span>
+                      <span>{del}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveDeliverable(idx)}

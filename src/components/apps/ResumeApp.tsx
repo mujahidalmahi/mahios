@@ -15,8 +15,20 @@ interface ResumeAppProps {
 
 export default function ResumeApp({ resume }: ResumeAppProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { playSound } = useSystemStore();
+
+  const handleShareLink = () => {
+    playSound('click');
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
+    const url = `${origin}/?app=resume`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+    }
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
 
   const handleDownload = () => {
     playSound('click');
@@ -66,6 +78,16 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={handleShareLink}
+            className="retro-btn px-2.5 py-1.5 font-bold text-xs text-[#000080] flex items-center gap-1.5 cursor-pointer"
+            title="Copy Direct Share Link to Resume"
+          >
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copiedLink ? 'Link Copied' : 'Share Link'}</span>
+          </button>
+
           <button
             type="button"
             onClick={handleCopyText}
