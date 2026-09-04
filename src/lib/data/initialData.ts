@@ -708,33 +708,7 @@ export const fallbackBiographyData: BiographyDatabaseData = {
     pdf_url: '',
     download_filename: 'Mujahid_Al_Mahi_Resume.pdf',
     last_updated_date: 'September 2026',
-    summary_markdown: `MUJAHID AL MAHI
-Full-Stack Software Engineer & Creative Technologist
-Location: Dhaka, Bangladesh | Email: mujahidmahi.official@gmail.com | Web: https://mujahidmahi.me
-GitHub: github.com/mujahidalmahi | LinkedIn: linkedin.com/in/mujahidmahi
-
-SUMMARY
-Experienced Full-Stack Engineer with 4+ years of expertise in React 19, Next.js 16, TypeScript, Supabase, PostgreSQL, and distributed web architectures. Proven track record of reducing 99th-percentile API latencies, designing resilient caching layers, and engineering memorable user experiences.
-
-TECHNICAL COMPETENCIES
-- Core: Next.js 16 (App Router), React 19, TypeScript, JavaScript (ESNext), HTML5/CSS3
-- Backend & Cloud: Node.js, Express, RESTful & GraphQL APIs, Edge Middleware, Vercel
-- Databases & Cache: PostgreSQL, Supabase, Redis, IndexedDB, LocalStorage
-- Architecture & Tools: Turbopack, Tailwind CSS 4, TipTap, Docker, Git, CI/CD Actions
-
-PROFESSIONAL EXPERIENCE
-Lead Full-Stack Software Engineer | Quantum Byte Systems (2024 - Present)
-- Spearheaded development of enterprise web platforms serving 150k+ active users.
-- Optimized query pipelines resulting in a 45% reduction in API response times.
-- Mentored junior engineers on clean architecture, TypeScript patterns, and testing.
-
-Full-Stack Developer | Apex Code Dynamics (2022 - 2024)
-- Built 14 client applications with 100/100 Lighthouse performance metrics.
-- Developed custom UI design systems with sub-50ms interaction latency.
-
-EDUCATION
-Bachelor of Science in Computer Science & Engineering (2022 - 2026)
-University of Engineering & Technology | CGPA: 3.88 (First Class Honors)`,
+    summary_markdown: `Software Systems Engineering learner with hands-on experience in low-level software development and full-stack application development. Strongly interested in distributed systems, database engineering, computer networking, software security, and data-intensive system design. I enjoy understanding how systems work under the hood and applying that knowledge through practical projects and experimentation.`,
     is_active: true,
   },
 

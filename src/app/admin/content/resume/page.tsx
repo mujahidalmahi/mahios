@@ -4,7 +4,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FileBadge, Save, CheckCircle2, AlertCircle, Download,
   Upload, ExternalLink, Loader2, Copy, Check, Calendar, FileText, Sparkles,
-  Bold, Italic, List, ListOrdered, Link2, Code, Quote, Eye, FileSymlink
+  Bold, Italic, List, ListOrdered, Link2, Code, Quote, Eye, FileSymlink,
+  Code2, Braces, RefreshCw
 } from 'lucide-react';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { SkeletonFormPage } from '@/components/admin/SkeletonLoader';
@@ -14,6 +15,7 @@ import { adminMutate } from '@/lib/api/adminMutate';
 import { ResumeConfig } from '@/types/database';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { renderMarkdownToHtml } from '@/lib/utils/markdownRenderer';
+import { officialCVData, resolveCVData } from '@/lib/data/cvData';
 
 export default function ResumeAdminPage() {
   const [config, setConfig] = useState<ResumeConfig>(fallbackBiographyData.resumeConfig);
@@ -21,19 +23,33 @@ export default function ResumeAdminPage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editorMode, setEditorMode] = useState<'summary' | 'json'>('summary');
   const [previewTab, setPreviewTab] = useState<'rendered' | 'raw'>('rendered');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const summaryTemplate = `Software Systems Engineering learner with hands-on experience in low-level software development and full-stack application development. Strongly interested in distributed systems, database engineering, computer networking, software security, and data-intensive system design.
+  const summaryTemplate = officialCVData.profile.summary;
+  const fullJsonTemplate = JSON.stringify(officialCVData, null, 2);
 
-Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on building robust, scalable systems. Experienced with **Next.js**, **React**, **TypeScript**, **PostgreSQL**, **Supabase**, and modern DevOps workflows.`;
+  const isCurrentJson = useMemo(() => {
+    const trimmed = (config.summary_markdown || '').trim();
+    return trimmed.startsWith('{') && trimmed.endsWith('}');
+  }, [config.summary_markdown]);
 
-  const handleLoadTemplate = () => {
+  const handleLoadSummaryTemplate = () => {
     if (config.summary_markdown && config.summary_markdown.trim().length > 0) {
       if (!window.confirm('This will replace your current summary. Continue?')) return;
     }
     setConfig({ ...config, summary_markdown: summaryTemplate });
+    setEditorMode('summary');
+  };
+
+  const handleLoadJsonTemplate = () => {
+    if (config.summary_markdown && config.summary_markdown.trim().length > 0) {
+      if (!window.confirm('This will replace your current content with the full official CV JSON. Continue?')) return;
+    }
+    setConfig({ ...config, summary_markdown: fullJsonTemplate });
+    setEditorMode('json');
   };
 
   // Normalize fields to prevent timestamp discrepancies from falsely triggering "unsaved changes"
@@ -59,6 +75,10 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
         if (data) {
           setConfig(data as ResumeConfig);
           setOriginal(data as ResumeConfig);
+          const trimmed = (data.summary_markdown || '').trim();
+          if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            setEditorMode('json');
+          }
         }
       } catch {
         // Table or row may not exist yet — use initial fallback
@@ -71,6 +91,17 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If editor mode is JSON, validate syntax before saving
+    if (editorMode === 'json' || isCurrentJson) {
+      try {
+        JSON.parse(config.summary_markdown);
+      } catch (err: any) {
+        setFeedback({ type: 'error', text: `JSON Syntax Error: ${err.message}. Please fix before saving.` });
+        return;
+      }
+    }
+
     setIsSaving(true);
     try {
       const updated = {
@@ -84,7 +115,6 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
       });
       if (!res.success) throw new Error(res.error);
 
-      // Keep both current config and original in exact lockstep
       const savedRecord = (res.data as ResumeConfig) || updated;
       setConfig(savedRecord);
       setOriginal(savedRecord);
@@ -104,7 +134,6 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Helper to insert markdown syntax at current cursor position
   const insertMarkdown = (prefix: string, suffix: string = '') => {
     if (!textareaRef.current) return;
     const el = textareaRef.current;
@@ -134,7 +163,7 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
             <span>Curriculum Vitae & Resume Studio</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Configure the PDF file download, ATS-friendly markdown summary, and verified timestamp for the desktop Resume app.
+            Configure PDF document, ATS plain text, verified timestamp, and complete CV content for the desktop Resume app.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -230,7 +259,7 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
               />
               <p className="text-[10px] text-slate-500">
-                Can be a local path (e.g. <code>/resume.pdf</code>) or an external HTTPS URL (e.g. Google Drive, Supabase Storage).
+                Can be a local path (e.g. <code>/resume.pdf</code>) or an external HTTPS URL.
               </p>
             </div>
 
@@ -279,29 +308,38 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
           </div>
         </div>
 
-        {/* Right Column: ATS Markdown Summary & Live Preview */}
+        {/* Right Column: CV Content Editor (Summary Markdown or Full CV JSON) */}
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-4 h-4 text-emerald-400" />
-                <span>Executive Summary (Markdown)</span>
+                <span>{editorMode === 'json' ? 'Full CV Data (JSON Mode)' : 'Executive Summary (Markdown)'}</span>
               </h3>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={handleLoadTemplate}
-                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                  title="Load a starter template"
+                  onClick={() => setEditorMode(editorMode === 'json' ? 'summary' : 'json')}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors border border-cyan-800/40"
+                  title="Toggle JSON / Summary Mode"
                 >
-                  <FileSymlink className="w-3 h-3" />
+                  {editorMode === 'json' ? <FileText className="w-3 h-3" /> : <Braces className="w-3 h-3" />}
+                  <span>{editorMode === 'json' ? 'Summary Mode' : 'JSON Mode'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={editorMode === 'json' ? handleLoadJsonTemplate : handleLoadSummaryTemplate}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Load starter template"
+                >
+                  <RefreshCw className="w-3 h-3" />
                   <span>Template</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleCopySummary}
                   className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                  title="Copy plaintext summary"
+                  title="Copy content"
                 >
                   {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -309,17 +347,25 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-500">
-              This controls the <strong>Executive Summary</strong> section in the CV viewer. Supports Markdown (bold, lists, links). Education, experience, and projects are managed from their own admin pages.
+            <p className="text-[11px] text-slate-400">
+              {editorMode === 'json' ? (
+                <span>
+                  <strong>Full CV Scope:</strong> Modify your profile, experiences, education, skills, certifications, achievements, languages, and references directly via structured JSON.
+                </span>
+              ) : (
+                <span>
+                  Controls the <strong>Executive Summary</strong> in the CV viewer. Use <strong>JSON Mode</strong> above if you want to customize all CV sections.
+                </span>
+              )}
             </p>
 
-            {/* Markdown Toolbar */}
-            <div className="space-y-0">
+            {/* Markdown Toolbar (shown only in summary mode) */}
+            {editorMode === 'summary' && (
               <div className="flex flex-wrap items-center gap-1 p-1.5 bg-slate-950 border border-slate-800 rounded-t-lg border-b-0 text-slate-400">
                 <button
                   type="button"
                   onClick={() => insertMarkdown('**', '**')}
-                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer font-bold flex items-center gap-1"
+                  className="p-1 hover:text-white hover:bg-slate-800 rounded text-xs cursor-pointer font-bold"
                   title="Bold (**text**)"
                 >
                   <Bold className="w-3.5 h-3.5" />
@@ -331,22 +377,6 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
                   title="Italic (*text*)"
                 >
                   <Italic className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertMarkdown('### ')}
-                  className="px-1.5 py-0.5 hover:text-white hover:bg-slate-800 rounded text-[11px] cursor-pointer font-bold font-mono"
-                  title="Heading 3 (### Heading)"
-                >
-                  H3
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertMarkdown('#### ')}
-                  className="px-1.5 py-0.5 hover:text-white hover:bg-slate-800 rounded text-[11px] cursor-pointer font-bold font-mono"
-                  title="Heading 4 (#### Subheading)"
-                >
-                  H4
                 </button>
                 <span className="h-3.5 w-px bg-slate-800 mx-0.5" />
                 <button
@@ -390,23 +420,23 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
                   <Quote className="w-3.5 h-3.5" />
                 </button>
               </div>
+            )}
 
-              <textarea
-                ref={textareaRef}
-                rows={9}
-                value={config.summary_markdown}
-                onChange={(e) => setConfig({ ...config, summary_markdown: e.target.value })}
-                placeholder="Paste plain-text ATS summary or markdown profile (e.g. ### Profile, **bold**, - bullet)..."
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-b-lg rounded-t-none text-xs font-mono text-white focus:outline-none focus:border-blue-500 resize-y leading-relaxed"
-              />
-            </div>
+            <textarea
+              ref={textareaRef}
+              rows={editorMode === 'json' ? 14 : 9}
+              value={config.summary_markdown}
+              onChange={(e) => setConfig({ ...config, summary_markdown: e.target.value })}
+              placeholder={editorMode === 'json' ? 'Paste full CV JSON object...' : 'Enter executive summary markdown...'}
+              className={`w-full px-3 py-2.5 bg-slate-950 border border-slate-800 ${editorMode === 'summary' ? 'rounded-b-lg rounded-t-none' : 'rounded-lg'} text-xs font-mono text-white focus:outline-none focus:border-blue-500 resize-y leading-relaxed`}
+            />
 
             {/* Live ATS Preview Box */}
             <div className="pt-2 border-t border-slate-800 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  Live Preview (What Visitors See & Copy)
+                  Live Preview
                 </span>
                 <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded p-0.5">
                   <button
@@ -418,7 +448,7 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    Markdown Rendered
+                    Formatted
                   </button>
                   <button
                     type="button"
@@ -429,7 +459,7 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    Raw ATS Text
+                    Raw Content
                   </button>
                 </div>
               </div>
@@ -438,9 +468,11 @@ Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on bui
                 <div
                   className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 font-sans leading-relaxed max-h-60 overflow-y-auto space-y-2"
                   dangerouslySetInnerHTML={{
-                    __html: config.summary_markdown
-                      ? renderMarkdownToHtml(config.summary_markdown, 'dark')
-                      : '<span class="text-slate-600 italic">Summary is currently empty. Enter markdown details above.</span>',
+                    __html: isCurrentJson
+                      ? `<div class="text-emerald-400 font-mono text-[11px] mb-2">✓ Valid CV JSON Mode active: full CV structure loaded</div><div class="text-slate-300">${renderMarkdownToHtml(resolveCVData(config.summary_markdown).profile.summary, 'dark')}</div>`
+                      : config.summary_markdown
+                        ? renderMarkdownToHtml(config.summary_markdown, 'dark')
+                        : '<span class="text-slate-600 italic">Summary is currently empty. Enter markdown details above.</span>',
                   }}
                 />
               ) : (
