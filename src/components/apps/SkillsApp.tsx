@@ -27,7 +27,12 @@ export default function SkillsApp({ categories, skills }: SkillsAppProps) {
     return matchSearch && matchProficiency;
   });
 
-  const rankedSkills = [...filteredSkills].sort((a, b) => b.proficiency - a.proficiency);
+  const rankedSkills = [...filteredSkills]
+    .filter(
+      (s, idx, arr) =>
+        idx === arr.findIndex((t) => t.name.toLowerCase().trim() === s.name.toLowerCase().trim())
+    )
+    .sort((a, b) => b.proficiency - a.proficiency);
 
   return (
     <div className="space-y-4 text-[#111827]">
@@ -124,7 +129,12 @@ export default function SkillsApp({ categories, skills }: SkillsAppProps) {
       {viewMode === 'categories' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {categories.map((cat) => {
-            const catSkills = filteredSkills.filter((s) => s.category_id === cat.id);
+            const catSkills = filteredSkills
+              .filter((s) => s.category_id === cat.id)
+              .filter(
+                (s, idx, arr) =>
+                  idx === arr.findIndex((t) => t.name.toLowerCase().trim() === s.name.toLowerCase().trim())
+              );
             if (catSkills.length === 0) return null;
 
             return (

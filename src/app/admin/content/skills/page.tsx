@@ -58,10 +58,14 @@ export default function SkillsAdminPage() {
   // --- SKILL HANDLERS ---
   const openNewSkill = () => {
     setIsNewSkill(true);
+    const defaultCatId =
+      selectedCatFilter !== 'all' && categories.some((c) => c.id === selectedCatFilter)
+        ? selectedCatFilter
+        : categories[0]?.id || '';
     setEditingSkill({
-      id: `skill-${Date.now()}`,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `skill-${Date.now()}`,
       name: '',
-      category_id: categories[0]?.id || 'cat-1',
+      category_id: defaultCatId,
       proficiency: 90,
       years_of_experience: 3,
       is_featured: true,
@@ -80,19 +84,27 @@ export default function SkillsAdminPage() {
     if (existing) {
       setEditingSkill({ ...editingSkill, category_id: existing.id });
     } else {
+      const newCatId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cat-${Date.now()}`;
       const newCat: SkillCategory = {
-        id: `cat-${Date.now()}`,
+        id: newCatId,
         name: catName,
         sort_order: categories.length + 1,
       };
       setCategories((prev) => [...prev, newCat]);
       setEditingSkill({ ...editingSkill, category_id: newCat.id });
       try {
-        await adminMutate<SkillCategory>({
+        const res = await adminMutate<SkillCategory>({
           table: 'skill_categories',
           action: 'upsert',
           data: newCat,
         });
+        if (res?.data) {
+          const savedCat = Array.isArray(res.data) ? res.data[0] : res.data;
+          if (savedCat?.id && savedCat.id !== newCatId) {
+            setCategories((prev) => prev.map((c) => (c.id === newCatId ? savedCat : c)));
+            setEditingSkill((prev) => (prev ? { ...prev, category_id: savedCat.id } : null));
+          }
+        }
       } catch {
         // Local fallback
       }
@@ -120,18 +132,27 @@ export default function SkillsAdminPage() {
     if (!editingSkill) return;
     setSaving(true);
 
+    const skillToSave = { ...editingSkill };
     if (isNewSkill) {
-      setSkills((prev) => [...prev, editingSkill]);
+      setSkills((prev) => [...prev, skillToSave]);
     } else {
-      setSkills((prev) => prev.map((s) => (s.id === editingSkill.id ? editingSkill : s)));
+      setSkills((prev) => prev.map((s) => (s.id === skillToSave.id ? skillToSave : s)));
     }
 
     try {
-      await adminMutate<Skill>({
+      const res = await adminMutate<Skill>({
         table: 'skills',
         action: 'upsert',
-        data: editingSkill,
+        data: skillToSave,
       });
+      if (res?.data) {
+        const saved = Array.isArray(res.data) ? res.data[0] : res.data;
+        if (saved?.id) {
+          setSkills((prev) =>
+            prev.map((s) => (s.id === skillToSave.id || s.id === saved.id ? saved : s))
+          );
+        }
+      }
     } catch {
       // Local fallback
     }
@@ -146,7 +167,7 @@ export default function SkillsAdminPage() {
   const openNewCategory = () => {
     setIsNewCategory(true);
     setEditingCategory({
-      id: `cat-${Date.now()}`,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cat-${Date.now()}`,
       name: '',
       sort_order: categories.length + 1,
     });
@@ -188,18 +209,27 @@ export default function SkillsAdminPage() {
     if (!editingCategory) return;
     setSaving(true);
 
+    const catToSave = { ...editingCategory };
     if (isNewCategory) {
-      setCategories((prev) => [...prev, editingCategory]);
+      setCategories((prev) => [...prev, catToSave]);
     } else {
-      setCategories((prev) => prev.map((c) => (c.id === editingCategory.id ? editingCategory : c)));
+      setCategories((prev) => prev.map((c) => (c.id === catToSave.id ? catToSave : c)));
     }
 
     try {
-      await adminMutate<SkillCategory>({
+      const res = await adminMutate<SkillCategory>({
         table: 'skill_categories',
         action: 'upsert',
-        data: editingCategory,
+        data: catToSave,
       });
+      if (res?.data) {
+        const savedCat = Array.isArray(res.data) ? res.data[0] : res.data;
+        if (savedCat?.id) {
+          setCategories((prev) =>
+            prev.map((c) => (c.id === catToSave.id || c.id === savedCat.id ? savedCat : c))
+          );
+        }
+      }
     } catch {
       // Local fallback
     }

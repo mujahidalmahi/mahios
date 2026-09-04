@@ -282,21 +282,27 @@ export default function SeoSettingsPage() {
             <label className="text-xs font-semibold text-slate-300 uppercase tracking-wide">SEO Page Title</label>
             <span
               className={`text-[10px] font-mono ${
-                titleLen > 60 ? 'text-red-400' : titleLen > 50 ? 'text-amber-400' : 'text-emerald-400'
+                titleLen > 120
+                  ? 'text-red-400'
+                  : titleLen > 90
+                  ? 'text-amber-400'
+                  : titleLen > 60
+                  ? 'text-blue-400'
+                  : 'text-emerald-400'
               }`}
             >
-              {titleLen}/60
+              {titleLen}/120
             </span>
           </div>
           <input
             type="text"
             value={settings.seo_title}
             onChange={(e) => setSettings({ ...settings, seo_title: e.target.value })}
-            maxLength={75}
+            maxLength={150}
             className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500"
           />
           {titleLen > 60 && (
-            <p className="text-[10px] text-red-400">⚠ Over 60 characters — Google may truncate this title</p>
+            <p className="text-[10px] text-slate-400">💡 Tip: Google search previews usually display the first ~60 characters.</p>
           )}
         </div>
 
@@ -307,19 +313,28 @@ export default function SeoSettingsPage() {
             </label>
             <span
               className={`text-[10px] font-mono ${
-                descLen > 160 ? 'text-red-400' : descLen > 140 ? 'text-emerald-400' : 'text-amber-400'
+                descLen > 500
+                  ? 'text-red-400'
+                  : descLen > 320
+                  ? 'text-amber-400'
+                  : descLen > 160
+                  ? 'text-blue-400'
+                  : 'text-emerald-400'
               }`}
             >
-              {descLen}/160
+              {descLen}/500
             </span>
           </div>
           <textarea
-            rows={3}
+            rows={4}
             value={settings.seo_description}
             onChange={(e) => setSettings({ ...settings, seo_description: e.target.value })}
-            maxLength={200}
+            maxLength={500}
             className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-blue-500 resize-none"
           />
+          {descLen > 160 && (
+            <p className="text-[10px] text-slate-400">💡 Standard Google SERP displays ~160 characters. Search engines & social share cards index up to 500 characters.</p>
+          )}
         </div>
 
         {/* Dynamic Keywords Chip Builder */}
