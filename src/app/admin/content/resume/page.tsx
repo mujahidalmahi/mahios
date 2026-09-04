@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   FileBadge, Save, CheckCircle2, AlertCircle, Download,
   Upload, ExternalLink, Loader2, Copy, Check, Calendar, FileText, Sparkles,
-  Bold, Italic, List, ListOrdered, Link2, Code, Quote, Eye
+  Bold, Italic, List, ListOrdered, Link2, Code, Quote, Eye, FileSymlink
 } from 'lucide-react';
 import MediaUploader from '@/components/admin/MediaUploader';
 import { SkeletonFormPage } from '@/components/admin/SkeletonLoader';
@@ -24,6 +24,17 @@ export default function ResumeAdminPage() {
   const [previewTab, setPreviewTab] = useState<'rendered' | 'raw'>('rendered');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const summaryTemplate = `Software Systems Engineering learner with hands-on experience in low-level software development and full-stack application development. Strongly interested in distributed systems, database engineering, computer networking, software security, and data-intensive system design.
+
+Currently pursuing a B.Sc. in Computer Science & Engineering with a focus on building robust, scalable systems. Experienced with **Next.js**, **React**, **TypeScript**, **PostgreSQL**, **Supabase**, and modern DevOps workflows.`;
+
+  const handleLoadTemplate = () => {
+    if (config.summary_markdown && config.summary_markdown.trim().length > 0) {
+      if (!window.confirm('This will replace your current summary. Continue?')) return;
+    }
+    setConfig({ ...config, summary_markdown: summaryTemplate });
+  };
 
   // Normalize fields to prevent timestamp discrepancies from falsely triggering "unsaved changes"
   const isDirty = useMemo(() => {
@@ -274,21 +285,32 @@ export default function ResumeAdminPage() {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-4 h-4 text-emerald-400" />
-                <span>ATS Plain Text & Markdown Summary</span>
+                <span>Executive Summary (Markdown)</span>
               </h3>
-              <button
-                type="button"
-                onClick={handleCopySummary}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                title="Copy plaintext summary"
-              >
-                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                <span>{copied ? 'Copied' : 'Copy'}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleLoadTemplate}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Load a starter template"
+                >
+                  <FileSymlink className="w-3 h-3" />
+                  <span>Template</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopySummary}
+                  className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Copy plaintext summary"
+                >
+                  {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
             </div>
 
             <p className="text-[11px] text-slate-500">
-              This summary supports full Markdown formatting (headings, bold, lists, links, code). It powers both the formatted CV preview and the <strong>Copy Text</strong> ATS feature in the desktop Resume application.
+              This controls the <strong>Executive Summary</strong> section in the CV viewer. Supports Markdown (bold, lists, links). Education, experience, and projects are managed from their own admin pages.
             </p>
 
             {/* Markdown Toolbar */}

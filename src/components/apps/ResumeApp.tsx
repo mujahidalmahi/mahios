@@ -68,8 +68,7 @@ export default function ResumeApp({ resume, data }: ResumeAppProps) {
 
     const eduText = educationList
       .map((edu) => {
-        const cleanDesc = edu.description_html ? '\n  ' + edu.description_html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-        return `* ${edu.degree} in ${edu.field_of_study}\n  Institution: ${edu.institution} (${edu.start_year} - ${edu.end_year})\n  Grade: ${edu.grade || 'N/A'}${cleanDesc}`;
+        return `* ${edu.degree} in ${edu.field_of_study}\n  Institution: ${edu.institution} (${edu.start_year} - ${edu.end_year})\n  Grade: ${edu.grade || 'N/A'}`;
       })
       .join('\n\n');
 
@@ -215,7 +214,6 @@ ATS Optimized • Verified September 2026 • Mujahid Al Mahi
                   <div><strong style="font-size: 10pt;">${edu.degree} in ${edu.field_of_study}</strong> — <span style="color: #000080; font-weight: 600;">${edu.institution}</span></div>
                   <div style="font-size: 9pt; color: #64748b; font-family: monospace;">${edu.start_year} – ${edu.end_year}${edu.grade ? ` | ${edu.grade}` : ''}</div>
                 </div>
-                <div style="font-size: 9pt; color: #334155; margin-top: 3px;">${edu.description_html || ''}</div>
               </div>
             `)
             .join('')}
@@ -250,44 +248,44 @@ ATS Optimized • Verified September 2026 • Mujahid Al Mahi
   return (
     <div className="space-y-3 text-[#111827]">
       {/* Top Application Header & Action Bar */}
-      <div className="p-3 bg-[#f3f4f6] retro-box-inset rounded-xs flex flex-col md:flex-row md:items-center justify-between gap-3 select-none">
-        {/* Document Title, Verified Date & View Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 retro-box-outset bg-white flex items-center justify-center text-[#000080] shrink-0">
-            <FileBadge className="w-6 h-6" />
+      <div className="p-2.5 bg-[#f3f4f6] retro-box-inset rounded-xs space-y-2 select-none">
+        {/* Row 1: Document Info */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 retro-box-outset bg-white flex items-center justify-center text-[#000080] shrink-0">
+            <FileBadge className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-[#000080] truncate">
+              <h2 className="text-xs sm:text-sm font-bold text-[#000080] truncate">
                 {resume.download_filename || 'Mujahid_Al_Mahi_Resume.pdf'}
               </h2>
-              <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono rounded-2xs font-semibold shrink-0">
-                ATS OPTIMIZED
+              <span className="text-[9px] px-1 py-px bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono rounded-2xs font-semibold shrink-0">
+                ATS
               </span>
             </div>
             <p className="text-[10px] text-gray-500 font-mono">
-              Verified & Current: {resume.last_updated_date || 'September 2026'}
+              Verified: {resume.last_updated_date || 'September 2026'}
             </p>
           </div>
         </div>
 
-        {/* View Switcher & Action Toolbar */}
-        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+        {/* Row 2: View Switcher & Action Buttons */}
+        <div className="flex items-center justify-between gap-1.5 border-t border-gray-300 pt-2">
           {/* Mode Switcher */}
-          <div className="flex items-center gap-0.5 mr-1 border-r border-gray-300 pr-2">
+          <div className="flex items-center gap-0.5">
             <button
               type="button"
               onClick={() => {
                 playSound('click');
                 setViewMode('document');
               }}
-              className={`px-2 py-1 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+              className={`px-1.5 py-1 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                 viewMode === 'document' ? 'retro-btn-pressed bg-[#dfdfdf] font-bold text-[#000080]' : 'retro-btn text-gray-700'
               }`}
               title="Formatted Document Sheet View"
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>Document</span>
+              <span className="hidden sm:inline">Document</span>
             </button>
             <button
               type="button"
@@ -295,55 +293,58 @@ ATS Optimized • Verified September 2026 • Mujahid Al Mahi
                 playSound('click');
                 setViewMode('plaintext');
               }}
-              className={`px-2 py-1 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+              className={`px-1.5 py-1 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
                 viewMode === 'plaintext' ? 'retro-btn-pressed bg-[#dfdfdf] font-bold text-[#000080]' : 'retro-btn text-gray-700'
               }`}
               title="Plain Text ATS Format"
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>ATS Text</span>
+              <span className="hidden sm:inline">ATS Text</span>
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleShareLink}
-            className="retro-btn px-2.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer"
-            title="Copy Direct Share Link to Resume"
-          >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{copiedLink ? 'Copied' : 'Share'}</span>
-          </button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleShareLink}
+              className="retro-btn px-1.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer"
+              title="Copy Share Link"
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{copiedLink ? 'Copied' : 'Share'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleCopyText}
-            className="retro-btn px-2.5 py-1 text-[11px] font-bold text-gray-800 flex items-center gap-1 cursor-pointer"
-            title="Copy Full ATS-friendly Plain Text"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied' : 'Copy Text'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleCopyText}
+              className="retro-btn px-1.5 py-1 text-[11px] font-bold text-gray-800 flex items-center gap-1 cursor-pointer"
+              title="Copy ATS Plain Text"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="retro-btn px-2.5 py-1 text-[11px] font-bold text-gray-800 flex items-center gap-1 cursor-pointer"
-            title="Print or Save to PDF via Browser"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print</span>
-          </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="retro-btn px-1.5 py-1 text-[11px] font-bold text-gray-800 flex items-center gap-1 cursor-pointer"
+              title="Print or Save to PDF"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Print</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="retro-btn px-3 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer"
-            title="Download PDF Document"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download PDF</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="retro-btn px-1.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer"
+              title="Download PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -517,27 +518,19 @@ ATS Optimized • Verified September 2026 • Mujahid Al Mahi
               </div>
               <div className="space-y-3">
                 {educationList.map((edu) => (
-                  <div key={edu.id} className="space-y-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <div>
-                        <span className="text-sm font-bold text-gray-900">{edu.degree} in {edu.field_of_study}</span>
-                        <span className="text-sm font-semibold text-[#000080]"> — {edu.institution}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-mono text-gray-500">
-                        <span>{edu.start_year} – {edu.end_year}</span>
-                        {edu.grade && (
-                          <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-semibold rounded-2xs">
-                            {edu.grade}
-                          </span>
-                        )}
-                      </div>
+                  <div key={edu.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <div>
+                      <span className="text-sm font-bold text-gray-900">{edu.degree} in {edu.field_of_study}</span>
+                      <span className="text-sm font-semibold text-[#000080]"> — {edu.institution}</span>
                     </div>
-                    {edu.description_html && (
-                      <div
-                        className="text-xs text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: edu.description_html }}
-                      />
-                    )}
+                    <div className="flex items-center gap-2 text-xs font-mono text-gray-500 shrink-0">
+                      <span>{edu.start_year} – {edu.end_year}</span>
+                      {edu.grade && (
+                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-semibold rounded-2xs">
+                          {edu.grade}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
