@@ -268,32 +268,6 @@ END:VCARD`;
             />
           </div>
 
-          {/* Interests & Specializations Preview */}
-          {interestsList.length > 0 && (
-            <div className="p-3 sm:p-4 bg-white retro-box-inset space-y-2.5">
-              <div className="flex items-center justify-between border-b border-gray-200 pb-1.5">
-                <div className="flex items-center gap-1.5 text-[#000080] font-bold text-xs">
-                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>Interests & Specializations</span>
-                </div>
-                <span className="text-[10px] font-mono text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 border border-gray-300 rounded-2xs">
-                  {interestsList.length} Domains
-                </span>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5 pt-0.5">
-                {interestsList.map((interest, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 bg-[#f9fafb] border border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-xs font-semibold text-gray-800 rounded-2xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-default"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-700 shrink-0" />
-                    <span>{interest}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Favorite Quote */}
           {about.quote && (
