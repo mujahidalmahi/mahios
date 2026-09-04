@@ -59,7 +59,8 @@ export default function SiteSettingsPage() {
         data: updated,
       });
       if (!res.success) throw new Error(res.error);
-      const saved = (res.data as SiteSettings) || updated;
+      const raw = res.data;
+      const saved = ((Array.isArray(raw) ? raw[0] : raw) as SiteSettings) || updated;
       setSettings(saved);
       setOriginalSettings(saved);
       setFeedback({ type: 'success', text: 'All site settings saved successfully!' });

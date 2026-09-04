@@ -80,7 +80,8 @@ export default function ThemeSettingsPage() {
         data: updated,
       });
       if (!res.success) throw new Error(res.error);
-      const saved = (res.data as SiteSettings) || updated;
+      const raw = res.data;
+      const saved = ((Array.isArray(raw) ? raw[0] : raw) as SiteSettings) || updated;
       setSettings(saved);
       setOriginal(saved);
       setFeedback({ type: 'success', text: 'Theme & CRT effects updated successfully across MahiOS!' });

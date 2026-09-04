@@ -60,14 +60,17 @@ export default function ResumeAdminPage() {
 
   // Normalize fields to prevent timestamp discrepancies from falsely triggering "unsaved changes"
   const isDirty = useMemo(() => {
-    const normalize = (c: ResumeConfig) => ({
-      pdf_url: (c.pdf_url || '').trim(),
-      download_filename: (c.download_filename || '').trim(),
-      last_updated_date: (c.last_updated_date || '').trim(),
-      summary_markdown: (c.summary_markdown || '').trim(),
-      is_active: Boolean(c.is_active),
-      preview_image_url: (c.preview_image_url || '').trim(),
-    });
+    const normalize = (c: ResumeConfig) => {
+      const item = (Array.isArray(c) ? c[0] : c) || {};
+      return {
+        pdf_url: (item.pdf_url || '').trim(),
+        download_filename: (item.download_filename || '').trim(),
+        last_updated_date: (item.last_updated_date || '').trim(),
+        summary_markdown: (item.summary_markdown || '').trim(),
+        is_active: Boolean(item.is_active),
+        preview_image_url: (item.preview_image_url || '').trim(),
+      };
+    };
     return JSON.stringify(normalize(config)) !== JSON.stringify(normalize(original));
   }, [config, original]);
 
@@ -79,9 +82,10 @@ export default function ResumeAdminPage() {
         const supabase = createClient();
         const { data } = await supabase.from('resume_config').select('*').single();
         if (data) {
-          setConfig(data as ResumeConfig);
-          setOriginal(data as ResumeConfig);
-          const parsed = resolveCVData(data.summary_markdown);
+          const item = (Array.isArray(data) ? data[0] : data) as ResumeConfig;
+          setConfig(item);
+          setOriginal(item);
+          const parsed = resolveCVData(item.summary_markdown);
           setCvState(parsed);
           setJsonString(JSON.stringify(parsed, null, 2));
         }
@@ -112,11 +116,18 @@ export default function ResumeAdminPage() {
 
     setIsSaving(true);
     try {
-      const updated = {
-        ...config,
+      const base = (Array.isArray(config) ? config[0] : config) || {};
+      const updated: ResumeConfig = {
+        id: base.id || '711303a9-7bba-4120-8b07-0dd66b585077',
+        pdf_url: (base.pdf_url || '').trim(),
+        download_filename: (base.download_filename || 'Mujahid_Al_Mahi_Resume.pdf').trim(),
+        last_updated_date: (base.last_updated_date || 'September 2026').trim(),
+        preview_image_url: (base.preview_image_url || '').trim(),
         summary_markdown: JSON.stringify(cvState, null, 2),
+        is_active: true,
         updated_at: new Date().toISOString(),
       };
+
       const res = await adminMutate<ResumeConfig>({
         table: 'resume_config',
         action: 'upsert',
@@ -124,7 +135,8 @@ export default function ResumeAdminPage() {
       });
       if (!res.success) throw new Error(res.error);
 
-      const savedRecord = (res.data as ResumeConfig) || updated;
+      const raw = res.data;
+      const savedRecord = ((Array.isArray(raw) ? raw[0] : raw) as ResumeConfig) || updated;
       setConfig(savedRecord);
       setOriginal(savedRecord);
       setFeedback({ type: 'success', text: 'CV Configuration and content saved successfully to Supabase!' });
@@ -205,7 +217,12 @@ export default function ResumeAdminPage() {
             <input
               type="text"
               value={config.pdf_url || ''}
-              onChange={(e) => setConfig({ ...config, pdf_url: e.target.value })}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...((Array.isArray(prev) ? prev[0] : prev) || {}),
+                  pdf_url: e.target.value,
+                }))
+              }
               placeholder="/resume.pdf or https://..."
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
             />
@@ -216,7 +233,12 @@ export default function ResumeAdminPage() {
             <input
               type="text"
               value={config.download_filename || ''}
-              onChange={(e) => setConfig({ ...config, download_filename: e.target.value })}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...((Array.isArray(prev) ? prev[0] : prev) || {}),
+                  download_filename: e.target.value,
+                }))
+              }
               placeholder="Mujahid_Al_Mahi_Resume.pdf"
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
             />
@@ -227,7 +249,12 @@ export default function ResumeAdminPage() {
             <input
               type="text"
               value={config.last_updated_date || ''}
-              onChange={(e) => setConfig({ ...config, last_updated_date: e.target.value })}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...((Array.isArray(prev) ? prev[0] : prev) || {}),
+                  last_updated_date: e.target.value,
+                }))
+              }
               placeholder="September 2026"
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
             />
@@ -238,10 +265,13 @@ export default function ResumeAdminPage() {
           value={config.pdf_url}
           onChange={(url) => {
             const filename = url.split('/').pop() || 'Mujahid_Al_Mahi_Resume.pdf';
-            setConfig({
-              ...config,
-              pdf_url: url,
-              download_filename: config.download_filename || filename,
+            setConfig((prev) => {
+              const base = ((Array.isArray(prev) ? prev[0] : prev) || {}) as ResumeConfig;
+              return {
+                ...base,
+                pdf_url: url,
+                download_filename: base.download_filename || filename,
+              };
             });
           }}
           label="Upload or Replace PDF File in Supabase Storage"

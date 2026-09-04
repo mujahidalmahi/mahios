@@ -65,7 +65,8 @@ export default function SeoSettingsPage() {
       });
 
       if (!res.success) throw new Error(res.error);
-      const saved = (res.data as SiteSettings) || updated;
+      const raw = res.data;
+      const saved = ((Array.isArray(raw) ? raw[0] : raw) as SiteSettings) || updated;
       setSettings(saved);
       setOriginal(saved);
       setFeedback({ type: 'success', text: 'SEO settings saved! Changes and sitemap take effect immediately.' });

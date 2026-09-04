@@ -46,17 +46,32 @@ export async function POST(req: NextRequest) {
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
     let sanitizedData = data;
-    if (sanitizedData && (action === 'upsert' || action === 'insert')) {
+    if (sanitizedData && (action === 'upsert' || action === 'insert' || action === 'update')) {
       const sanitizeItem = (item: any) => {
-        if (item && typeof item === 'object' && !Array.isArray(item)) {
-          if ('id' in item && typeof item.id === 'string' && !isUuid(item.id)) {
-            return {
-              ...item,
-              id: crypto.randomUUID(),
-            };
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+          return item;
+        }
+
+        let cleaned = { ...item };
+
+        // Handle accidental array-spread-into-object: e.g. { ...[obj], key: val } -> { '0': obj, key: val }
+        if ('0' in cleaned && typeof cleaned['0'] === 'object' && cleaned['0'] !== null) {
+          const { '0': innerObj, ...rest } = cleaned;
+          cleaned = { ...innerObj, ...rest };
+        }
+
+        // Clean any remaining numeric string keys ('0', '1', etc.) which cannot be valid database columns
+        for (const key of Object.keys(cleaned)) {
+          if (/^\d+$/.test(key)) {
+            delete cleaned[key];
           }
         }
-        return item;
+
+        if ('id' in cleaned && typeof cleaned.id === 'string' && !isUuid(cleaned.id)) {
+          cleaned.id = crypto.randomUUID();
+        }
+
+        return cleaned;
       };
 
       if (Array.isArray(sanitizedData)) {
