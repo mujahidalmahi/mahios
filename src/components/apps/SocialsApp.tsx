@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Share2, ExternalLink, Copy, Check, ShieldCheck,
   Globe, Mail, MessageSquare, Send, Music
 } from 'lucide-react';
-import { GithubIcon } from '@/components/shared/Icons';
+import { GithubIcon, LinkedinIcon } from '@/components/shared/Icons';
 import { SocialLinkItem } from '@/types/database';
 
 interface SocialsAppProps {
@@ -15,10 +15,36 @@ interface SocialsAppProps {
 export default function SocialsApp({ socialLinks }: SocialsAppProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Deduplicate by platform name so duplicate database rows never show on the desktop
+  const distinctLinks = useMemo(() => {
+    if (!socialLinks || socialLinks.length === 0) return [];
+    const seen = new Set<string>();
+    const result: SocialLinkItem[] = [];
+    for (const item of socialLinks) {
+      const key = (item.platform_name || item.id).trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(item);
+      }
+    }
+    return result;
+  }, [socialLinks]);
+
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const getPlatformIcon = (platform: string, iconName?: string) => {
+    const p = platform.toLowerCase();
+    if (p.includes('github')) return <GithubIcon className="w-5 h-5 text-white" />;
+    if (p.includes('linkedin')) return <LinkedinIcon className="w-5 h-5 text-white" />;
+    if (p.includes('mail') || p.includes('email')) return <Mail className="w-5 h-5 text-white" />;
+    if (p.includes('telegram')) return <Send className="w-5 h-5 text-white" />;
+    if (p.includes('discord')) return <MessageSquare className="w-5 h-5 text-white" />;
+    if (p.includes('spotify')) return <Music className="w-5 h-5 text-white" />;
+    return <Globe className="w-5 h-5 text-white" />;
   };
 
   return (
@@ -40,13 +66,13 @@ export default function SocialsApp({ socialLinks }: SocialsAppProps) {
         </div>
 
         <span className="text-[10px] font-mono bg-white px-2 py-1 retro-box-inset self-start sm:self-auto">
-          {socialLinks.length} Verified Endpoints
+          {distinctLinks.length} Verified Endpoints
         </span>
       </div>
 
       {/* Grid of Social Links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {socialLinks.map((link) => (
+        {distinctLinks.map((link) => (
           <div
             key={link.id}
             className="p-3.5 bg-[#f9fafb] retro-box-inset rounded-xs flex items-center justify-between gap-3 hover:bg-white transition-all"
@@ -56,7 +82,7 @@ export default function SocialsApp({ socialLinks }: SocialsAppProps) {
                 className="w-10 h-10 rounded-2xs flex items-center justify-center text-white shrink-0 shadow-sm"
                 style={{ backgroundColor: link.accent_color || '#000080' }}
               >
-                <Globe className="w-5 h-5" />
+                {getPlatformIcon(link.platform_name, link.icon_name)}
               </div>
 
               <div className="min-w-0 flex-1">

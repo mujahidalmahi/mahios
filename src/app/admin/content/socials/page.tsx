@@ -43,12 +43,12 @@ export default function SocialsAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingLink({
-      id: `soc-${Date.now()}`,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `soc-${Date.now()}`,
       platform_name: '',
       username: '',
       url: 'https://',
       icon_name: 'Globe',
-      category: allDistinctCategories[0] || 'social',
+      category: allDistinctCategories[0] || 'Social',
       is_verified: true,
       accent_color: '#000080',
       sort_order: links.length + 1,
@@ -81,26 +81,34 @@ export default function SocialsAdminPage() {
     if (!editingLink) return;
     setSaving(true);
 
-    if (isNew) {
-      setLinks((prev) => [...prev, editingLink]);
-    } else {
-      setLinks((prev) => prev.map((l) => (l.id === editingLink.id ? editingLink : l)));
-    }
-
     try {
-      await adminMutate<SocialLinkItem>({
+      const res = await adminMutate<SocialLinkItem>({
         table: 'social_links',
-        action: 'upsert',
+        action: isNew ? 'insert' : 'update',
+        match: isNew ? undefined : { id: editingLink.id },
         data: editingLink,
       });
-    } catch {
-      // Local fallback
-    }
 
-    setEditingLink(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Platform "${editingLink.platform_name}" saved!` });
-    setTimeout(() => setFeedback(null), 3000);
+      const saved = (Array.isArray(res.data) ? res.data[0] : res.data) || editingLink;
+
+      if (isNew) {
+        setLinks((prev) => [...prev, saved]);
+      } else {
+        setLinks((prev) => prev.map((l) => (l.id === editingLink.id ? saved : l)));
+      }
+      setFeedback({ type: 'success', text: `Platform "${editingLink.platform_name}" saved!` });
+    } catch (err: any) {
+      if (isNew) {
+        setLinks((prev) => [...prev, editingLink]);
+      } else {
+        setLinks((prev) => prev.map((l) => (l.id === editingLink.id ? editingLink : l)));
+      }
+      setFeedback({ type: 'error', text: `Failed to save: ${err?.message || 'Unknown error'}` });
+    } finally {
+      setEditingLink(null);
+      setSaving(false);
+      setTimeout(() => setFeedback(null), 3000);
+    }
   };
 
   const handleMove = (index: number, direction: 'up' | 'down') => {
