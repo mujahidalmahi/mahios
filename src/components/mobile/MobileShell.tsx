@@ -46,6 +46,7 @@ import NotepadApp from '@/components/apps/NotepadApp';
 import PaintApp from '@/components/apps/PaintApp';
 import TaskManagerApp from '@/components/apps/TaskManagerApp';
 import BlogPostReaderApp from '@/components/apps/BlogPostReaderApp';
+import BiographyChapterReaderApp from '@/components/apps/BiographyChapterReaderApp';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   User, Briefcase, FolderGit2, Cpu, GraduationCap,
@@ -192,6 +193,11 @@ export default function MobileShell({ data }: MobileShellProps) {
         const postId = activeApp?.app_id?.replace('blog-', '') || '';
         const post = data.blogPosts.find((p) => p.id === postId || p.slug === postId) || data.blogPosts[0];
         return <BlogPostReaderApp post={post} />;
+      }
+      case 'BiographyChapterReaderApp': {
+        const milestoneId = activeApp?.app_id?.replace(/^(milestone-|bio-ch-)/, '') || '';
+        const milestone = data.biographyTimeline.find((m) => m.id === milestoneId) || data.biographyTimeline[0];
+        return milestone ? <BiographyChapterReaderApp milestone={milestone} allMilestones={data.biographyTimeline} /> : null;
       }
       default: return <AboutApp about={data.about} />;
     }

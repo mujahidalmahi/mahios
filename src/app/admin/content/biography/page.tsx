@@ -41,10 +41,24 @@ export default function BiographyAdminPage() {
 
   const distinctPeriods = Array.from(new Set(chapters.map((c) => c.period).filter(Boolean)));
 
+  const isUuid = (val: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+  const generateUuid = () => {
+    if (typeof window !== 'undefined' && window.crypto?.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  };
+
   const openNew = () => {
     setIsNew(true);
     setEditingChapter({
-      id: `bio-ch-${Date.now()}`,
+      id: generateUuid(),
       chapter: `Chapter ${chapters.length + 1}: The Next Frontier`,
       title: '',
       period: '2026 – Future',
@@ -62,17 +76,17 @@ export default function BiographyAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this biography chapter?')) return;
-    try {
-      await adminMutate<BiographyMilestone>({
-        table: 'biography_milestones',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const res = await adminMutate<BiographyMilestone>({
+      table: 'biography_milestones',
+      action: 'delete',
+      match: { id },
+    });
     setChapters((prev) => prev.filter((c) => c.id !== id));
-    setFeedback({ type: 'success', text: 'Chapter removed.' });
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to remove chapter from database.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Chapter removed.' });
+    }
     setTimeout(() => setFeedback(null), 3000);
   };
 
@@ -81,25 +95,28 @@ export default function BiographyAdminPage() {
     if (!editingChapter) return;
     setSaving(true);
 
+    const safeId = isUuid(editingChapter.id) ? editingChapter.id : generateUuid();
+    const payload = { ...editingChapter, id: safeId };
+
     if (isNew) {
-      setChapters((prev) => [...prev, editingChapter]);
+      setChapters((prev) => [...prev, payload]);
     } else {
-      setChapters((prev) => prev.map((c) => (c.id === editingChapter.id ? editingChapter : c)));
+      setChapters((prev) => prev.map((c) => (c.id === editingChapter.id ? payload : c)));
     }
 
-    try {
-      await adminMutate<BiographyMilestone>({
-        table: 'biography_milestones',
-        action: 'upsert',
-        data: editingChapter,
-      });
-    } catch {
-      // Local fallback
-    }
+    const res = await adminMutate<BiographyMilestone>({
+      table: 'biography_milestones',
+      action: 'upsert',
+      data: payload,
+    });
 
     setEditingChapter(null);
     setSaving(false);
-    setFeedback({ type: 'success', text: `Chapter "${editingChapter.title}" saved successfully!` });
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save chapter to database.' });
+    } else {
+      setFeedback({ type: 'success', text: `Chapter "${payload.title}" saved successfully!` });
+    }
     setTimeout(() => setFeedback(null), 3000);
   };
 
@@ -132,15 +149,27 @@ export default function BiographyAdminPage() {
   const handleSaveAll = async () => {
     setSaving(true);
     try {
-      const promises = chapters.map((ch, idx) =>
+      const sanitizedChapters = chapters.map((ch, idx) => ({
+        ...ch,
+        id: isUuid(ch.id) ? ch.id : generateUuid(),
+        sort_order: idx + 1,
+      }));
+      setChapters(sanitizedChapters);
+
+      const promises = sanitizedChapters.map((ch) =>
         adminMutate<BiographyMilestone>({
           table: 'biography_milestones',
           action: 'upsert',
-          data: { ...ch, sort_order: idx + 1 },
+          data: ch,
         })
       );
-      await Promise.all(promises);
-      setFeedback({ type: 'success', text: 'All biography chapters and timeline structure saved successfully!' });
+      const results = await Promise.all(promises);
+      const failed = results.find((r) => !r.success);
+      if (failed) {
+        setFeedback({ type: 'error', text: failed.error || 'Failed to save timeline to database.' });
+      } else {
+        setFeedback({ type: 'success', text: 'All biography chapters and timeline structure saved successfully!' });
+      }
     } catch {
       setFeedback({ type: 'error', text: 'Failed to save timeline changes to database.' });
     } finally {

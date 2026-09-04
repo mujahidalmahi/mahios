@@ -44,6 +44,7 @@ import NotepadApp from '@/components/apps/NotepadApp';
 import PaintApp from '@/components/apps/PaintApp';
 import TaskManagerApp from '@/components/apps/TaskManagerApp';
 import BlogPostReaderApp from '@/components/apps/BlogPostReaderApp';
+import BiographyChapterReaderApp from '@/components/apps/BiographyChapterReaderApp';
 
 interface DesktopProps {
   data: BiographyDatabaseData;
@@ -205,6 +206,13 @@ export default function Desktop({ data }: DesktopProps) {
       const postId = appId ? appId.replace('blog-', '') : '';
       const post = data.blogPosts.find((p) => p.id === postId || p.slug === postId) || data.blogPosts[0];
       if (post) return <BlogPostReaderApp post={post} />;
+    }
+
+    // Separate dedicated biography chapter reader window
+    if (componentKey === 'BiographyChapterReaderApp' || appId?.startsWith('milestone-') || appId?.startsWith('bio-ch-')) {
+      const milestoneId = appId ? appId.replace(/^(milestone-|bio-ch-)/, '') : '';
+      const milestone = data.biographyTimeline.find((m) => m.id === milestoneId) || data.biographyTimeline[0];
+      if (milestone) return <BiographyChapterReaderApp milestone={milestone} allMilestones={data.biographyTimeline} />;
     }
 
     switch (componentKey) {

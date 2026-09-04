@@ -41,12 +41,31 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminSupabaseClient();
     let queryResult;
 
+    const isUuid = (val: any) =>
+      typeof val === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+    let sanitizedData = data;
+    if (table === 'biography_milestones' && sanitizedData) {
+      if (Array.isArray(sanitizedData)) {
+        sanitizedData = sanitizedData.map((item) => ({
+          ...item,
+          id: item.id && isUuid(item.id) ? item.id : crypto.randomUUID(),
+        }));
+      } else if (typeof sanitizedData === 'object') {
+        sanitizedData = {
+          ...sanitizedData,
+          id: sanitizedData.id && isUuid(sanitizedData.id) ? sanitizedData.id : crypto.randomUUID(),
+        };
+      }
+    }
+
     if (action === 'upsert') {
-      queryResult = await supabase.from(table).upsert(data).select();
+      queryResult = await supabase.from(table).upsert(sanitizedData).select();
     } else if (action === 'insert') {
-      queryResult = await supabase.from(table).insert(data).select();
+      queryResult = await supabase.from(table).insert(sanitizedData).select();
     } else if (action === 'update') {
-      let query = supabase.from(table).update(data);
+      let query = supabase.from(table).update(sanitizedData);
       if (match) {
         Object.entries(match).forEach(([k, v]) => {
           query = query.eq(k, v);
