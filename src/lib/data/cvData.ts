@@ -7,6 +7,7 @@ export interface CVProfile {
   linkedin: string;
   website: string;
   summary: string;
+  photoUrl?: string;
 }
 
 export interface CVExperience {
@@ -68,6 +69,7 @@ export const officialCVData: CVData = {
     location: "Narayanganj, Bangladesh",
     linkedin: "",
     website: "mujahidmahi.me",
+    photoUrl: "/images/profile-cv.png",
     summary: "Software Systems Engineering learner with hands-on experience in low-level software development and full-stack application development. Strongly interested in distributed systems, database engineering, computer networking, software security, and data-intensive system design. I enjoy understanding how systems work under the hood and applying that knowledge through practical projects and experimentation."
   },
   experiences: [
@@ -87,7 +89,7 @@ export const officialCVData: CVData = {
   education: [
     {
       school: "Khulna University",
-      degree: "B.Sc.",
+      degree: "B.Sc. in Computer Science and Engineering",
       start: "Jul 2025",
       end: "June 2029",
       grade: "3.74 / 4.00 CGPA",
@@ -187,11 +189,12 @@ export function resolveCVData(rawSummaryMarkdown?: string): CVData {
   if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (parsed && typeof parsed === 'object' && parsed.profile && Array.isArray(parsed.experiences)) {
+      if (parsed && typeof parsed === 'object') {
         return {
           profile: {
             ...officialCVData.profile,
-            ...parsed.profile,
+            ...(parsed.profile || {}),
+            photoUrl: parsed.profile?.photoUrl || parsed.profile?.avatarUrl || officialCVData.profile.photoUrl,
           },
           experiences: Array.isArray(parsed.experiences) ? parsed.experiences : officialCVData.experiences,
           education: Array.isArray(parsed.education) ? parsed.education : officialCVData.education,
@@ -203,7 +206,7 @@ export function resolveCVData(rawSummaryMarkdown?: string): CVData {
         };
       }
     } catch {
-      // Not valid JSON
+      // Fallback
     }
   }
 

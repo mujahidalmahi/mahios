@@ -3,9 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   FileBadge, Download, Printer, Copy, Check,
-  Share2, Eye, FileText, MapPin, Mail, Globe, Phone,
-  GraduationCap, Briefcase, Code2, Sparkles, Award,
-  Languages, Users, ShieldCheck
+  Share2, Eye, FileText
 } from 'lucide-react';
 import { ResumeConfig, BiographyDatabaseData } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -29,7 +27,7 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
     return resolveCVData(resume?.summary_markdown);
   }, [resume?.summary_markdown]);
 
-  // Generate complete ATS-optimized plaintext resume containing strictly these contents
+  // Generate complete ATS-optimized plaintext resume
   const fullPlainTextResume = useMemo(() => {
     const expText = cv.experiences
       .map((exp) => {
@@ -48,7 +46,7 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
       .join('\n\n');
 
     const certText = cv.certifications
-      .map((c) => `* ${c.name} - ${c.issuer} (${c.date})`)
+      .map((c) => `* ${c.name} — ${c.issuer} (${c.date})`)
       .join('\n');
 
     const achText = cv.achievements
@@ -62,60 +60,47 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
     const skillsText = `* ${cv.skills.join(', ')}`;
 
     const refText = cv.references
-      .map((r) => `* ${r.name} - ${r.title}, ${r.company}\n  Email: ${r.email} | Phone: ${r.phone} | Relationship: ${r.relationship}`)
+      .map((r) => `* ${r.name} - ${r.title}, ${r.company}\n  Relationship: ${r.relationship}\n  Email: ${r.email} | Phone: ${r.phone}`)
       .join('\n\n');
 
-    return `${cv.profile.fullName.toUpperCase()}
+    return `${cv.profile.fullName}
 ${cv.profile.title}
-Location: ${cv.profile.location}
-Email: ${cv.profile.email}
-Phone: ${cv.profile.phone}
-Portfolio: https://${cv.profile.website.replace(/^https?:\/\//, '')}
+${cv.profile.email} | ${cv.profile.phone} | ${cv.profile.location}
+${cv.profile.website}
 
-============================================================
-EXECUTIVE SUMMARY
-============================================================
+Summary
+------------------------------------------------------------
 ${cv.profile.summary}
 
-============================================================
-TECHNICAL SKILLS
-============================================================
-${skillsText}
-
-============================================================
-PROFESSIONAL EXPERIENCE
-============================================================
+Experience
+------------------------------------------------------------
 ${expText}
 
-============================================================
-ACADEMIC BACKGROUND & EDUCATION
-============================================================
+Education
+------------------------------------------------------------
 ${eduText}
 
-============================================================
-CERTIFICATIONS
-============================================================
-${certText}
-
-============================================================
-HONORS & ACHIEVEMENTS
-============================================================
+Achievements
+------------------------------------------------------------
 ${achText}
 
-============================================================
-LANGUAGES
-============================================================
+Certifications
+------------------------------------------------------------
+${certText}
+
+Languages
+------------------------------------------------------------
 ${langText}
 
-============================================================
-PROFESSIONAL REFERENCES
-============================================================
-${refText}
+Skills
+------------------------------------------------------------
+${skillsText}
 
-============================================================
-ATS Optimized • Verified ${resume?.last_updated_date || 'September 2026'} • ${cv.profile.fullName}
+References
+------------------------------------------------------------
+${refText}
 `;
-  }, [cv, resume?.last_updated_date]);
+  }, [cv]);
 
   const handleShareLink = () => {
     playSound('click');
@@ -140,46 +125,48 @@ ATS Optimized • Verified ${resume?.last_updated_date || 'September 2026'} • 
   const handlePrint = () => {
     playSound('click');
 
+    const photoHtml = cv.profile.photoUrl
+      ? `<img src="${cv.profile.photoUrl}" alt="${cv.profile.fullName}" style="width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 1px solid #e2e8f0; flex-shrink: 0;" />`
+      : '';
+
     const printContentHtml = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; line-height: 1.5; font-size: 9.5pt;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000000; line-height: 1.45; font-size: 9.5pt; max-width: 800px; margin: 0 auto; background: #ffffff; padding: 24px;">
         {/* Header */}
-        <div style="border-bottom: 2.5px solid #000080; padding-bottom: 10px; margin-bottom: 14px;">
-          <h1 style="font-size: 20pt; font-weight: 800; margin: 0 0 3px 0; color: #000080; letter-spacing: -0.5px;">${cv.profile.fullName.toUpperCase()}</h1>
-          <div style="font-size: 11pt; font-weight: 600; color: #334155; margin-bottom: 6px;">${cv.profile.title}</div>
-          <div style="font-size: 9pt; color: #64748b; display: flex; flex-wrap: wrap; gap: 12px;">
-            <span>📍 ${cv.profile.location}</span>
-            <span>✉️ ${cv.profile.email}</span>
-            <span>📞 ${cv.profile.phone}</span>
-            <span>🌐 https://${cv.profile.website.replace(/^https?:\/\//, '')}</span>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+          <div>
+            <h1 style="font-size: 20pt; font-weight: 800; margin: 0 0 2px 0; color: #000000; letter-spacing: -0.3px;">${cv.profile.fullName}</h1>
+            <div style="font-size: 10pt; font-weight: 500; color: #4b5563; margin-bottom: 6px;">${cv.profile.title}</div>
+            <div style="font-size: 8.5pt; color: #4b5563; margin-bottom: 2px;">
+              <span>${cv.profile.email}</span> &nbsp;|&nbsp; 
+              <span>${cv.profile.phone}</span> &nbsp;|&nbsp; 
+              <span>${cv.profile.location}</span>
+            </div>
+            <div style="font-size: 8.5pt; color: #4b5563;">
+              <a href="https://${cv.profile.website.replace(/^https?:\/\//, '')}" style="color: #4b5563; text-decoration: none;">${cv.profile.website}</a>
+            </div>
           </div>
+          ${photoHtml}
         </div>
 
-        {/* Executive Summary */}
+        {/* Summary */}
         <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Executive Summary</h2>
-          <div style="font-size: 9.5pt; color: #1e293b; margin: 0; line-height: 1.6;">${renderMarkdownToHtml(cv.profile.summary, 'light')}</div>
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Summary</h2>
+          <div style="font-size: 8.8pt; color: #1f2937; text-align: justify; line-height: 1.5;">${cv.profile.summary}</div>
         </div>
 
-        {/* Technical Skills */}
+        {/* Experience */}
         <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Technical Skills</h2>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 9pt;">
-            ${cv.skills.map((s) => `<span style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 3px; font-family: monospace; font-weight: 600; color: #0f172a;">${s}</span>`).join('')}
-          </div>
-        </div>
-
-        {/* Professional Experience */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Professional Experience</h2>
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Experience</h2>
           ${cv.experiences
             .map(
               (exp) => `
               <div style="margin-bottom: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <div><strong style="font-size: 10pt;">${exp.role}</strong> — <span style="color: #000080; font-weight: 600;">${exp.company}</span></div>
-                  <div style="font-size: 8.5pt; color: #64748b; font-family: monospace;">${exp.start} – ${exp.end} | ${exp.location}</div>
+                  <strong style="font-size: 9.5pt; color: #000000;">${exp.role}</strong>
+                  <span style="font-size: 8.5pt; color: #6b7280;">${exp.start} – ${exp.end}</span>
                 </div>
-                <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 9pt; color: #334155;">
+                <div style="font-size: 8.5pt; color: #4b5563; margin-top: 1px;">${exp.company} · ${exp.location}</div>
+                <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.45;">
                   ${exp.bullets.map((b) => `<li style="margin-bottom: 2px;">${b}</li>`).join('')}
                 </ul>
               </div>
@@ -190,56 +177,78 @@ ATS Optimized • Verified ${resume?.last_updated_date || 'September 2026'} • 
 
         {/* Education */}
         <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Academic Background & Education</h2>
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Education</h2>
           ${cv.education
             .map(
               (edu) => `
               <div style="margin-bottom: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <div><strong style="font-size: 9.5pt;">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</strong> — <span style="color: #000080; font-weight: 600;">${edu.school}</span></div>
-                  <div style="font-size: 8.5pt; color: #64748b; font-family: monospace;">${edu.start} – ${edu.end} | ${edu.grade}</div>
+                  <strong style="font-size: 9.5pt; color: #000000;">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</strong>
+                  <span style="font-size: 8.5pt; color: #6b7280;">${edu.start} – ${edu.end}</span>
                 </div>
+                <div style="font-size: 8.5pt; color: #4b5563;">${edu.school}</div>
+                <div style="font-size: 8.5pt; color: #15803d; font-weight: 600;">Grade: ${edu.grade}</div>
               </div>
             `
             )
             .join('')}
         </div>
 
-        {/* Certifications & Achievements in 2 columns */}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-          <div>
-            <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Certifications</h2>
-            <ul style="margin: 0 0 0 16px; padding: 0; font-size: 9pt; color: #334155;">
-              ${cv.certifications.map((c) => `<li style="margin-bottom: 3px;"><strong>${c.name}</strong> — ${c.issuer} (${c.date})</li>`).join('')}
-            </ul>
-          </div>
-          <div>
-            <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Honors & Achievements</h2>
-            <ul style="margin: 0 0 0 16px; padding: 0; font-size: 9pt; color: #334155;">
-              ${cv.achievements.map((a) => `<li style="margin-bottom: 3px;">${a}</li>`).join('')}
-            </ul>
+        {/* Achievements */}
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Achievements</h2>
+          <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.45;">
+            ${cv.achievements.map((ach) => `<li style="margin-bottom: 2px;">${ach}</li>`).join('')}
+          </ul>
+        </div>
+
+        {/* Certifications */}
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Certifications</h2>
+          <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.45;">
+            ${cv.certifications.map((c) => `<li style="margin-bottom: 2px;">${c.name} — ${c.issuer} (${c.date})</li>`).join('')}
+          </ul>
+        </div>
+
+        {/* Languages */}
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Languages</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px;">
+            ${cv.languages.map((l) => `<span style="background: #f3f4f6; color: #1f2937; border: 1px solid #e5e7eb; border-radius: 3px; padding: 3px 10px; font-size: 8.5pt; font-weight: 500;">${l.name} (${l.level})</span>`).join('')}
           </div>
         </div>
 
-        {/* Languages & References in 2 columns */}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-          <div>
-            <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">Languages</h2>
-            <div style="font-size: 9pt; color: #334155;">
-              ${cv.languages.map((l) => `<span style="margin-right: 10px;"><strong>${l.name}</strong> (${l.level})</span>`).join('')}
-            </div>
-          </div>
-          <div>
-            <h2 style="font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #000080; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">References</h2>
-            <div style="font-size: 8.5pt; color: #334155;">
-              ${cv.references.map((r) => `<div style="margin-bottom: 4px;"><strong>${r.name}</strong> (${r.relationship}) — ${r.title}, ${r.company}<br/><span style="color: #64748b;">${r.email} • ${r.phone}</span></div>`).join('')}
-            </div>
+        {/* Skills */}
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Skills</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px;">
+            ${cv.skills.map((s) => `<span style="background: #0f172a; color: #ffffff; border-radius: 2px; padding: 2.5px 8px; font-size: 8.5pt; font-family: monospace; font-weight: 500;">${s}</span>`).join('')}
           </div>
         </div>
 
-        {/* Footer */}
-        <div style="margin-top: 18px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 8pt; color: #94a3b8; text-align: center; font-family: monospace;">
-          Official Curriculum Vitae • Verified ${resume?.last_updated_date || 'September 2026'} • ${cv.profile.fullName} • ${cv.profile.location}
+        {/* References */}
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 8px 0;">References</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            ${cv.references
+              .map(
+                (ref, idx) => `
+                <div style="${idx === 1 ? 'border-left: 1px solid #d1d5db; padding-left: 14px;' : ''}">
+                  <strong style="font-size: 9.5pt; color: #000000; display: block;">${ref.name}</strong>
+                  <div style="font-size: 8.5pt; color: #374151;">${ref.title}, ${ref.company}</div>
+                  <div style="font-size: 8.5pt; color: #7c3aed; font-style: italic; margin-bottom: 2px;">${ref.relationship}</div>
+                  <div style="font-size: 8.5pt; color: #6b7280;">${ref.email}</div>
+                  <div style="font-size: 8.5pt; color: #6b7280;">${ref.phone}</div>
+                </div>
+              `
+              )
+              .join('')}
+          </div>
+        </div>
+
+        {/* Footer Page 1 */}
+        <div style="text-align: right; font-size: 8pt; color: #9ca3af; padding-top: 10px;">
+          1
         </div>
       </div>
     `;
@@ -366,115 +375,84 @@ ATS Optimized • Verified ${resume?.last_updated_date || 'September 2026'} • 
         </div>
       </div>
 
-      {/* Mode 1: Document View (Formatted A4 Sheet) */}
+      {/* Mode 1: Document View (Clean Formatted Paper Sheet matching Reference Image) */}
       {viewMode === 'document' ? (
-        <div className="bg-[#6b7280]/15 p-2 sm:p-5 retro-box-inset rounded-xs flex justify-center">
-          <div className="w-full max-w-3xl bg-white shadow-lg border border-gray-300 p-5 sm:p-8 space-y-6 text-[#0f172a] rounded-xs select-text">
-            {/* Header / Identity Banner */}
-            <div className="border-b-2 border-[#000080] pb-4 space-y-2 text-center sm:text-left">
-              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#000080]">
-                  {cv.profile.fullName.toUpperCase()}
+        <div className="bg-[#52525b]/20 p-2 sm:p-5 retro-box-inset rounded-xs flex justify-center">
+          <div className="w-full max-w-[760px] bg-white shadow-xl border border-gray-300 p-6 sm:p-10 space-y-5 text-[#000000] rounded-xs select-text font-sans">
+            
+            {/* Header: Name, Title, Contact Info + Right Circular Avatar */}
+            <div className="flex justify-between items-start gap-4">
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-black leading-none">
+                  {cv.profile.fullName}
                 </h1>
-                <span className="text-xs font-mono text-gray-500">
-                  Verified: {resume?.last_updated_date || 'September 2026'}
-                </span>
-              </div>
-              <p className="text-sm sm:text-base font-semibold text-gray-700">
-                {cv.profile.title}
-              </p>
-
-              {/* Contact Information & Channels */}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1.5 text-xs text-gray-600 font-sans pt-1">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-red-500" />
-                  {cv.profile.location}
-                </span>
-                <a
-                  href={`mailto:${cv.profile.email}`}
-                  className="flex items-center gap-1 hover:text-[#000080] underline decoration-gray-300 transition-colors"
-                >
-                  <Mail className="w-3.5 h-3.5 text-blue-500" />
-                  {cv.profile.email}
-                </a>
-                <a
-                  href={`tel:${cv.profile.phone.replace(/\s+/g, '')}`}
-                  className="flex items-center gap-1 hover:text-[#000080] underline decoration-gray-300 transition-colors"
-                >
-                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                  {cv.profile.phone}
-                </a>
-                <a
-                  href={`https://${cv.profile.website.replace(/^https?:\/\//, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1 hover:text-[#000080] underline decoration-gray-300 transition-colors"
-                >
-                  <Globe className="w-3.5 h-3.5 text-indigo-600" />
-                  {cv.profile.website}
-                </a>
-              </div>
-            </div>
-
-            {/* Section: Executive Summary */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                <Sparkles className="w-3.5 h-3.5 text-[#000080]" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                  Executive Summary
-                </h2>
-              </div>
-              <div
-                className="text-xs sm:text-[13px] leading-relaxed text-gray-800 space-y-1.5"
-                dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(cv.profile.summary, 'light') }}
-              />
-            </div>
-
-            {/* Section: Technical Skills */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                <Code2 className="w-3.5 h-3.5 text-[#000080]" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                  Technical Skills
-                </h2>
-              </div>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {cv.skills.map((skill, idx) => (
-                  <span
-                    key={idx}
-                    className="text-xs px-2.5 py-1 bg-slate-100 text-slate-800 border border-slate-300 rounded font-mono font-medium shadow-2xs"
+                <p className="text-[13px] font-medium text-gray-600 pt-0.5">
+                  {cv.profile.title}
+                </p>
+                <div className="text-[11px] text-gray-500 pt-1 flex flex-wrap items-center gap-1.5 leading-tight">
+                  <span>{cv.profile.email}</span>
+                  <span className="text-gray-400">|</span>
+                  <span>{cv.profile.phone}</span>
+                  <span className="text-gray-400">|</span>
+                  <span>{cv.profile.location}</span>
+                </div>
+                <div>
+                  <a
+                    href={`https://${cv.profile.website.replace(/^https?:\/\//, '')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-gray-500 hover:text-black transition-colors block"
                   >
-                    {skill}
-                  </span>
-                ))}
+                    {cv.profile.website}
+                  </a>
+                </div>
               </div>
+
+              {/* Avatar Circle */}
+              {cv.profile.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={cv.profile.photoUrl}
+                  alt={cv.profile.fullName}
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-gray-200 shadow-xs shrink-0"
+                />
+              ) : (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-lg shrink-0">
+                  M
+                </div>
+              )}
             </div>
 
-            {/* Section: Professional Experience */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                <Briefcase className="w-3.5 h-3.5 text-[#000080]" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                  Professional Experience
-                </h2>
-              </div>
+            {/* Section: Summary */}
+            <div className="space-y-1.5 pt-1">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Summary
+              </h2>
+              <p className="text-[11px] sm:text-[11.5px] text-gray-800 leading-relaxed text-justify">
+                {cv.profile.summary}
+              </p>
+            </div>
+
+            {/* Section: Experience */}
+            <div className="space-y-2">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Experience
+              </h2>
               <div className="space-y-3">
                 {cv.experiences.map((exp, idx) => (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <div>
-                        <span className="text-sm font-bold text-gray-900">{exp.role}</span>
-                        <span className="text-sm font-semibold text-[#000080]"> — {exp.company}</span>
-                      </div>
-                      <span className="text-xs font-mono text-gray-500">
-                        {exp.start} – {exp.end} • {exp.location}
-                      </span>
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-baseline justify-between">
+                      <strong className="text-[12px] font-bold text-black">{exp.role}</strong>
+                      <span className="text-[11px] text-gray-500 font-normal">{exp.start} – {exp.end}</span>
+                    </div>
+                    <div className="text-[11px] text-gray-600">
+                      {exp.company} · {exp.location}
                     </div>
                     {exp.bullets && exp.bullets.length > 0 && (
-                      <ul className="list-disc list-inside text-xs text-gray-700 space-y-1 pl-1">
-                        {exp.bullets.map((bullet, bIdx) => (
-                          <li key={bIdx} className="leading-relaxed">
-                            {bullet}
+                      <ul className="list-disc list-outside ml-4 text-[11px] text-gray-700 space-y-0.5 pt-0.5">
+                        {exp.bullets.map((b, bIdx) => (
+                          <li key={bIdx} className="leading-snug">
+                            {b}
                           </li>
                         ))}
                       </ul>
@@ -484,129 +462,115 @@ ATS Optimized • Verified ${resume?.last_updated_date || 'September 2026'} • 
               </div>
             </div>
 
-            {/* Section: Academic Background & Education */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                <GraduationCap className="w-3.5 h-3.5 text-[#000080]" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                  Academic Background & Education
-                </h2>
-              </div>
+            {/* Section: Education */}
+            <div className="space-y-2">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Education
+              </h2>
               <div className="space-y-2.5">
                 {cv.education.map((edu, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <div>
-                      <span className="text-sm font-bold text-gray-900">
+                  <div key={idx} className="space-y-0.5">
+                    <div className="flex items-baseline justify-between">
+                      <strong className="text-[12px] font-bold text-black">
                         {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
-                      </span>
-                      <span className="text-sm font-semibold text-[#000080]"> — {edu.school}</span>
+                      </strong>
+                      <span className="text-[11px] text-gray-500 font-normal">{edu.start} – {edu.end}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-mono text-gray-500 shrink-0">
-                      <span>{edu.start} – {edu.end}</span>
-                      {edu.grade && (
-                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-semibold rounded-2xs">
-                          {edu.grade}
-                        </span>
-                      )}
+                    <div className="text-[11px] text-gray-600">{edu.school}</div>
+                    <div className="text-[11px] text-[#1b7340] font-semibold">
+                      Grade: {edu.grade}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Grid 2-Column: Certifications & Honors */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-1">
-              {/* Section: Certifications */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#000080]" />
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                    Certifications
-                  </h2>
-                </div>
-                <ul className="space-y-1.5 text-xs text-gray-700">
-                  {cv.certifications.map((cert, idx) => (
-                    <li key={idx} className="flex items-baseline justify-between gap-2">
-                      <div>
-                        <strong className="text-gray-900">{cert.name}</strong>
-                        <span className="text-gray-500"> — {cert.issuer}</span>
-                      </div>
-                      <span className="text-[11px] font-mono text-gray-400 shrink-0">{cert.date}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {/* Section: Achievements */}
+            <div className="space-y-1.5">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Achievements
+              </h2>
+              <ul className="list-disc list-outside ml-4 text-[11px] text-gray-700 space-y-0.5">
+                {cv.achievements.map((ach, idx) => (
+                  <li key={idx} className="leading-snug">
+                    {ach}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-              {/* Section: Honors & Achievements */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                  <Award className="w-3.5 h-3.5 text-[#000080]" />
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                    Honors & Achievements
-                  </h2>
-                </div>
-                <ul className="list-disc list-inside space-y-1 text-xs text-gray-700">
-                  {cv.achievements.map((ach, idx) => (
-                    <li key={idx} className="leading-relaxed">
-                      {ach}
-                    </li>
-                  ))}
-                </ul>
+            {/* Section: Certifications */}
+            <div className="space-y-1.5">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Certifications
+              </h2>
+              <ul className="list-disc list-outside ml-4 text-[11px] text-gray-700 space-y-0.5">
+                {cv.certifications.map((c, idx) => (
+                  <li key={idx} className="leading-snug">
+                    {c.name} — {c.issuer} ({c.date})
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Section: Languages */}
+            <div className="space-y-2">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Languages
+              </h2>
+              <div className="flex flex-wrap gap-2 pt-0.5">
+                {cv.languages.map((l, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 bg-[#f3f4f6] text-gray-800 text-[11px] font-medium rounded-xs border border-gray-200"
+                  >
+                    {l.name} ({l.level})
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* Grid 2-Column: Languages & Professional References */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-1">
-              {/* Section: Languages */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                  <Languages className="w-3.5 h-3.5 text-[#000080]" />
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                    Languages
-                  </h2>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  {cv.languages.map((lang, idx) => (
-                    <span key={idx} className="px-2 py-0.5 bg-gray-50 border border-gray-200 rounded text-gray-700">
-                      <strong>{lang.name}</strong> <span className="text-gray-500 font-mono text-[11px]">({lang.level})</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Section: References */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 border-b border-gray-200 pb-1">
-                  <Users className="w-3.5 h-3.5 text-[#000080]" />
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#000080]">
-                    Professional References
-                  </h2>
-                </div>
-                <div className="space-y-2 text-xs text-gray-700">
-                  {cv.references.map((ref, idx) => (
-                    <div key={idx} className="p-2 bg-gray-50 border border-gray-200 rounded-2xs space-y-0.5">
-                      <div className="flex items-baseline justify-between gap-1">
-                        <strong className="text-gray-900">{ref.name}</strong>
-                        <span className="text-[10px] px-1 bg-gray-200 text-gray-700 rounded font-mono">
-                          {ref.relationship}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-600 font-medium">{ref.title}, {ref.company}</p>
-                      <div className="text-[10px] text-gray-500 font-mono flex flex-wrap gap-x-2">
-                        <span>{ref.email}</span>
-                        <span>•</span>
-                        <span>{ref.phone}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Section: Skills */}
+            <div className="space-y-2">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                Skills
+              </h2>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {cv.skills.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 bg-[#0b0f19] text-white text-[11px] font-mono font-medium rounded-2xs shadow-xs"
+                  >
+                    {skill}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* Document Footer */}
-            <div className="pt-4 border-t border-gray-200 text-center text-[10px] text-gray-400 font-mono flex flex-col sm:flex-row items-center justify-between gap-1">
-              <span>Official Curriculum Vitae • {cv.profile.fullName}</span>
-              <span>ATS Optimized & Machine Readable • {cv.profile.location}</span>
+            {/* Section: References */}
+            <div className="space-y-2">
+              <h2 className="text-[13px] font-bold text-black uppercase tracking-wide border-b-[1.5px] border-black pb-0.5">
+                References
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                {cv.references.map((ref, idx) => (
+                  <div
+                    key={idx}
+                    className={`space-y-0.5 ${idx === 1 ? 'sm:border-l sm:border-gray-300 sm:pl-4' : ''}`}
+                  >
+                    <strong className="text-[12px] font-bold text-black block">{ref.name}</strong>
+                    <div className="text-[11px] text-gray-700">{ref.title}, {ref.company}</div>
+                    <div className="text-[11px] text-purple-600 italic font-medium">{ref.relationship}</div>
+                    <div className="text-[11px] text-gray-500">{ref.email}</div>
+                    <div className="text-[11px] text-gray-500">{ref.phone}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer: Page 1 */}
+            <div className="pt-4 text-right text-[11px] text-gray-400 font-mono">
+              1
             </div>
           </div>
         </div>
