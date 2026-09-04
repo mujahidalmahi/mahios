@@ -151,3 +151,56 @@ html, body {
   color: #ffffff;
   font-weight: 600;
 }
+
+/* Print Media Styles */
+@media print {
+  @page {
+    margin: 15mm;
+    size: auto;
+  }
+
+  html, body {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  main {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    inset: auto !important;
+  }
+
+  [data-desktop-canvas] {
+    background: #ffffff !important;
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Hide Desktop Environment Chrome */
+  [data-taskbar],
+  [data-start-menu],
+  .taskbar,
+  .desktop-icons,
+  .crt-scanlines,
+  .crt-screen-curvature,
+  .matrix-canvas,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Expand scrollable window areas */
+  .overflow-y-auto,
+  .overflow-auto {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+}

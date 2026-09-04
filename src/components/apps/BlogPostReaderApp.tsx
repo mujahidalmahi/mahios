@@ -8,6 +8,7 @@ import {
 import { BlogPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { parseBlogReactions } from '@/lib/data/blogReactions';
+import { printDocument } from '@/lib/utils/printDocument';
 
 interface BlogPostReaderAppProps {
   post: BlogPost;
@@ -108,9 +109,22 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
 
   const handlePrint = () => {
     playSound('click');
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+    printDocument({
+      title: post.title,
+      categoryBadge: 'Technical Article & Dev Notes',
+      subtitle: post.excerpt,
+      periodOrDate: post.published_at
+        ? new Date(post.published_at).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'Recent Note',
+      contentHtml: post.content_html,
+      tags: post.tags,
+      author: 'Mujahid Al Mahi',
+      footerNote: 'Published on MahiOS 05 by Mujahid Al Mahi',
+    });
   };
 
   // Ensure all links inside blog content open safely in a new tab

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { BiographyMilestone } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import { printDocument } from '@/lib/utils/printDocument';
 import { useWindowStore } from '@/stores/windowStore';
 
 interface BiographyChapterReaderAppProps {
@@ -58,9 +59,17 @@ export default function BiographyChapterReaderApp({
 
   const handlePrint = () => {
     playSound('click');
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+    printDocument({
+      title: currentMilestone.title,
+      categoryBadge: currentMilestone.chapter,
+      periodOrDate: currentMilestone.period,
+      location: currentMilestone.location,
+      contentHtml: currentMilestone.story_html,
+      calloutTitle: 'Key Realization & Takeaway',
+      calloutText: currentMilestone.key_learning,
+      author: 'Mujahid Al Mahi',
+      footerNote: 'Mujahid Al Mahi Digital Biography • Timeline Chapter',
+    });
   };
 
   const getThemeClasses = () => {

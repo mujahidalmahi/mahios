@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { ResumeConfig } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import { printDocument } from '@/lib/utils/printDocument';
 
 interface ResumeAppProps {
   resume: ResumeConfig;
@@ -28,7 +29,14 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
 
   const handlePrint = () => {
     playSound('click');
-    window.print();
+    printDocument({
+      title: resume.download_filename ? resume.download_filename.replace('.pdf', '') : 'Mujahid_Al_Mahi_Resume',
+      categoryBadge: 'Curriculum Vitae & Competency Summary',
+      periodOrDate: `Verified: ${resume.last_updated_date || 'September 2026'}`,
+      author: 'Mujahid Al Mahi',
+      plainText: resume.summary_markdown,
+      footerNote: 'ATS-Optimized Curriculum Vitae • Mujahid Al Mahi',
+    });
   };
 
   const handleCopyText = () => {
