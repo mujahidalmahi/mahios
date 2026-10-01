@@ -258,21 +258,28 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
 
   // Timeline List View
   return (
-    <div className="space-y-3 pb-6 flex flex-col min-h-full flex-1">
+    <div className="space-y-3 pb-8 flex flex-col min-h-full flex-1 font-sans">
       <div className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
         Life Milestones & Timeline ({sortedMilestones.length})
       </div>
 
-      <div className="relative pl-6 space-y-3.5 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5 before:bg-blue-200">
-        {sortedMilestones.map((milestone) => (
-          <div
-            key={milestone.id}
-            onClick={() => {
-              playSound('open');
-              setActiveMilestone(milestone);
-            }}
-            className="relative bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-2 cursor-pointer hover:border-blue-400 active:scale-[0.99] transition-all"
-          >
+      {sortedMilestones.length === 0 ? (
+        <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 space-y-2">
+          <BookOpen className="w-8 h-8 text-slate-300 mx-auto" />
+          <p className="text-xs text-slate-600 font-medium">No biography chapters documented yet</p>
+          <p className="text-[11px] text-slate-400">Add timeline milestones in the Admin Dashboard</p>
+        </div>
+      ) : (
+        <div className="relative pl-6 space-y-3.5 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5 before:bg-blue-200">
+          {sortedMilestones.map((milestone) => (
+            <div
+              key={milestone.id}
+              onClick={() => {
+                playSound('open');
+                setActiveMilestone(milestone);
+              }}
+              className="relative bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs space-y-2 cursor-pointer hover:border-blue-400 active:scale-[0.99] transition-all"
+            >
             {/* Timeline bullet dot */}
             <div className="absolute -left-5.5 top-5 w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow-xs" />
 
@@ -299,9 +306,10 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
                 <span>{milestone.location}</span>
               </div>
             )}
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

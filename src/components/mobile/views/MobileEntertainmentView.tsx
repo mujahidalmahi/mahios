@@ -16,12 +16,21 @@ const ITEMS_PER_PAGE = 6;
 
 export default function MobileEntertainmentView({ entertainment = [] }: MobileEntertainmentViewProps) {
   const { playSound } = useSystemStore();
-  const [filter, setFilter] = useState<'all' | 'game' | 'movie' | 'series' | 'book'>('all');
+  const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Discover types dynamically from database + standard presets
+  const availableTypes = useMemo(() => {
+    const types = new Set<string>(['game', 'movie', 'series', 'book']);
+    entertainment.forEach((e) => {
+      if (e.type) types.add(e.type.toLowerCase().trim());
+    });
+    return ['all', ...Array.from(types)];
+  }, [entertainment]);
+
   const getIcon = (type: string) => {
-    switch (type) {
+    switch (type?.toLowerCase()) {
       case 'game':
         return <Gamepad2 className="w-3.5 h-3.5 text-emerald-600" />;
       case 'movie':
@@ -37,11 +46,11 @@ export default function MobileEntertainmentView({ entertainment = [] }: MobileEn
   };
 
   const filteredItems = useMemo(() => {
-    let list = entertainment;
+    let list = [...entertainment].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
     if (filter !== 'all') {
       list = list.filter((e) => {
         if (filter === 'series') return e.type === 'series' || e.type === 'anime';
-        return e.type === filter;
+        return e.type?.toLowerCase() === filter;
       });
     }
 
@@ -72,21 +81,23 @@ export default function MobileEntertainmentView({ entertainment = [] }: MobileEn
   };
 
   return (
-    <div className="space-y-3 pb-6 flex flex-col min-h-full flex-1">
+    <div className="space-y-3 pb-8 flex flex-col min-h-full flex-1 font-sans">
       {/* Category Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        {(['all', 'game', 'movie', 'series', 'book'] as const).map((t) => {
+        {availableTypes.map((t) => {
           const isSelected = filter === t;
           const label =
             t === 'all'
               ? 'All Media'
               : t === 'series'
-              ? 'Series'
+              ? 'Series & Anime'
               : t === 'game'
               ? 'Games'
               : t === 'movie'
               ? 'Movies'
-              : 'Books';
+              : t === 'book'
+              ? 'Books'
+              : t.charAt(0).toUpperCase() + t.slice(1);
 
           return (
             <button
@@ -119,8 +130,8 @@ export default function MobileEntertainmentView({ entertainment = [] }: MobileEn
             setSearchQuery(e.target.value);
             setCurrentPage(1);
           }}
-          placeholder="Search games, cinema, literature..."
-          className="w-full pl-8.5 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400 shadow-2xs transition-all"
+          placeholder="Search games, cinema, literature, creators..."
+          className="w-full pl-8.5 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400 shadow-2xs transition-all font-medium"
         />
         {searchQuery && (
           <button
@@ -138,30 +149,34 @@ export default function MobileEntertainmentView({ entertainment = [] }: MobileEn
 
       {/* Items Grid */}
       {filteredItems.length === 0 ? (
-        <div className="bg-white rounded-2xl p-6 text-center border border-slate-200 space-y-2">
+        <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 space-y-2">
           <Gamepad2 className="w-8 h-8 text-slate-300 mx-auto" />
           <p className="text-xs text-slate-600 font-medium">No media found matching your filter</p>
+          <p className="text-[11px] text-slate-400">Add media in the Admin Dashboard</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {paginatedItems.map((item) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {paginatedItems.map((item, index) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3 flex flex-col justify-between"
+              className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs space-y-3 flex flex-col justify-between hover:border-fuchsia-300 transition-all"
             >
               <div className="space-y-2.5">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                  <div className="flex items-start gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs">
                       {getIcon(item.type || '')}
                     </div>
-                    <div>
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
-                        {item.type || 'Media'}
-                      </span>
-                      <h4 className="text-xs font-bold text-slate-900 mt-1 leading-snug">{item.title}</h4>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[9px] font-mono font-bold uppercase tracking-wider">
+                          {item.type || 'Media'}
+                        </span>
+                        <span className="text-[9px] font-mono text-slate-400">#{item.sort_order ?? index + 1}</span>
+                      </div>
+                      <h4 className="text-xs font-black text-slate-900 mt-1 leading-snug truncate">{item.title}</h4>
                       {item.creator && (
-                        <div className="text-[11px] text-slate-500 font-medium">by {item.creator}</div>
+                        <div className="text-[11px] text-slate-500 font-medium truncate">by {item.creator}</div>
                       )}
                     </div>
                   </div>
@@ -175,7 +190,7 @@ export default function MobileEntertainmentView({ entertainment = [] }: MobileEn
                 </div>
 
                 {item.cover_url && (
-                  <div className="w-full h-36 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                  <div className="w-full h-40 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner">
                     <img
                       src={item.cover_url}
                       alt={item.title}
@@ -192,10 +207,15 @@ export default function MobileEntertainmentView({ entertainment = [] }: MobileEn
               </div>
 
               {item.favorite_quote && (
-                <div className="text-[11px] italic text-slate-600 border-l-2 border-fuchsia-400 pl-2.5 py-0.5 bg-fuchsia-50/50 rounded-r-lg font-serif">
+                <div className="text-[11px] italic text-slate-700 border-l-2 border-fuchsia-400 pl-2.5 py-1 bg-fuchsia-50/60 rounded-r-lg font-serif">
                   &ldquo;{item.favorite_quote}&rdquo;
                 </div>
               )}
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span>Masterwork #{item.sort_order ?? index + 1}</span>
+                <span className="text-fuchsia-700 font-bold">★ Essential Masterpiece</span>
+              </div>
             </div>
           ))}
         </div>

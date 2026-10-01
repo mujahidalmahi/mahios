@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Image as ImageIcon, ChevronLeft, ChevronRight, X,
-  Maximize2, Play, Pause, Download, ExternalLink
+  Maximize2, Play, Pause, Download, ExternalLink, Calendar, Tag
 } from 'lucide-react';
 import { GalleryCategory, GalleryImage } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -22,12 +22,19 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [isSlideshow, setIsSlideshow] = useState(false);
 
+  // Category lookup map for fast name resolution
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    categories.forEach((c) => map.set(c.id, c.name));
+    return map;
+  }, [categories]);
+
   const filteredImages = useMemo(() => {
-    let list = images;
+    let list = [...images].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
     if (selectedCatId !== 'all') {
       list = list.filter((img) => img.category_id === selectedCatId);
     }
-    return list.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    return list;
   }, [images, selectedCatId]);
 
   const totalPages = Math.max(1, Math.ceil(filteredImages.length / ITEMS_PER_PAGE));
@@ -81,7 +88,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
   };
 
   return (
-    <div className="space-y-3 pb-6 flex flex-col min-h-full flex-1">
+    <div className="space-y-3 pb-8 flex flex-col min-h-full flex-1 font-sans">
       {/* Category Filter Pills */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
         <button
@@ -99,7 +106,9 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
         >
           All ({images.length})
         </button>
+
         {categories.map((cat) => {
+          const isSelected = selectedCatId === cat.id;
           const count = images.filter((img) => img.category_id === cat.id).length;
           return (
             <button
@@ -111,7 +120,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
                 setCurrentPage(1);
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer border ${
-                selectedCatId === cat.id
+                isSelected
                   ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                   : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
               }`}
@@ -122,32 +131,46 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
         })}
       </div>
 
-      {/* Photo Stream */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {paginatedImages.map((image) => (
-          <div
-            key={image.id}
-            onClick={() => handleOpenLightbox(image)}
-            className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xs group cursor-pointer active:scale-98 transition-transform"
-          >
-            <div className="w-full h-32 bg-slate-100 overflow-hidden relative">
-              <img
-                src={image.image_url}
-                alt={image.title || 'Photo'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+      {filteredImages.length === 0 ? (
+        <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 space-y-2">
+          <ImageIcon className="w-8 h-8 text-slate-300 mx-auto" />
+          <p className="text-xs text-slate-600 font-medium">No photos found in this category</p>
+          <p className="text-[11px] text-slate-400">Upload images in the Admin Dashboard</p>
+        </div>
+      ) : (
+        /* Photo Stream */
+        <div className="grid grid-cols-2 gap-2.5">
+          {paginatedImages.map((image) => (
+            <div
+              key={image.id}
+              onClick={() => handleOpenLightbox(image)}
+              className="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-2xs group cursor-pointer active:scale-98 transition-transform hover:border-blue-400"
+            >
+              <div className="w-full h-36 bg-slate-100 overflow-hidden relative">
+                <img
+                  src={image.image_url}
+                  alt={image.title || 'Photo'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div className="p-2.5">
+                <h4 className="text-xs font-bold text-slate-900 truncate">{image.title || 'Untitled'}</h4>
+                {image.caption && (
+                  <p className="text-[10px] text-slate-500 truncate mt-0.5">{image.caption}</p>
+                )}
+                {image.taken_at && (
+                  <div className="text-[9px] font-mono text-slate-400 mt-1 flex items-center gap-1">
+                    <Calendar className="w-2.5 h-2.5" />
+                    <span>{image.taken_at}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="p-2.5">
-              <h4 className="text-xs font-bold text-slate-900 truncate">{image.title || 'Untitled'}</h4>
-              {image.caption && (
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">{image.caption}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Lightbox Modal with Next/Prev and Slideshow */}
+      {/* Lightbox Modal with Next/Prev, Slideshow, Taken Date, and Tags */}
       {activeImage && (
         <div
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 animate-in fade-in duration-150 select-none"
@@ -162,7 +185,14 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             onClick={(e) => e.stopPropagation()}
           >
             <div className="min-w-0 pr-3">
-              <span className="text-xs font-bold block truncate">{activeImage.title || 'Photo'}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold block truncate">{activeImage.title || 'Photo'}</span>
+                {activeImage.category_id && categoryMap.get(activeImage.category_id) && (
+                  <span className="text-[9px] font-mono uppercase bg-white/20 px-1.5 py-0.5 rounded text-white/90">
+                    {categoryMap.get(activeImage.category_id)}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-mono text-slate-400">
                 {selectedImageIndex! + 1} of {filteredImages.length}
               </span>
@@ -182,20 +212,9 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
                 {isSlideshow ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               </button>
 
-              <a
-                href={activeImage.image_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20"
-                title="Open original"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-
               <button
                 type="button"
                 onClick={() => {
-                  playSound('close');
                   setSelectedImageIndex(null);
                   setIsSlideshow(false);
                 }}
@@ -214,7 +233,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             <img
               src={activeImage.image_url}
               alt={activeImage.title || 'Photo'}
-              className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl"
+              className="max-h-[65vh] max-w-full object-contain rounded-xl shadow-2xl"
             />
 
             {/* Prev Button */}
@@ -236,15 +255,31 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             </button>
           </div>
 
-          {/* Caption */}
-          {activeImage.caption && (
-            <div
-              className="text-center text-xs text-slate-300 font-medium pb-2 px-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {activeImage.caption}
+          {/* Bottom Details (Caption, Taken Date, Tags) */}
+          <div
+            className="text-center text-xs text-slate-300 font-medium pb-2 px-4 space-y-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {activeImage.caption && (
+              <p className="text-white text-xs">{activeImage.caption}</p>
+            )}
+
+            <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-slate-400 pt-0.5">
+              {activeImage.taken_at && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-slate-400" />
+                  <span>{activeImage.taken_at}</span>
+                </span>
+              )}
+
+              {activeImage.tags && activeImage.tags.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <Tag className="w-3 h-3 text-slate-400" />
+                  <span>{activeImage.tags.join(', ')}</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 
