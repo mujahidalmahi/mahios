@@ -35,7 +35,7 @@ export default function StartMenu({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [shutdownDialogOpen, setShutdownDialogOpen] = useState(false);
-  const [shutdownMode, setShutdownMode] = useState<'shutdown' | 'restart' | 'dos'>('shutdown');
+  const [shutdownMode, setShutdownMode] = useState<'shutdown' | 'restart'>('shutdown');
   const [isSafeToTurnOff, setIsSafeToTurnOff] = useState(false);
 
   const handleConfirmShutdown = () => {
@@ -47,23 +47,6 @@ export default function StartMenu({
     } else if (shutdownMode === 'restart') {
       playSound('boot');
       startBoot();
-    } else if (shutdownMode === 'dos') {
-      const termApp = apps.find((a) => a.app_id === 'terminal') || {
-        id: 'terminal',
-        app_id: 'terminal',
-        title: 'MS-DOS Prompt',
-        icon_name: 'Terminal',
-        component_key: 'TerminalApp',
-        default_x: 40,
-        default_y: 40,
-        default_width: 800,
-        default_height: 500,
-        is_system_app: true,
-        is_visible: true,
-        sort_order: 1,
-        category: 'System',
-      };
-      openWindow(termApp);
     }
   };
 
@@ -408,17 +391,6 @@ export default function StartMenu({
                 />
                 <span>Restart</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="shutdownOption"
-                  value="dos"
-                  checked={shutdownMode === 'dos'}
-                  onChange={() => setShutdownMode('dos')}
-                  className="accent-[#000080] cursor-pointer"
-                />
-                <span>Restart in MS-DOS mode</span>
-              </label>
             </div>
           </div>
         </div>
@@ -438,13 +410,6 @@ export default function StartMenu({
             className="w-18 py-1 retro-btn text-xs cursor-pointer hover:bg-gray-200"
           >
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => alert("MahiOS 05: An authentic retro Windows 95/98 web operating system portfolio. Select 'Restart' to reboot or 'MS-DOS' for command terminal.")}
-            className="w-18 py-1 retro-btn text-xs cursor-pointer hover:bg-gray-200"
-          >
-            Help
           </button>
         </div>
       </div>
