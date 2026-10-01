@@ -3,13 +3,14 @@
 import React, { useState, useMemo } from 'react';
 import {
   FileBadge, Download, Printer, Copy, Check,
-  Share2, Eye, FileText
+  Share2, Eye, FileText, Contact
 } from 'lucide-react';
 import { ResumeConfig, BiographyDatabaseData } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { printDocument } from '@/lib/utils/printDocument';
 import { renderMarkdownToHtml } from '@/lib/utils/markdownRenderer';
 import { resolveCVData, CVData } from '@/lib/data/cvData';
+import { downloadVCard } from '@/lib/utils/vcardGenerator';
 
 interface ResumeAppProps {
   resume: ResumeConfig;
@@ -360,6 +361,27 @@ ${refText}
             >
               <Printer className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Print</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playSound('click');
+                downloadVCard({
+                  fullName: cv.profile.fullName || 'Mujahid Al Mahi',
+                  title: cv.profile.title || 'Software Systems Engineer',
+                  email: cv.profile.email || 'mujahidmahi.official@gmail.com',
+                  phone: cv.profile.phone || '+880 1805128634',
+                  location: cv.profile.location || 'Narayanganj, Bangladesh',
+                  website: cv.profile.website?.startsWith('http') ? cv.profile.website : `https://${cv.profile.website || 'mujahidmahi.me'}`,
+                  note: cv.profile.summary,
+                });
+              }}
+              className="retro-btn px-1.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer"
+              title="Download Electronic Contact Card (.vcf with photo)"
+            >
+              <Contact className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">vCard</span>
             </button>
 
             <button

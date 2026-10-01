@@ -4,11 +4,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   User, MapPin, Coffee, Code2, Award, Sparkles, Quote,
   Copy, Check, Clock, Download, Lightbulb, Compass,
-  BookOpen, HelpCircle, HeartHandshake, ShieldCheck
+  BookOpen, HelpCircle, HeartHandshake, ShieldCheck,
+  Contact, Phone, Mail, Globe, X
 } from 'lucide-react';
 import { AboutContent, PhilosophyItem } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { parseAboutExtras } from '@/lib/data/aboutExtras';
+import { downloadVCard } from '@/lib/utils/vcardGenerator';
 
 interface AboutAppProps {
   about: AboutContent;
@@ -21,6 +23,7 @@ export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
   const [dhakaTime, setDhakaTime] = useState('');
   const [isAwake, setIsAwake] = useState(true);
   const [openTrivia, setOpenTrivia] = useState<number | null>(null);
+  const [showVCardModal, setShowVCardModal] = useState(false);
   const { playSound } = useSystemStore();
 
   // Normalize interests from database
@@ -74,25 +77,20 @@ export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
 
   const handleDownloadVCard = () => {
     playSound('click');
-    const vcard = `BEGIN:VCARD
-VERSION:3.0
-FN:${about.full_name}
-TITLE:Full-Stack Software Engineer & Creative Technologist
-EMAIL:mujahidmahi.official@gmail.com
-URL:https://mujahidmahi.me
-ADR:;;${about.location};;;;
-NOTE:${about.status_text}
-END:VCARD`;
-
-    const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${about.full_name.replace(/\s+/g, '_')}.vcf`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadVCard({
+      fullName: about.full_name || 'Mujahid Al Mahi',
+      title: 'Software Systems Engineer',
+      email: 'mujahidmahi.official@gmail.com',
+      phone: '+880 1805128634',
+      location: about.location || 'Narayanganj, Bangladesh',
+      website: 'https://mujahidmahi.me',
+      note: about.status_text || 'Software Systems Engineer & Creative Technologist. Portfolio: https://mujahidmahi.me',
+    });
   };
+
+  const avatarSrc = about.avatar_url && !about.avatar_url.includes('unsplash')
+    ? about.avatar_url
+    : '/images/formal.png';
 
   return (
     <div className="space-y-4 text-[#111827] max-w-full overflow-hidden break-words">
@@ -100,14 +98,12 @@ END:VCARD`;
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-[#f3f4f6] retro-box-inset rounded-xs">
         {/* Profile Avatar */}
         <div className="w-20 h-20 sm:w-26 sm:h-26 rounded-xs retro-box-outset p-1 bg-white shrink-0 overflow-hidden relative group">
-          {about.avatar_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={about.avatar_url} alt={about.full_name} className="w-full h-full object-cover rounded-2xs" />
-          ) : (
-            <div className="w-full h-full bg-[#000080] flex items-center justify-center text-white font-bold text-2xl">
-              M
-            </div>
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={avatarSrc}
+            alt={about.full_name}
+            className="w-full h-full object-cover rounded-2xs"
+          />
           <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" title="Online & Available" />
         </div>
 
@@ -118,6 +114,19 @@ END:VCARD`;
               {about.full_name}
             </h1>
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  setShowVCardModal(true);
+                }}
+                className="retro-btn px-2 py-0.5 text-[10px] sm:text-[11px] flex items-center gap-1 font-semibold text-[#000080] cursor-pointer"
+                title="View Electronic Business Card"
+              >
+                <Contact className="w-3 h-3" />
+                <span>vCard</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleCopyEmail}
@@ -132,7 +141,7 @@ END:VCARD`;
                 type="button"
                 onClick={handleDownloadVCard}
                 className="retro-btn px-2 py-0.5 text-[10px] sm:text-[11px] flex items-center gap-1 font-semibold text-[#000080] cursor-pointer"
-                title="Download Electronic Contact Card (.vcf)"
+                title="Download Electronic Contact Card (.vcf with photo embedded)"
               >
                 <Download className="w-3 h-3" />
                 <span>Save vCard</span>
@@ -398,6 +407,149 @@ END:VCARD`;
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Interactive Retro Electronic Business Card (vCard) Modal */}
+      {showVCardModal && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-2xs flex items-center justify-center p-3 animate-fadeIn">
+          <div className="retro-box-outset bg-[#c0c0c0] w-full max-w-md shadow-2xl overflow-hidden">
+            {/* Window Titlebar */}
+            <div className="retro-titlebar px-2.5 py-1.5 flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs text-white font-bold">
+                <Contact className="w-3.5 h-3.5" />
+                <span>Address Book — {about.full_name} (vCard)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  setShowVCardModal(false);
+                }}
+                className="retro-window-btn"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Card Content Area */}
+            <div className="p-3 sm:p-4 space-y-3">
+              {/* The Authentic Business Card Canvas */}
+              <div className="retro-box-inset bg-white p-3.5 sm:p-4 rounded-xs text-[#111827] space-y-3 relative overflow-hidden">
+                {/* Top Brand Stripe with Photo */}
+                <div className="flex items-start gap-3 sm:gap-4 border-b border-gray-200 pb-3">
+                  {/* Real Formal Portrait in Retro 3D Frame */}
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 retro-box-inset p-1 bg-white shrink-0 shadow-inner">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/images/formal.png"
+                      alt={about.full_name}
+                      className="w-full h-full object-cover rounded-2xs"
+                    />
+                  </div>
+
+                  {/* Core Identity */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-[#000080] font-sans truncate">
+                      {about.full_name}
+                    </h3>
+                    <div className="text-xs font-semibold text-gray-800">
+                      Software Systems Engineer
+                    </div>
+                    <div className="text-[11px] text-gray-500 font-mono mt-0.5">
+                      Akruno • MahiOS Architecture
+                    </div>
+                    <div className="mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-2xs text-[10px] font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Verified Contact Card</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Details List */}
+                <div className="space-y-1.5 text-xs text-gray-700 font-sans pt-1">
+                  <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
+                    <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
+                      <Phone className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Phone:</span>
+                    </span>
+                    <a
+                      href="tel:+8801805128634"
+                      className="font-mono text-blue-700 font-bold hover:underline"
+                    >
+                      +880 1805128634
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
+                    <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
+                      <Mail className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Email:</span>
+                    </span>
+                    <a
+                      href="mailto:mujahidmahi.official@gmail.com"
+                      className="font-mono text-blue-700 font-bold hover:underline truncate max-w-[200px]"
+                    >
+                      mujahidmahi.official@gmail.com
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
+                    <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
+                      <MapPin className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Location:</span>
+                    </span>
+                    <span className="text-gray-800 font-medium">
+                      Narayanganj, Bangladesh
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
+                    <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
+                      <Globe className="w-3.5 h-3.5 text-blue-700" />
+                      <span>Website:</span>
+                    </span>
+                    <a
+                      href="https://mujahidmahi.me"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-blue-700 font-bold hover:underline"
+                    >
+                      https://mujahidmahi.me
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <div className="text-[10px] text-gray-600 font-mono">
+                  Embedded Photo: Active
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleDownloadVCard}
+                    className="retro-btn px-2.5 py-1 text-xs font-bold text-[#000080] flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Save vCard (.vcf)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound('click');
+                      setShowVCardModal(false);
+                    }}
+                    className="retro-btn px-2.5 py-1 text-xs text-gray-800 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
