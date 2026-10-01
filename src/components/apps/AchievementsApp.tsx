@@ -8,14 +8,18 @@ import {
 import confetti from 'canvas-confetti';
 import { Achievement } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import RetroPagination from '@/components/shared/RetroPagination';
 
 interface AchievementsAppProps {
   achievements: Achievement[];
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function AchievementsApp({ achievements }: AchievementsAppProps) {
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const { playSound } = useSystemStore();
 
   const handleCelebrate = (type: 'standard' | 'stars' | 'gold' = 'standard') => {
@@ -44,9 +48,16 @@ export default function AchievementsApp({ achievements }: AchievementsAppProps) 
     (a.description && a.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const paginatedAchievements = React.useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
   return (
-    <div className="space-y-4 text-[#111827]">
-      {/* Header */}
+    <div className="flex flex-col min-h-full flex-1 space-y-4 text-[#111827]">
+      <div className="space-y-4 flex-1">
+        {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-300 pb-2">
         <div className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-amber-600" />
@@ -88,13 +99,19 @@ export default function AchievementsApp({ achievements }: AchievementsAppProps) 
           type="text"
           placeholder="Search awards, hackathon victories, or certifications..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           className="flex-1 px-2 py-1 bg-white retro-box-inset text-xs focus:outline-none"
         />
         {searchQuery && (
           <button
             type="button"
-            onClick={() => setSearchQuery('')}
+            onClick={() => {
+              setSearchQuery('');
+              setCurrentPage(1);
+            }}
             className="retro-btn px-2 py-0.5 text-[10px]"
           >
             Clear
@@ -103,41 +120,60 @@ export default function AchievementsApp({ achievements }: AchievementsAppProps) 
       </div>
 
       {/* Achievements Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {filtered.map((ach) => (
-          <div
-            key={ach.id}
-            onClick={() => {
-              playSound('click');
-              setSelectedAchievement(ach);
-            }}
-            className="p-3.5 bg-[#f9fafb] retro-box-inset rounded-xs hover:bg-[#fffdf7] cursor-pointer space-y-2 transition-colors flex flex-col justify-between"
-          >
-            <div className="space-y-2">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xs retro-box-outset bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">
-                  <Trophy className="w-5 h-5" />
+      {filtered.length === 0 ? (
+        <div className="p-8 text-center bg-white retro-box-inset text-gray-500 text-xs">
+          No honors or certifications found matching &ldquo;{searchQuery}&rdquo;.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          {paginatedAchievements.map((ach) => (
+            <div
+              key={ach.id}
+              onClick={() => {
+                playSound('click');
+                setSelectedAchievement(ach);
+              }}
+              className="p-3.5 bg-[#f9fafb] retro-box-inset rounded-xs hover:bg-[#fffdf7] cursor-pointer space-y-2 transition-colors flex flex-col justify-between"
+            >
+              <div className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xs retro-box-outset bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">
+                    <Trophy className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-0.5 min-w-0 flex-1">
+                    <h3 className="font-bold text-xs text-[#000080] truncate">{ach.title}</h3>
+                    <p className="text-[11px] text-gray-600 font-semibold">{ach.issuer}</p>
+                    <p className="text-[10px] text-gray-500 font-mono">{ach.issue_date}</p>
+                  </div>
                 </div>
-                <div className="space-y-0.5 min-w-0 flex-1">
-                  <h3 className="font-bold text-xs text-[#000080] truncate">{ach.title}</h3>
-                  <p className="text-[11px] text-gray-600 font-semibold">{ach.issuer}</p>
-                  <p className="text-[10px] text-gray-500 font-mono">{ach.issue_date}</p>
-                </div>
+
+                {ach.description && (
+                  <p className="text-xs text-gray-700 leading-relaxed border-t border-gray-200 pt-1.5 line-clamp-2">
+                    {ach.description}
+                  </p>
+                )}
               </div>
 
-              {ach.description && (
-                <p className="text-xs text-gray-700 leading-relaxed border-t border-gray-200 pt-1.5 line-clamp-2">
-                  {ach.description}
-                </p>
-              )}
+              <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-[10px] text-amber-800 font-semibold">
+                <span>Inspect Credential &gt;</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              </div>
             </div>
+          ))}
+        </div>
+      )}
+      </div>
 
-            <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-[10px] text-amber-800 font-semibold">
-              <span>Inspect Credential &gt;</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            </div>
-          </div>
-        ))}
+      {/* Retro Win95 Pagination Bar (docked below the app) */}
+      <div className="mt-auto pt-4 shrink-0">
+        <RetroPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemName="Honors"
+        />
       </div>
 
       {/* Credential Inspector Modal */}

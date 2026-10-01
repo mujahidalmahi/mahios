@@ -4,13 +4,17 @@ import React, { useState } from 'react';
 import { Gamepad2, Film, Tv, Book, Star, Sparkles, Volume2, Quote } from 'lucide-react';
 import { EntertainmentItem } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import RetroPagination from '@/components/shared/RetroPagination';
 
 interface EntertainmentAppProps {
   entertainment: EntertainmentItem[];
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function EntertainmentApp({ entertainment }: EntertainmentAppProps) {
   const [filter, setFilter] = useState<'all' | 'game' | 'movie' | 'series' | 'book'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const { playSound } = useSystemStore();
 
   const filtered = filter === 'all'
@@ -40,9 +44,16 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
     playSound('click');
   };
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const paginatedEntertainment = React.useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
   return (
-    <div className="p-4 sm:p-5 space-y-4 max-w-full text-black font-sans">
-      {/* Header */}
+    <div className="flex flex-col min-h-full flex-1 p-4 sm:p-5 space-y-4 max-w-full text-black font-sans">
+      <div className="space-y-4 flex-1">
+        {/* Header */}
       <div className="p-3 bg-[#e4e4e4] retro-box-outset rounded-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 retro-box-inset bg-[#000080] text-white flex items-center justify-center shrink-0">
@@ -93,6 +104,7 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
               onClick={() => {
                 playSound('click');
                 setFilter(t);
+                setCurrentPage(1);
               }}
               className={`px-3 py-1 text-xs font-bold uppercase tracking-wider cursor-pointer transition-none ${
                 isSelected
@@ -108,7 +120,7 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
 
       {/* Grid of Entertainment Items */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {filtered.map((item) => (
+        {paginatedEntertainment.map((item) => (
           <div
             key={item.id}
             className="p-4 bg-[#f9fafb] retro-box-inset rounded-xs flex flex-col justify-between gap-3"
@@ -160,6 +172,19 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
             </div>
           </div>
         ))}
+      </div>
+      </div>
+
+      {/* Retro Win95 Pagination Bar (docked below the app) */}
+      <div className="mt-auto pt-4 shrink-0">
+        <RetroPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemName="Items"
+        />
       </div>
     </div>
   );

@@ -96,8 +96,9 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
   };
 
   return (
-    <div className="space-y-4 text-[#111827]">
-      {/* Header & Controls */}
+    <div className="flex flex-col min-h-full flex-1 space-y-4 text-[#111827]">
+      <div className="space-y-4 flex-1">
+        {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-300 pb-2">
         <div className="flex items-center gap-2">
           <ImageIcon className="w-5 h-5 text-[#000080]" />
@@ -185,16 +186,19 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
           );
         })}
       </div>
+      </div>
 
-      {/* Retro Win95 Pagination Bar (6 Photos Per Page) */}
-      <RetroPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        totalItems={filteredImages.length}
-        itemsPerPage={ITEMS_PER_PAGE}
-        itemName="Photos"
-      />
+      {/* Retro Win95 Pagination Bar (docked below the app) */}
+      <div className="mt-auto pt-4 shrink-0">
+        <RetroPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredImages.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemName="Photos"
+        />
+      </div>
 
       {/* Lightbox Modal */}
       {activeImage && selectedImageIndex !== null && (

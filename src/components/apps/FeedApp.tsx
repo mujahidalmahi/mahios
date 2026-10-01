@@ -5,13 +5,17 @@ import { Radio, Heart, MessageSquare, Send, Sparkles, Clock, Share2, Check } fro
 import { FeedPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import RetroShareModal from '@/components/shared/RetroShareModal';
+import RetroPagination from '@/components/shared/RetroPagination';
 
 interface FeedAppProps {
   feedPosts: FeedPost[];
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function FeedApp({ feedPosts }: FeedAppProps) {
   const { playSound } = useSystemStore();
+  const [currentPage, setCurrentPage] = useState(1);
   const [likes, setLikes] = useState<Record<string, number>>(() =>
     feedPosts.reduce((acc, p) => ({ ...acc, [p.id]: p.likes_count }), {})
   );
@@ -70,35 +74,42 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
     setActiveSharePost(post);
   };
 
+  const totalPages = Math.ceil(feedPosts.length / ITEMS_PER_PAGE) || 1;
+  const paginatedFeedPosts = React.useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return feedPosts.slice(start, start + ITEMS_PER_PAGE);
+  }, [feedPosts, currentPage]);
+
   return (
-    <div className="p-4 sm:p-5 space-y-4 max-w-full text-black font-sans">
-      {/* Header */}
-      <div className="p-3 bg-[#e4e4e4] retro-box-outset rounded-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 retro-box-inset bg-emerald-800 text-white flex items-center justify-center shrink-0">
-            <Radio className="w-5 h-5 text-emerald-300 animate-pulse" />
+    <div className="flex flex-col min-h-full flex-1 p-4 sm:p-5 space-y-4 max-w-full text-black font-sans">
+      <div className="space-y-4 flex-1">
+        {/* Header */}
+        <div className="p-3 bg-[#e4e4e4] retro-box-outset rounded-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 retro-box-inset bg-emerald-800 text-white flex items-center justify-center shrink-0">
+              <Radio className="w-5 h-5 text-emerald-300 animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 flex items-center gap-2">
+                <span>Live_Feed.dll — Micro-Logs & Status Stream</span>
+                <span className="px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-mono rounded-2xs">
+                  ONLINE
+                </span>
+              </h2>
+              <p className="text-[11px] text-gray-600">
+                Live engineering thoughts, coffee updates, quick breakthroughs, and system pulses.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900 flex items-center gap-2">
-              <span>Live_Feed.dll — Micro-Logs & Status Stream</span>
-              <span className="px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-mono rounded-2xs">
-                ONLINE
-              </span>
-            </h2>
-            <p className="text-[11px] text-gray-600">
-              Live engineering thoughts, coffee updates, quick breakthroughs, and system pulses.
-            </p>
-          </div>
+
+          <span className="text-[10px] font-mono bg-white px-2 py-1 retro-box-inset self-start sm:self-auto">
+            {feedPosts.length} Broadcasts
+          </span>
         </div>
 
-        <span className="text-[10px] font-mono bg-white px-2 py-1 retro-box-inset self-start sm:self-auto">
-          {feedPosts.length} Broadcasts
-        </span>
-      </div>
-
-      {/* Feed Stream */}
-      <div className="space-y-3">
-        {feedPosts.map((post) => (
+        {/* Feed Stream */}
+        <div className="space-y-3">
+          {paginatedFeedPosts.map((post) => (
           <div
             key={post.id}
             className="p-4 bg-[#f9fafb] retro-box-inset rounded-xs space-y-2.5"
@@ -161,6 +172,19 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
             </div>
           </div>
         ))}
+        </div>
+      </div>
+
+      {/* Retro Win95 Pagination Bar (docked below the app) */}
+      <div className="mt-auto pt-4 shrink-0">
+        <RetroPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={feedPosts.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemName="Broadcasts"
+        />
       </div>
 
       {/* Retro 90s Share Dialog */}

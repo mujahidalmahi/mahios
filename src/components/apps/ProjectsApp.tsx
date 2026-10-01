@@ -149,8 +149,9 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
   };
 
   return (
-    <div className="space-y-4 text-[#111827]">
-      {/* Explorer Header */}
+    <div className="flex flex-col min-h-full flex-1 space-y-4 text-[#111827]">
+      <div className="space-y-4 flex-1">
+        {/* Explorer Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-300 pb-2">
         <div className="flex items-center gap-2">
           <FolderGit2 className="w-5 h-5 text-[#000080]" />
@@ -372,16 +373,19 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
           No projects found matching the specified filters.
         </div>
       )}
+      </div>
 
-      {/* Retro Win95 Pagination Bar (6 Projects Per Page) */}
-      <RetroPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        totalItems={filteredProjects.length}
-        itemsPerPage={ITEMS_PER_PAGE}
-        itemName="Projects"
-      />
+      {/* Retro Win95 Pagination Bar (docked below the app) */}
+      <div className="mt-auto pt-4 shrink-0">
+        <RetroPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredProjects.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          itemName="Projects"
+        />
+      </div>
 
       {/* Project Inspector Detail Modal */}
       {selectedProject && (

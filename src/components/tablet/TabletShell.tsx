@@ -392,7 +392,7 @@ export default function TabletShell({ data }: TabletShellProps) {
               </div>
 
               {/* Main Content Area */}
-              <div className="flex-1 min-h-0 retro-box-inset bg-white p-3.5 m-1 overflow-y-auto">
+              <div className="flex-1 min-h-0 retro-box-inset bg-white p-3.5 m-1 overflow-y-auto flex flex-col">
                 {renderAppContent(activeApp.component_key)}
               </div>
             </>

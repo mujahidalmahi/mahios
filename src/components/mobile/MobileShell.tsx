@@ -333,7 +333,7 @@ export default function MobileShell({ data }: MobileShellProps) {
             </div>
 
             {/* Application Scrollable Body */}
-            <div className="flex-1 min-h-0 retro-box-inset bg-white p-2.5 m-1 overflow-y-auto">
+            <div className="flex-1 min-h-0 retro-box-inset bg-white p-2.5 m-1 overflow-y-auto flex flex-col">
               {renderAppContent(activeApp.component_key)}
             </div>
           </div>
