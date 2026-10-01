@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Wifi, Battery, ArrowLeft, X, Search, ChevronLeft,
   User, Briefcase, FolderGit2, Cpu, GraduationCap,
@@ -9,7 +9,7 @@ import {
   Scale, Gamepad2, Target, Sparkles, Flame, Star,
   Calculator, FileEdit, Activity, Clock, Shield,
   Phone, PhoneCall, Volume2, VolumeX, Copy, Check,
-  Send, ExternalLink, RefreshCw, MessageSquare, Smartphone
+  Send, ExternalLink, RefreshCw, MessageSquare, Smartphone, Grid
 } from 'lucide-react';
 import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -17,34 +17,32 @@ import { useWindowStore } from '@/stores/windowStore';
 import { resolveDeepLink } from '@/lib/utils/deepLinks';
 import { getWallpaperStyle } from '@/lib/utils/wallpaper';
 
-// Dynamically Loaded Mobile Applications
+// Dedicated Mobile/Tablet Views (100% Mobile UI, Zero Desktop Logic)
 import {
-  DynamicAboutApp,
-  DynamicExperienceApp,
-  DynamicProjectsApp,
-  DynamicSkillsApp,
-  DynamicEducationApp,
-  DynamicGalleryApp,
-  DynamicAchievementsApp,
-  DynamicBlogApp,
-  DynamicResumeApp,
-  DynamicContactApp,
-  DynamicSettingsApp,
-  DynamicPhilosophyApp,
-  DynamicFeedApp,
-  DynamicBiographyApp,
-  DynamicSocialsApp,
-  DynamicIdeologyApp,
-  DynamicEntertainmentApp,
-  DynamicAimApp,
-  DynamicDreamApp,
-  DynamicWishesApp,
-  DynamicFavouritesApp,
-  DynamicCalculatorApp,
-  DynamicNotepadApp,
-  DynamicBlogPostReaderApp,
-  DynamicBiographyChapterReaderApp,
-} from '@/components/apps/dynamicApps';
+  MobileAboutView,
+  MobileProjectsView,
+  MobileExperienceView,
+  MobileSkillsView,
+  MobileEducationView,
+  MobileAchievementsView,
+  MobileResumeView,
+  MobileBlogView,
+  MobileBiographyView,
+  MobileFeedView,
+  MobileSocialsView,
+  MobileGalleryView,
+  MobileContactView,
+  MobileEntertainmentView,
+  MobilePhilosophyView,
+  MobileIdeologyView,
+  MobileAimView,
+  MobileDreamView,
+  MobileWishesView,
+  MobileFavouritesView,
+  MobileCalculatorView,
+  MobileNotepadView,
+  MobileSettingsView,
+} from './views';
 
 // Desktop-only applications strictly excluded from Mobile OS
 const DESKTOP_ONLY_APPS = new Set([
@@ -162,6 +160,7 @@ interface MobileShellProps {
 export default function MobileShell({ data }: MobileShellProps) {
   const [activeApp, setActiveApp] = useState<DesktopApp | null>(null);
   const [deepLinkedProjectId, setDeepLinkedProjectId] = useState<string | undefined>();
+  const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryTabId>('all');
   const [isDialerOpen, setIsDialerOpen] = useState(false);
@@ -173,8 +172,6 @@ export default function MobileShell({ data }: MobileShellProps) {
   const [dialedNumber, setDialedNumber] = useState(targetPhoneNumber);
 
   const { playSound, soundEnabled, toggleSound } = useSystemStore();
-
-  const appsContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Real-time 12-hour digital clock
   useEffect(() => {
@@ -208,7 +205,6 @@ export default function MobileShell({ data }: MobileShellProps) {
         if (result.targetType === 'project' && result.project) {
           setDeepLinkedProjectId(result.project.slug || result.project.id);
         }
-        // Exclude desktop-only apps from mobile deep links
         if (!DESKTOP_ONLY_APPS.has(result.targetApp.app_id)) {
           setActiveApp(result.targetApp);
           return true;
@@ -234,21 +230,11 @@ export default function MobileShell({ data }: MobileShellProps) {
           if (existingApp && !DESKTOP_ONLY_APPS.has(existingApp.app_id)) {
             setActiveApp(existingApp);
           } else if (lastWin.componentKey === 'BlogPostReaderApp' || lastWin.componentKey === 'BiographyChapterReaderApp') {
-            setActiveApp({
-              id: lastWin.appId,
-              app_id: lastWin.appId,
-              title: lastWin.title,
-              icon_name: lastWin.iconName,
-              component_key: lastWin.componentKey,
-              default_x: 0,
-              default_y: 0,
-              default_width: 800,
-              default_height: 600,
-              is_system_app: false,
-              is_visible: true,
-              sort_order: 99,
-              category: lastWin.componentKey === 'BlogPostReaderApp' ? 'Dev Notes' : 'Biography',
-            });
+            const fallbackAppId = lastWin.componentKey === 'BlogPostReaderApp' ? 'blog' : 'biography';
+            const baseApp = data.apps.find((a) => a.app_id === fallbackAppId);
+            if (baseApp) {
+              setActiveApp(baseApp);
+            }
           }
         }
       }
@@ -261,14 +247,14 @@ export default function MobileShell({ data }: MobileShellProps) {
     };
   }, [data]);
 
-  // Clean, mobile-only application list (Desktop-only apps completely removed)
+  // Clean, mobile-only application list (Desktop-only apps completely filtered out)
   const mobileApps = useMemo(() => {
     return data.apps
       .filter((a) => a.is_visible && !DESKTOP_ONLY_APPS.has(a.app_id))
       .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
   }, [data.apps]);
 
-  // Filtered mobile apps by Category tab and Search query
+  // Filtered mobile apps by Category tab and Search query in App Drawer
   const filteredApps = useMemo(() => {
     let list = mobileApps;
     if (selectedCategory !== 'all') {
@@ -354,6 +340,7 @@ export default function MobileShell({ data }: MobileShellProps) {
       navigator.vibrate(20);
     }
     setActiveApp(app);
+    setIsAppDrawerOpen(false);
     setIsDialerOpen(false);
   };
 
@@ -378,77 +365,57 @@ export default function MobileShell({ data }: MobileShellProps) {
     }
   };
 
-  const scrollToApps = () => {
-    playSound('click');
-    appsContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Render Mobile In-App Content
-  const renderAppContent = (componentKey: string) => {
-    switch (componentKey) {
-      case 'AboutApp':
-        return <DynamicAboutApp about={data.about} philosophies={data.philosophies} phone={data.settings?.phone} />;
-      case 'ExperienceApp':
-        return <DynamicExperienceApp experiences={data.experiences} />;
-      case 'ProjectsApp':
-        return <DynamicProjectsApp projects={data.projects} initialProjectId={deepLinkedProjectId} />;
-      case 'SkillsApp':
-        return <DynamicSkillsApp categories={data.categories} skills={data.skills} />;
-      case 'EducationApp':
-        return <DynamicEducationApp education={data.education} />;
-      case 'GalleryApp':
-        return <DynamicGalleryApp categories={data.galleryCategories} images={data.galleryImages} />;
-      case 'AchievementsApp':
-        return <DynamicAchievementsApp achievements={data.achievements} />;
-      case 'BlogApp':
-        return <DynamicBlogApp posts={data.blogPosts} />;
-      case 'ResumeApp':
-        return <DynamicResumeApp resume={data.resumeConfig} data={data} />;
-      case 'ContactApp':
-        return <DynamicContactApp />;
-      case 'SettingsApp':
-        return <DynamicSettingsApp />;
-      case 'PhilosophyApp':
-        return <DynamicPhilosophyApp philosophies={data.philosophies} />;
-      case 'FeedApp':
-        return <DynamicFeedApp feedPosts={data.feedPosts} />;
-      case 'BiographyApp':
-        return <DynamicBiographyApp biographyTimeline={data.biographyTimeline} />;
-      case 'SocialsApp':
-        return <DynamicSocialsApp socialLinks={data.socialLinks} />;
-      case 'IdeologyApp':
-        return <DynamicIdeologyApp ideologies={data.ideologies} />;
-      case 'EntertainmentApp':
-        return <DynamicEntertainmentApp entertainment={data.entertainment} />;
-      case 'AimApp':
-        return <DynamicAimApp aims={data.aims} />;
-      case 'DreamApp':
-        return <DynamicDreamApp dreams={data.dreams} />;
-      case 'WishesApp':
-        return <DynamicWishesApp wishes={data.wishes} />;
-      case 'FavouritesApp':
-        return <DynamicFavouritesApp favourites={data.favourites} />;
-      case 'CalculatorApp':
-        return <DynamicCalculatorApp />;
-      case 'NotepadApp':
-        return <DynamicNotepadApp />;
-      case 'BlogPostReaderApp': {
-        const postId = activeApp?.app_id?.replace('blog-', '') || '';
-        const post = data.blogPosts.find((p) => p.id === postId || p.slug === postId) || data.blogPosts[0];
-        return <DynamicBlogPostReaderApp post={post} />;
-      }
-      case 'BiographyChapterReaderApp': {
-        const milestoneId = activeApp?.app_id?.replace(/^(milestone-|bio-ch-)/, '') || '';
-        const milestone = data.biographyTimeline.find((m) => m.id === milestoneId) || data.biographyTimeline[0];
-        return milestone ? (
-          <DynamicBiographyChapterReaderApp
-            milestone={milestone}
-            allMilestones={data.biographyTimeline}
-          />
-        ) : null;
-      }
+  // Render Dedicated Mobile View Component (100% Mobile UI, Zero Desktop Windows)
+  const renderAppContent = (appId: string) => {
+    switch (appId) {
+      case 'about':
+        return <MobileAboutView about={data.about} philosophies={data.philosophies} phone={data.settings?.phone} />;
+      case 'projects':
+        return <MobileProjectsView projects={data.projects} initialProjectId={deepLinkedProjectId} />;
+      case 'experience':
+        return <MobileExperienceView experiences={data.experiences} />;
+      case 'skills':
+        return <MobileSkillsView categories={data.categories} skills={data.skills} />;
+      case 'education':
+        return <MobileEducationView education={data.education} />;
+      case 'achievements':
+        return <MobileAchievementsView achievements={data.achievements} />;
+      case 'resume':
+        return <MobileResumeView resume={data.resumeConfig} data={data} />;
+      case 'blog':
+        return <MobileBlogView posts={data.blogPosts} />;
+      case 'biography':
+        return <MobileBiographyView biographyTimeline={data.biographyTimeline} />;
+      case 'feed':
+        return <MobileFeedView feedPosts={data.feedPosts} />;
+      case 'socials':
+        return <MobileSocialsView socialLinks={data.socialLinks} />;
+      case 'gallery':
+        return <MobileGalleryView categories={data.galleryCategories} images={data.galleryImages} />;
+      case 'contact':
+        return <MobileContactView />;
+      case 'entertainment':
+        return <MobileEntertainmentView entertainment={data.entertainment} />;
+      case 'philosophy':
+        return <MobilePhilosophyView philosophies={data.philosophies} />;
+      case 'ideology':
+        return <MobileIdeologyView ideologies={data.ideologies} />;
+      case 'aim':
+        return <MobileAimView aims={data.aims} />;
+      case 'dream':
+        return <MobileDreamView dreams={data.dreams} />;
+      case 'wishes':
+        return <MobileWishesView wishes={data.wishes} />;
+      case 'favourites':
+        return <MobileFavouritesView favourites={data.favourites} />;
+      case 'calculator':
+        return <MobileCalculatorView />;
+      case 'notepad':
+        return <MobileNotepadView />;
+      case 'settings':
+        return <MobileSettingsView />;
       default:
-        return <DynamicAboutApp about={data.about} phone={data.settings?.phone} />;
+        return <MobileAboutView about={data.about} phone={data.settings?.phone} />;
     }
   };
 
@@ -457,15 +424,14 @@ export default function MobileShell({ data }: MobileShellProps) {
   return (
     <div
       style={getWallpaperStyle(data.settings?.desktop_background_color)}
-      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] text-slate-900 font-sans flex flex-col justify-between select-none overflow-hidden bg-[#18191c]"
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] text-slate-900 font-sans flex flex-col justify-between select-none overflow-hidden bg-cover bg-center"
     >
       {/* ========================================================= */}
-      {/* 1. AUTHENTIC VINTAGE MOBILE TOP TELEMETRY STATUS BAR     */}
+      {/* 1. TOP MOBILE STATUS BAR (TRANSLUCENT VINTAGE TELEMETRY)  */}
       {/* ========================================================= */}
-      <div className="h-7.5 px-3 vintage-status-bar flex items-center justify-between text-xs font-bold shrink-0 z-40 select-none">
-        {/* Left: Signal Bars + Carrier + Audio Mode */}
+      <div className="h-7 px-3 bg-black/40 backdrop-blur-md flex items-center justify-between text-xs font-bold shrink-0 z-40 select-none border-b border-white/10">
+        {/* Left: Signal + Carrier + Audio Mode */}
         <div className="flex items-center gap-2">
-          {/* 4-Bar Signal Meter */}
           <div className="flex items-end gap-0.5 h-3" title="Signal: Full GSM/4G">
             <span className="w-1 h-1 bg-emerald-400 rounded-2xs" />
             <span className="w-1 h-1.5 bg-emerald-400 rounded-2xs" />
@@ -481,7 +447,7 @@ export default function MobileShell({ data }: MobileShellProps) {
             type="button"
             onClick={toggleSound}
             className="text-slate-400 hover:text-white p-0.5 ml-0.5 cursor-pointer"
-            title={soundEnabled ? 'Mute System Sounds' : 'Unmute System Sounds'}
+            title={soundEnabled ? 'Mute Audio' : 'Unmute Audio'}
           >
             {soundEnabled ? (
               <Volume2 className="w-3.5 h-3.5 text-slate-300" />
@@ -491,21 +457,17 @@ export default function MobileShell({ data }: MobileShellProps) {
           </button>
         </div>
 
-        {/* Center: Pocket OS Badge */}
-        <div className="flex items-center gap-1">
-          <Smartphone className="w-3 h-3 text-cyan-400" />
-          <span className="font-mono text-[10px] font-bold text-slate-200 tracking-tight">
-            Pocket MahiOS
-          </span>
-        </div>
+        {/* Center: Mobile OS Title */}
+        <span className="font-mono text-[10px] font-bold text-white/80 tracking-tight">
+          Pocket MahiOS
+        </span>
 
         {/* Right: Battery Gauge & Live Clock */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 font-mono text-[10px] text-slate-300 font-bold">
+          <div className="flex items-center gap-1 font-mono text-[10px] text-slate-200 font-bold">
             <span>98%</span>
-            <div className="w-4 h-2.5 border border-slate-300 p-0.5 flex items-center relative rounded-2xs bg-black/40">
+            <div className="w-3.5 h-2 border border-slate-300 p-0.5 flex items-center relative rounded-2xs bg-black/50">
               <div className="h-full w-4/5 bg-emerald-400 rounded-2xs" />
-              <div className="absolute -right-1 top-0.5 w-0.5 h-1 bg-slate-300 rounded-2xs" />
             </div>
           </div>
           <span className="font-mono text-[11px] font-bold text-white drop-shadow-xs">
@@ -515,35 +477,32 @@ export default function MobileShell({ data }: MobileShellProps) {
       </div>
 
       {/* ========================================================= */}
-      {/* 2. MAIN MOBILE WORKSPACE (HOME SPRINGBOARD OR IN-APP)     */}
+      {/* 2. MAIN VIEWPORT AREA                                     */}
       {/* ========================================================= */}
       <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
-        {/* Subtle Vintage Mobile Screen Glass / Texture */}
-        <div className="absolute inset-0 pointer-events-none opacity-15 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:4px_4px] z-0" />
-
         {activeApp ? (
           /* ===================================================== */
-          /* 3. IN-APP MOBILE VIEW (NATIVE MOBILE, NOT DESKTOP)    */
+          /* 3. DEDICATED IN-APP MOBILE VIEW                       */
           /* ===================================================== */
-          <div className="relative z-20 w-full h-full flex flex-col overflow-hidden bg-[#eef2f6] animate-fadeIn">
-            {/* Vintage Mobile App Navigation Header */}
-            <div className="h-11 px-2.5 bg-gradient-to-r from-[#000080] via-[#10489e] to-[#000080] flex items-center justify-between text-white font-bold shrink-0 border-b-2 border-[#000040] shadow-md">
+          <div className="relative z-20 w-full h-full flex flex-col overflow-hidden bg-slate-50 animate-fadeIn">
+            {/* Native Mobile App Top Navigation Bar */}
+            <div className="h-11 px-3 bg-white border-b border-slate-200/80 flex items-center justify-between font-bold shrink-0 shadow-2xs">
               {/* Back to Home Button */}
               <button
                 type="button"
                 onClick={handleCloseApp}
-                className="flex items-center gap-1 px-2.5 py-1 bg-white/15 hover:bg-white/25 active:bg-white/35 rounded-md text-white font-bold text-xs cursor-pointer border border-white/25 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-slate-800 font-bold text-xs cursor-pointer border border-slate-200 active:scale-95 transition-all"
               >
                 <ChevronLeft className="w-4 h-4 stroke-[3]" />
                 <span className="tracking-tight text-[11px]">Home</span>
               </button>
 
               {/* Title & App Icon */}
-              <div className="flex items-center gap-1.5 truncate px-2 max-w-[55%]">
-                <div className="w-5 h-5 rounded-md bg-white/20 p-0.5 flex items-center justify-center shrink-0">
-                  <ActiveAppIcon className="w-3.5 h-3.5 text-white" />
+              <div className="flex items-center gap-2 truncate px-2 max-w-[55%]">
+                <div className="w-5 h-5 rounded-lg bg-blue-50 text-blue-700 p-0.5 flex items-center justify-center shrink-0">
+                  <ActiveAppIcon className="w-3.5 h-3.5" />
                 </div>
-                <span className="truncate text-xs font-bold drop-shadow-xs">
+                <span className="truncate text-xs font-black text-slate-900">
                   {activeApp.title}
                 </span>
               </div>
@@ -553,259 +512,49 @@ export default function MobileShell({ data }: MobileShellProps) {
                 <button
                   type="button"
                   onClick={handleShareApp}
-                  className="p-1 bg-white/15 hover:bg-white/25 active:bg-white/35 rounded-md text-white cursor-pointer border border-white/25"
-                  title="Share Application"
+                  className="p-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-slate-700 cursor-pointer border border-slate-200"
+                  title="Share"
                 >
                   <Share2 className="w-3.5 h-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={handleCloseApp}
-                  className="p-1 bg-red-600/80 hover:bg-red-600 active:bg-red-700 rounded-md text-white cursor-pointer border border-white/25"
-                  title="Close and return to Home"
+                  className="p-1.5 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 rounded-xl text-rose-600 cursor-pointer border border-rose-200"
+                  title="Close"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
-            {/* App Scrollable Content Body */}
-            <div className="flex-1 min-h-0 bg-white overflow-y-auto p-2.5 flex flex-col overscroll-contain">
-              {renderAppContent(activeApp.component_key)}
+            {/* Mobile App Scrollable Body */}
+            <div className="flex-1 min-h-0 bg-slate-50 overflow-y-auto p-3 flex flex-col overscroll-contain">
+              {renderAppContent(activeApp.app_id)}
             </div>
           </div>
         ) : (
           /* ===================================================== */
-          /* 4. VINTAGE MOBILE HOME SCREEN ("TODAY" SPRINGBOARD)   */
+          /* 4. HOME SCREEN: PURE WALLPAPER ONLY                   */
+          /* Nothing on top or center! Wallpaper shines through.   */
           /* ===================================================== */
-          <div className="relative z-10 flex-1 overflow-y-auto p-3 space-y-3 pb-16 overscroll-contain">
-            {/* Top LCD Clock & Weather Widget */}
-            <div className="vintage-mobile-screen rounded-xl p-3 border-2 border-[#94a3b8] shadow-md flex items-center justify-between">
-              <div>
-                <div className="text-3xl font-mono font-black text-[#0f2240] tracking-tight leading-none">
-                  {timeString || '12:00 PM'}
-                </div>
-                <div className="text-xs font-bold text-slate-700 mt-1">
-                  {dateString || 'Thu, Oct 1, 2026'}
-                </div>
-              </div>
-
-              <div className="text-right">
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[9px] font-black tracking-wide">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  <span>ONLINE</span>
-                </div>
-                <div className="text-[10px] text-slate-600 font-mono mt-1 font-semibold">
-                  Dhaka, BD • 28°C
-                </div>
-              </div>
-            </div>
-
-            {/* Owner Contact Profile Card (Pocket PC / Palm Style) */}
-            <div className="bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-300 shadow-md space-y-2.5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-[#000080] to-[#1084d0] p-0.5 shrink-0 shadow-sm flex items-center justify-center">
-                  <img
-                    src="/images/mahios-logo.png"
-                    alt={data.settings?.owner_name || 'Mujahid Al Mahi'}
-                    className="w-full h-full object-contain drop-shadow-xs"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="font-black text-sm text-[#000080] truncate leading-tight">
-                    {data.settings?.owner_name || 'Mujahid Al Mahi'}
-                  </h1>
-                  <p className="text-[11px] text-slate-600 truncate font-medium">
-                    {data.settings?.headline || 'Full-Stack Software Engineer & Creative Technologist'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Quick Mobile Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => {
-                    playSound('open');
-                    setIsDialerOpen(true);
-                  }}
-                  className="py-1.5 px-2 bg-gradient-to-b from-emerald-500 to-emerald-700 active:from-emerald-700 active:to-emerald-800 text-white rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>Call</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const contactApp = data.apps.find((a) => a.app_id === 'contact');
-                    if (contactApp) handleOpenApp(contactApp);
-                  }}
-                  className="py-1.5 px-2 bg-gradient-to-b from-blue-500 to-blue-700 active:from-blue-700 active:to-blue-800 text-white rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Mail</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleWhatsApp}
-                  className="py-1.5 px-2 bg-gradient-to-b from-teal-500 to-emerald-600 active:from-teal-700 active:to-emerald-800 text-white rounded-lg flex items-center justify-center gap-1.5 text-xs font-bold shadow-sm cursor-pointer"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Live Broadcast Pulse Card */}
-            {data.feedPosts?.length > 0 && (
-              <div
-                onClick={() => {
-                  const feedApp = data.apps.find((a) => a.app_id === 'feed');
-                  if (feedApp) handleOpenApp(feedApp);
-                }}
-                className="bg-white/95 backdrop-blur-md rounded-xl p-2.5 border border-slate-300 shadow-md cursor-pointer hover:bg-yellow-50/80 active:scale-[0.99] transition-all"
-              >
-                <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono mb-1">
-                  <div className="flex items-center gap-1 text-[#000080] font-black">
-                    <Radio className="w-3 h-3 text-red-500 animate-pulse" />
-                    <span>LATEST BROADCAST:</span>
-                  </div>
-                  <span className="font-semibold">{data.feedPosts[0].timestamp}</span>
-                </div>
-                <p className="text-xs text-slate-800 line-clamp-2 leading-relaxed italic">
-                  &ldquo;{data.feedPosts[0].content}&rdquo;
-                </p>
-              </div>
-            )}
-
-            {/* =================================================== */}
-            {/* MOBILE APPLICATION SPRINGBOARD (ICON LAUNCHER)      */}
-            {/* =================================================== */}
-            <div
-              ref={appsContainerRef}
-              className="bg-white/95 backdrop-blur-md rounded-xl p-3 border border-slate-300 shadow-lg space-y-3"
-            >
-              {/* Launcher Header & Search */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Smartphone className="w-4 h-4 text-[#000080]" />
-                    <span className="font-black text-xs text-slate-800 uppercase tracking-wide">
-                      Applications ({mobileApps.length})
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-slate-500">
-                    Pocket OS
-                  </span>
-                </div>
-
-                {/* Instant Filter Search Bar */}
-                <div className="relative flex items-center bg-slate-100 rounded-lg px-2.5 py-1.5 border border-slate-300">
-                  <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search mobile apps..."
-                    className="w-full bg-transparent text-xs text-slate-900 placeholder-slate-400 focus:outline-none font-sans font-medium"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="text-slate-400 hover:text-slate-700 p-0.5"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Category Filter Pills */}
-                <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
-                  {CATEGORY_TABS.map((tab) => {
-                    const isSelected = selectedCategory === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => {
-                          playSound('click');
-                          setSelectedCategory(tab.id);
-                        }}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#000080] text-white shadow-xs'
-                            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Grid of Mobile App Icons */}
-              {filteredApps.length === 0 ? (
-                <div className="py-8 text-center text-slate-400 font-mono text-xs">
-                  No applications found matching &ldquo;{searchQuery}&rdquo;
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-y-3.5 gap-x-2 pt-1">
-                  {filteredApps.map((app) => {
-                    const Icon = iconMap[app.icon_name] || FileText;
-                    const gradient = getAppGradient(app.app_id);
-
-                    return (
-                      <button
-                        key={app.id}
-                        type="button"
-                        onClick={() => handleOpenApp(app)}
-                        className="flex flex-col items-center text-center group cursor-pointer active:scale-95 transition-transform"
-                      >
-                        {/* Squircle App Tile */}
-                        <div className="relative">
-                          <div
-                            className={`w-13 h-13 rounded-2xl bg-gradient-to-br ${gradient} vintage-mobile-tile flex items-center justify-center p-2.5`}
-                          >
-                            <Icon className="w-6 h-6 text-white drop-shadow-sm group-hover:scale-105 transition-transform" />
-                          </div>
-
-                          {/* Optional Badge */}
-                          {app.badge_text && (
-                            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-red-600 text-white font-mono text-[8px] font-black rounded-full border border-white shadow-xs">
-                              {app.badge_text}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Title Underneath */}
-                        <span className="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2 w-full mt-1.5 px-0.5 group-hover:text-[#000080]">
-                          {app.title}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+          <div className="relative z-10 flex-1 flex flex-col justify-end p-4">
+            {/* The center and top remain completely clean! */}
           </div>
         )}
       </div>
 
       {/* ========================================================= */}
-      {/* 5. VINTAGE MOBILE BOTTOM SOFTKEY DOCK (ALWAYS ACCESSIBLE) */}
+      {/* 5. VINTAGE MOBILE BOTTOM NAVIGATION DOCK (ALWAYS VISIBLE) */}
       {/* ========================================================= */}
-      <div className="h-12 vintage-softkey-bar px-3 flex items-center justify-between shrink-0 z-30 select-none">
+      <div className="h-16 px-4 pb-2 pt-1.5 bg-slate-900/75 backdrop-blur-xl border-t border-white/15 flex items-center justify-between shrink-0 z-30 select-none shadow-2xl">
         {activeApp ? (
-          /* Softkeys when inside an active application */
-          <>
+          /* Softkey bar when inside an active application */
+          <div className="w-full flex items-center justify-between">
             <button
               type="button"
               onClick={handleCloseApp}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-700 text-white text-xs font-bold border border-slate-500 shadow-sm cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-xs font-bold border border-white/20 shadow-sm cursor-pointer active:scale-95"
             >
               <ChevronLeft className="w-4 h-4 stroke-[3]" />
               <span>Back</span>
@@ -814,9 +563,9 @@ export default function MobileShell({ data }: MobileShellProps) {
             <button
               type="button"
               onClick={handleCloseApp}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-b from-[#000080] to-[#10489e] text-white text-xs font-bold border border-blue-400 shadow-sm cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md cursor-pointer active:scale-95"
             >
-              <Smartphone className="w-4 h-4 text-cyan-300" />
+              <Smartphone className="w-4 h-4 text-white" />
               <span>Home</span>
             </button>
 
@@ -826,57 +575,208 @@ export default function MobileShell({ data }: MobileShellProps) {
                 playSound('open');
                 setIsDialerOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/80 hover:bg-emerald-700 text-white text-xs font-bold border border-emerald-500 shadow-sm cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm cursor-pointer active:scale-95"
             >
               <Phone className="w-3.5 h-3.5" />
               <span>Dial</span>
             </button>
-          </>
+          </div>
         ) : (
-          /* Softkeys when on the Home screen */
-          <>
+          /* Home Navigation Dock: Navigators to Apps & Others */
+          <div className="w-full grid grid-cols-4 gap-2">
+            {/* 1. Phone / Dialer */}
             <button
               type="button"
               onClick={() => {
                 playSound('open');
                 setIsDialerOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-b from-emerald-600 to-emerald-800 text-white text-xs font-bold border border-emerald-400 shadow-sm cursor-pointer active:scale-95"
+              className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
             >
-              <PhoneCall className="w-3.5 h-3.5 text-emerald-200" />
-              <span>Dialer</span>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg border border-emerald-400/40">
+                <PhoneCall className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-[10px] font-bold tracking-tight">Dialer</span>
             </button>
 
-            <button
-              type="button"
-              onClick={scrollToApps}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-700 text-white text-xs font-bold border border-slate-500 shadow-sm cursor-pointer active:scale-95"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-cyan-300" />
-              <span>Apps</span>
-            </button>
-
+            {/* 2. Messages / Mail */}
             <button
               type="button"
               onClick={() => {
                 const contactApp = data.apps.find((a) => a.app_id === 'contact');
                 if (contactApp) handleOpenApp(contactApp);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-b from-blue-600 to-blue-800 text-white text-xs font-bold border border-blue-400 shadow-sm cursor-pointer active:scale-95"
+              className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
             >
-              <Mail className="w-3.5 h-3.5 text-blue-200" />
-              <span>Mail</span>
+              <div className="w-10 h-10 rounded-2xl bg-sky-600 flex items-center justify-center shadow-lg border border-sky-400/40">
+                <Mail className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-[10px] font-bold tracking-tight">Mail</span>
             </button>
-          </>
+
+            {/* 3. Primary App Drawer Navigator */}
+            <button
+              type="button"
+              onClick={() => {
+                playSound('open');
+                setIsAppDrawerOpen(true);
+              }}
+              className="flex flex-col items-center justify-center gap-0.5 text-white cursor-pointer active:scale-90 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl border-2 border-white/60">
+                <Grid className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-[10px] font-black tracking-tight text-cyan-300">All Apps</span>
+            </button>
+
+            {/* 4. Settings */}
+            <button
+              type="button"
+              onClick={() => {
+                const settingsApp = data.apps.find((a) => a.app_id === 'settings');
+                if (settingsApp) handleOpenApp(settingsApp);
+              }}
+              className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-slate-700 flex items-center justify-center shadow-lg border border-slate-500/40">
+                <Settings className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-[10px] font-bold tracking-tight">Settings</span>
+            </button>
+          </div>
         )}
       </div>
 
       {/* ========================================================= */}
-      {/* 6. VINTAGE CELLULAR PHONE DIALER MODAL                     */}
+      {/* 6. MOBILE APPLICATION DRAWER (FULL LAUNCHER OVERLAY)      */}
+      {/* ========================================================= */}
+      {isAppDrawerOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex flex-col justify-end animate-fadeIn select-none">
+          <div className="w-full h-[90dvh] bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Grid className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 leading-tight">
+                    Applications ({mobileApps.length})
+                  </h3>
+                  <p className="text-[10px] text-slate-500 font-mono">MahiOS Pocket Edition</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  setIsAppDrawerOpen(false);
+                }}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Input & Category Pills */}
+            <div className="p-3 bg-slate-50 border-b border-slate-200 space-y-2">
+              <div className="relative flex items-center bg-white rounded-xl px-3 py-2 border border-slate-200 shadow-2xs">
+                <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search 23 mobile apps..."
+                  className="w-full bg-transparent text-xs text-slate-900 placeholder-slate-400 focus:outline-none font-medium"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-slate-400 hover:text-slate-700 p-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {CATEGORY_TABS.map((tab) => {
+                  const isSelected = selectedCategory === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        playSound('click');
+                        setSelectedCategory(tab.id);
+                      }}
+                      className={`px-3 py-1 rounded-full text-[11px] font-bold shrink-0 transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4-Column Mobile App Grid */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 overscroll-contain">
+              {filteredApps.length === 0 ? (
+                <div className="py-16 text-center text-slate-400 font-mono text-xs">
+                  No applications found matching &ldquo;{searchQuery}&rdquo;
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+                  {filteredApps.map((app) => {
+                    const Icon = iconMap[app.icon_name] || FileText;
+                    const gradient = getAppGradient(app.app_id);
+
+                    return (
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => handleOpenApp(app)}
+                        className="flex flex-col items-center text-center group cursor-pointer active:scale-92 transition-transform"
+                      >
+                        <div className="relative">
+                          <div
+                            className={`w-13 h-13 rounded-2xl bg-gradient-to-br ${gradient} vintage-mobile-tile flex items-center justify-center p-2.5 shadow-md`}
+                          >
+                            <Icon className="w-6 h-6 text-white drop-shadow-sm group-hover:scale-105 transition-transform" />
+                          </div>
+
+                          {app.badge_text && (
+                            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-red-600 text-white font-mono text-[8px] font-black rounded-full border border-white shadow-xs">
+                              {app.badge_text}
+                            </span>
+                          )}
+                        </div>
+
+                        <span className="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2 w-full mt-1.5 px-0.5 group-hover:text-blue-600">
+                          {app.title}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 7. VINTAGE CELLULAR PHONE DIALER MODAL                     */}
       {/* ========================================================= */}
       {isDialerOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-sm bg-gradient-to-b from-[#1e293b] via-[#0f172a] to-[#020617] rounded-t-2xl sm:rounded-2xl border-2 border-slate-600 shadow-2xl p-4 flex flex-col space-y-3.5 select-none animate-slideUp">
+          <div className="w-full max-w-sm bg-gradient-to-b from-[#1e293b] via-[#0f172a] to-[#020617] rounded-t-3xl sm:rounded-2xl border-2 border-slate-600 shadow-2xl p-4 flex flex-col space-y-3.5 select-none animate-slideUp">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-700">
               <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-xs font-black">
@@ -889,14 +789,14 @@ export default function MobileShell({ data }: MobileShellProps) {
                   playSound('close');
                   setIsDialerOpen(false);
                 }}
-                className="w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center cursor-pointer border border-slate-600"
+                className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center cursor-pointer border border-slate-600"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Green LCD Number Display */}
-            <div className="bg-[#14261d] rounded-xl p-3 border-2 border-[#1e4630] shadow-inner text-right">
+            <div className="bg-[#14261d] rounded-2xl p-3 border-2 border-[#1e4630] shadow-inner text-right">
               <div className="text-[10px] text-emerald-400/80 font-mono font-bold tracking-wider mb-1 flex items-center justify-between">
                 <span>RECIPIENT:</span>
                 <span>{data.settings?.owner_name || 'Mujahid Al Mahi'}</span>
@@ -926,7 +826,7 @@ export default function MobileShell({ data }: MobileShellProps) {
                   key={key}
                   type="button"
                   onClick={() => handleDialKeyPress(key)}
-                  className="vintage-phone-key h-12 rounded-xl flex flex-col items-center justify-center active:scale-95"
+                  className="vintage-phone-key h-12 rounded-2xl flex flex-col items-center justify-center active:scale-95"
                 >
                   <span className="text-lg font-mono font-bold leading-none">{key}</span>
                   {sub.trim() && (
