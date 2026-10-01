@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import { parseBlogReactions, packBlogReactions } from '@/lib/data/blogReactions';
-import { revalidatePath } from 'next/cache';
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,7 +42,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: updateErr.message }, { status: 500 });
       }
 
-      revalidatePath('/', 'layout');
       return NextResponse.json({ success: true, applause: newApplause });
     }
 
@@ -91,7 +89,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: updateErr.message }, { status: 500 });
       }
 
-      revalidatePath('/', 'layout');
       return NextResponse.json({ success: true, likes_count: newLikes });
     }
 
@@ -114,7 +111,6 @@ export async function POST(req: NextRequest) {
           .update({ stats: updatedStats })
           .eq('id', entityId);
 
-        revalidatePath('/', 'layout');
         return NextResponse.json({ success: true, stars: newStars });
       }
       return NextResponse.json({ success: false });

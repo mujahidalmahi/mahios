@@ -11,7 +11,7 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import { Experience } from '@/types/database';
 
@@ -84,18 +84,22 @@ export default function ExperienceAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this career experience entry?')) return;
-    try {
-      await adminMutate<Experience>({
-        table: 'experiences',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevExperiences = experiences;
     setExperiences((prev) => prev.filter((e) => e.id !== id));
-    setFeedback({ type: 'success', text: 'Experience deleted successfully.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<Experience>({
+      table: 'experiences',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setExperiences(prevExperiences);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete experience.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Experience deleted successfully.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -103,24 +107,28 @@ export default function ExperienceAdminPage() {
     if (!editingExp) return;
     setSaving(true);
 
+    const prevExperiences = experiences;
+    const res = await adminMutate<Experience>({
+      table: 'experiences',
+      action: 'upsert',
+      data: editingExp,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save experience. Please check your data.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+
     if (isNew) {
       setExperiences((prev) => [...prev, editingExp]);
     } else {
       setExperiences((prev) => prev.map((e) => (e.id === editingExp.id ? editingExp : e)));
     }
 
-    try {
-      await adminMutate<Experience>({
-        table: 'experiences',
-        action: 'upsert',
-        data: editingExp,
-      });
-    } catch {
-      // Local fallback
-    }
-
     setEditingExp(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Experience at "${editingExp.company}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -162,10 +170,11 @@ export default function ExperienceAdminPage() {
     });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= experiences.length) return;
 
+    const prevExperiences = experiences;
     const newExp = [...experiences];
     const temp = newExp[index];
     newExp[index] = newExp[targetIdx];
@@ -174,17 +183,11 @@ export default function ExperienceAdminPage() {
     const updated = newExp.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setExperiences(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<Experience>({
-          table: 'experiences',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const res = await adminBatchOrder('experiences', updated.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+    if (!res.success) {
+      setExperiences(prevExperiences);
+      setFeedback({ type: 'error', text: res.error || 'Failed to reorder experiences.' });
+      setTimeout(() => setFeedback(null), 3000);
     }
   };
 

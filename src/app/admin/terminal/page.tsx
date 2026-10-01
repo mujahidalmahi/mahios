@@ -60,18 +60,20 @@ export default function TerminalAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this terminal command?')) return;
-    try {
-      await adminMutate<TerminalCommand>({
-        table: 'terminal_commands',
-        action: 'delete',
-        match: { id },
-      });
-      setCommands((prev) => prev.filter((c) => c.id !== id));
+    const prev = commands;
+    setCommands((p) => p.filter((c) => c.id !== id));
+    const res = await adminMutate<TerminalCommand>({
+      table: 'terminal_commands',
+      action: 'delete',
+      match: { id },
+    });
+    if (!res.success) {
+      setCommands(prev);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete terminal command.' });
+    } else {
       setFeedback({ type: 'success', text: 'Terminal command deleted.' });
-      setTimeout(() => setFeedback(null), 3000);
-    } catch {
-      setCommands((prev) => prev.filter((c) => c.id !== id));
     }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {

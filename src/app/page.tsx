@@ -5,8 +5,9 @@ import ResponsiveOSWrapper from '@/components/os/ResponsiveOSWrapper';
 import { parseAboutExtras } from '@/lib/data/aboutExtras';
 import { generateDynamicSeoMetadata } from '@/lib/seo/dynamicSeoGenerator';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Enable ISR (Incremental Static Regeneration) with 60s background revalidation
+// On-demand revalidation is also triggered automatically on admin content mutations
+export const revalidate = 60;
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

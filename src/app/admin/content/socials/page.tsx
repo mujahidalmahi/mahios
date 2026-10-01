@@ -8,7 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -62,18 +62,22 @@ export default function SocialsAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this social link endpoint?')) return;
-    try {
-      await adminMutate<SocialLinkItem>({
-        table: 'social_links',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
+    const prev = links;
+    setLinks((p) => p.filter((l) => l.id !== id));
+    
+    const res = await adminMutate<SocialLinkItem>({
+      table: 'social_links',
+      action: 'delete',
+      match: { id },
+    });
+
+    if (!res.success) {
+      setLinks(prev);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete social link.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Social endpoint removed.' });
     }
-    setLinks((prev) => prev.filter((l) => l.id !== id));
-    setFeedback({ type: 'success', text: 'Social endpoint removed.' });
-    setTimeout(() => setFeedback(null), 3000);
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -81,40 +85,39 @@ export default function SocialsAdminPage() {
     if (!editingLink) return;
     setSaving(true);
 
-    try {
-      const res = await adminMutate<SocialLinkItem>({
-        table: 'social_links',
-        action: isNew ? 'insert' : 'update',
-        match: isNew ? undefined : { id: editingLink.id },
-        data: editingLink,
-      });
+    const prev = links;
+    const res = await adminMutate<SocialLinkItem>({
+      table: 'social_links',
+      action: isNew ? 'insert' : 'update',
+      match: isNew ? undefined : { id: editingLink.id },
+      data: editingLink,
+    });
 
-      const saved = (Array.isArray(res.data) ? res.data[0] : res.data) || editingLink;
+    setSaving(false);
 
-      if (isNew) {
-        setLinks((prev) => [...prev, saved]);
-      } else {
-        setLinks((prev) => prev.map((l) => (l.id === editingLink.id ? saved : l)));
-      }
-      setFeedback({ type: 'success', text: `Platform "${editingLink.platform_name}" saved!` });
-    } catch (err: any) {
-      if (isNew) {
-        setLinks((prev) => [...prev, editingLink]);
-      } else {
-        setLinks((prev) => prev.map((l) => (l.id === editingLink.id ? editingLink : l)));
-      }
-      setFeedback({ type: 'error', text: `Failed to save: ${err?.message || 'Unknown error'}` });
-    } finally {
-      setEditingLink(null);
-      setSaving(false);
-      setTimeout(() => setFeedback(null), 3000);
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save social endpoint.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
     }
+
+    const saved = (Array.isArray(res.data) ? res.data[0] : res.data) || editingLink;
+
+    if (isNew) {
+      setLinks([...prev, saved]);
+    } else {
+      setLinks(prev.map((l) => (l.id === editingLink.id ? saved : l)));
+    }
+    setEditingLink(null);
+    setFeedback({ type: 'success', text: `Platform "${editingLink.platform_name}" saved!` });
+    setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= links.length) return;
 
+    const prev = links;
     const newLinks = [...links];
     const temp = newLinks[index];
     newLinks[index] = newLinks[targetIdx];
@@ -123,17 +126,11 @@ export default function SocialsAdminPage() {
     const updated = newLinks.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setLinks(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<SocialLinkItem>({
-          table: 'social_links',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const res = await adminBatchOrder('social_links', updated.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+    if (!res.success) {
+      setLinks(prev);
+      setFeedback({ type: 'error', text: res.error || 'Failed to reorder links.' });
+      setTimeout(() => setFeedback(null), 3000);
     }
   };
 

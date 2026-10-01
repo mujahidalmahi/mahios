@@ -92,32 +92,40 @@ export default function DesktopAppsManagerPage() {
 
   const handleDeleteApp = async (id: string) => {
     if (!confirm('Are you sure you want to remove this desktop application?')) return;
-    try {
-      await adminMutate<DesktopApp>({
-        table: 'desktop_apps',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevApps = apps;
     setApps(apps.filter((a) => a.id !== id));
-    setNotification('Application removed from desktop');
-    setTimeout(() => setNotification(null), 3000);
+    
+    const res = await adminMutate<DesktopApp>({
+      table: 'desktop_apps',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setApps(prevApps);
+      setNotification(`Error: ${res.error || 'Failed to remove application'}`);
+    } else {
+      setNotification('Application removed from desktop');
+    }
+    setTimeout(() => setNotification(null), 3500);
   };
 
   const handleToggleVisibility = async (app: DesktopApp) => {
+    const prevApps = apps;
     const updated = apps.map((a) => (a.id === app.id ? { ...a, is_visible: !a.is_visible } : a));
     setApps(updated);
-    try {
-      await adminMutate<DesktopApp>({
-        table: 'desktop_apps',
-        action: 'update',
-        match: { id: app.id },
-        data: { is_visible: !app.is_visible },
-      });
-    } catch {
-      // Local fallback
+    
+    const res = await adminMutate<DesktopApp>({
+      table: 'desktop_apps',
+      action: 'update',
+      match: { id: app.id },
+      data: { is_visible: !app.is_visible },
+    });
+    
+    if (!res.success) {
+      setApps(prevApps);
+      setNotification(`Error: ${res.error || 'Failed to update visibility'}`);
+      setTimeout(() => setNotification(null), 3500);
     }
   };
 
@@ -125,20 +133,23 @@ export default function DesktopAppsManagerPage() {
     e.preventDefault();
     if (!editingApp) return;
 
+    const prevApps = apps;
+    const res = await adminMutate<DesktopApp>({
+      table: 'desktop_apps',
+      action: 'upsert',
+      data: editingApp,
+    });
+
+    if (!res.success) {
+      setNotification(`Error: ${res.error || 'Failed to save application'}`);
+      setTimeout(() => setNotification(null), 5000);
+      return;
+    }
+
     if (isNew) {
       setApps([...apps, editingApp]);
     } else {
       setApps(apps.map((a) => (a.id === editingApp.id ? editingApp : a)));
-    }
-
-    try {
-      await adminMutate<DesktopApp>({
-        table: 'desktop_apps',
-        action: 'upsert',
-        data: editingApp,
-      });
-    } catch {
-      // Local fallback
     }
 
     setEditingApp(null);

@@ -591,7 +591,35 @@ CREATE POLICY "Admin can modify wish items" ON wish_items FOR ALL USING (auth.ro
 DROP POLICY IF EXISTS "Public can view favourite items" ON favourite_items;
 DROP POLICY IF EXISTS "Admin can modify favourite items" ON favourite_items;
 CREATE POLICY "Public can view favourite items" ON favourite_items FOR SELECT USING (true);
-CREATE POLICY "Admin can modify favourite items" ON favourite_items FOR ALL USING (auth.role() = 'authenticated');
+-- =========================================================
+-- AUTOMATIC TIMESTAMP TRIGGERS (updated_at)
+-- =========================================================
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+DECLARE
+    tbl TEXT;
+    tables TEXT[] := ARRAY[
+        'site_settings', 'desktop_apps', 'about_content', 'skill_categories',
+        'skills', 'experiences', 'education', 'projects', 'achievements',
+        'gallery_categories', 'gallery_images', 'blog_posts',
+        'boot_logs', 'terminal_commands', 'resume_config', 'philosophies',
+        'feed_posts', 'biography_milestones', 'social_links', 'ideologies',
+        'entertainment_items', 'aim_items', 'dream_items', 'wish_items', 'favourite_items'
+    ];
+BEGIN
+    FOREACH tbl IN ARRAY tables LOOP
+        EXECUTE format('DROP TRIGGER IF EXISTS trg_update_%I ON %I;', tbl, tbl);
+        EXECUTE format('CREATE TRIGGER trg_update_%I BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();', tbl, tbl);
+    END LOOP;
+END $$;
 
 -- =========================================================
 -- INITIAL SEED DATA (IDEMPOTENT INSERTS)

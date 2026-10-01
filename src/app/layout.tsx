@@ -13,8 +13,13 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const data = await getBiographyData();
   const dynamicMeta = generateDynamicSeoMetadata(data);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mujahidmahi.me';
 
   return {
+    metadataBase: new URL(siteUrl),
+    alternates: {
+      canonical: '/',
+    },
     ...dynamicMeta,
     icons: {
       icon: [

@@ -8,7 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import { FeedPost } from '@/types/database';
 
@@ -24,9 +24,8 @@ export default function FeedAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('feed_posts').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setPosts(data as FeedPost[]);
+        const res = await adminFetch<FeedPost>('feed_posts', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) setPosts(res.data);
       } catch {
         // Fallback
       } finally {
@@ -61,18 +60,27 @@ export default function FeedAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this status update?')) return;
+    const previous = [...posts];
+    setPosts((prev) => prev.filter((p) => p.id !== id));
     try {
-      await adminMutate<FeedPost>({
+      const res = await adminMutate<FeedPost>({
         table: 'feed_posts',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setPosts(previous);
+        setFeedback({ type: 'error', text: `Failed to delete post: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: 'Status update removed.' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setPosts(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setPosts((prev) => prev.filter((p) => p.id !== id));
-    setFeedback({ type: 'success', text: 'Status update removed.' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -80,6 +88,7 @@ export default function FeedAdminPage() {
     if (!editingPost) return;
     setSaving(true);
 
+    const previous = [...posts];
     if (isNew) {
       setPosts((prev) => [editingPost, ...prev]);
     } else {
@@ -87,25 +96,35 @@ export default function FeedAdminPage() {
     }
 
     try {
-      await adminMutate<FeedPost>({
+      const res = await adminMutate<FeedPost>({
         table: 'feed_posts',
         action: 'upsert',
         data: editingPost,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setPosts(previous);
+        setFeedback({ type: 'error', text: `Failed to save post: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingPost(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: 'Feed post published successfully!' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setPosts(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingPost(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: 'Feed post published successfully!' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= posts.length) return;
 
+    const previous = [...posts];
     const newPosts = [...posts];
     const temp = newPosts[index];
     newPosts[index] = newPosts[targetIdx];
@@ -114,17 +133,12 @@ export default function FeedAdminPage() {
     const updated = newPosts.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setPosts(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<FeedPost>({
-          table: 'feed_posts',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('feed_posts', orderUpdates);
+    if (!res.success) {
+      setPosts(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

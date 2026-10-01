@@ -8,7 +8,7 @@ import {
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
 import { BootLog } from '@/types/database';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 
 export default function BootAdminPage() {
   const [logs, setLogs] = useState<BootLog[]>([]);
@@ -21,16 +21,11 @@ export default function BootAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('boot_logs')
-          .select('*')
-          .order('sort_order', { ascending: true });
-
-        if (error || !data || data.length === 0) {
-          setLogs(fallbackBiographyData.bootLogs);
+        const res = await adminFetch<BootLog>('boot_logs', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) {
+          setLogs(res.data);
         } else {
-          setLogs(data as BootLog[]);
+          setLogs(fallbackBiographyData.bootLogs);
         }
       } catch {
         setLogs(fallbackBiographyData.bootLogs);
@@ -111,10 +106,11 @@ export default function BootAdminPage() {
     }
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= logs.length) return;
 
+    const previous = [...logs];
     const newLogs = [...logs];
     const temp = newLogs[index];
     newLogs[index] = newLogs[targetIdx];
@@ -123,18 +119,12 @@ export default function BootAdminPage() {
     const updated = newLogs.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setLogs(updated);
 
-    // Save to Supabase
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate({
-          table: 'boot_logs',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Ignore
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('boot_logs', orderUpdates);
+    if (!res.success) {
+      setLogs(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

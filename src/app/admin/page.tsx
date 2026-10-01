@@ -11,6 +11,7 @@ import {
   Clock, Mail, ArrowUpRight, Activity
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { adminFetch } from '@/lib/api/adminMutate';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { BiographyDatabaseData, ContactMessage } from '@/types/database';
 
@@ -54,7 +55,7 @@ export default function AdminOverviewPage() {
           supabase.from('education').select('*'),
           supabase.from('achievements').select('*'),
           supabase.from('blog_posts').select('*'),
-          supabase.from('contact_messages').select('*').order('created_at', { ascending: false }).limit(5),
+          adminFetch<ContactMessage>('contact_messages', { order: { column: 'created_at', ascending: false }, limit: 5 }),
           supabase.from('gallery_images').select('*'),
           supabase.from('philosophies').select('*'),
           supabase.from('feed_posts').select('*'),

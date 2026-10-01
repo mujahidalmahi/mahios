@@ -9,7 +9,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -42,9 +42,8 @@ export default function IdeologyAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('ideologies').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setPillars(data as IdeologyPillar[]);
+        const res = await adminFetch<IdeologyPillar>('ideologies', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) setPillars(res.data);
       } catch {
         // Fallback
       } finally {
@@ -76,6 +75,7 @@ export default function IdeologyAdminPage() {
   };
 
   const handleDelete = async (id: string) => {
+    const previous = [...pillars];
     setPillars((prev) => prev.filter((p) => p.id !== id));
     if (isUuid(id)) {
       const res = await adminMutate<IdeologyPillar>({
@@ -84,6 +84,7 @@ export default function IdeologyAdminPage() {
         match: { id },
       });
       if (!res.success) {
+        setPillars(previous);
         setFeedback({ type: 'error', text: res.error || 'Failed to remove pillar from database.' });
       } else {
         setFeedback({ type: 'success', text: 'Pillar deleted.' });
@@ -102,6 +103,7 @@ export default function IdeologyAdminPage() {
     const safeId = isUuid(editingPillar.id) ? editingPillar.id : generateUuid();
     const payload = { ...editingPillar, id: safeId };
 
+    const previous = [...pillars];
     if (isNew) {
       setPillars((prev) => [...prev, payload]);
     } else {
@@ -117,6 +119,7 @@ export default function IdeologyAdminPage() {
     setEditingPillar(null);
     setSaving(false);
     if (!res.success) {
+      setPillars(previous);
       setFeedback({ type: 'error', text: res.error || 'Failed to save pillar to database.' });
     } else {
       setFeedback({ type: 'success', text: `Pillar "${payload.title}" saved successfully!` });
@@ -124,10 +127,11 @@ export default function IdeologyAdminPage() {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= pillars.length) return;
 
+    const previous = [...pillars];
     const newPillars = [...pillars];
     const temp = newPillars[index];
     newPillars[index] = newPillars[targetIdx];
@@ -136,17 +140,12 @@ export default function IdeologyAdminPage() {
     const updated = newPillars.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setPillars(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<IdeologyPillar>({
-          table: 'ideologies',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('ideologies', orderUpdates);
+    if (!res.success) {
+      setPillars(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

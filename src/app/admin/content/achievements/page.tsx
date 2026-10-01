@@ -11,7 +11,7 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -71,18 +71,22 @@ export default function AchievementsAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this achievement?')) return;
-    try {
-      await adminMutate<Achievement>({
-        table: 'achievements',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevAchievements = achievements;
     setAchievements((prev) => prev.filter((a) => a.id !== id));
-    setFeedback({ type: 'success', text: 'Achievement removed.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<Achievement>({
+      table: 'achievements',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setAchievements(prevAchievements);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete achievement.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Achievement removed.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -90,24 +94,28 @@ export default function AchievementsAdminPage() {
     if (!editingItem) return;
     setSaving(true);
 
+    const prevAchievements = achievements;
+    const res = await adminMutate<Achievement>({
+      table: 'achievements',
+      action: 'upsert',
+      data: editingItem,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save achievement. Please check your data.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+
     if (isNew) {
       setAchievements((prev) => [...prev, editingItem]);
     } else {
       setAchievements((prev) => prev.map((a) => (a.id === editingItem.id ? editingItem : a)));
     }
 
-    try {
-      await adminMutate<Achievement>({
-        table: 'achievements',
-        action: 'upsert',
-        data: editingItem,
-      });
-    } catch {
-      // Local fallback
-    }
-
     setEditingItem(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Achievement "${editingItem.title}" saved!` });
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -120,10 +128,11 @@ export default function AchievementsAdminPage() {
     });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= achievements.length) return;
 
+    const prevAchievements = achievements;
     const newAch = [...achievements];
     const temp = newAch[index];
     newAch[index] = newAch[targetIdx];
@@ -132,17 +141,11 @@ export default function AchievementsAdminPage() {
     const updated = newAch.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setAchievements(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<Achievement>({
-          table: 'achievements',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const res = await adminBatchOrder('achievements', updated.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+    if (!res.success) {
+      setAchievements(prevAchievements);
+      setFeedback({ type: 'error', text: res.error || 'Failed to reorder achievements.' });
+      setTimeout(() => setFeedback(null), 3000);
     }
   };
 

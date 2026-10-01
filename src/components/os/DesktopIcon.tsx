@@ -50,7 +50,7 @@ interface DesktopIconProps {
   onContextMenu?: (e: React.MouseEvent, app: DesktopApp) => void;
 }
 
-export default function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
+const DesktopIcon = React.memo(function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
   const { openWindow } = useWindowStore();
   const { playSound, selectedIconId, setSelectedIconId } = useSystemStore();
 
@@ -79,7 +79,8 @@ export default function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
       handleOpen();
     }
   };
@@ -96,6 +97,8 @@ export default function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
   return (
     <div
       data-desktop-icon="true"
+      role="button"
+      aria-label={`Open ${app.title}`}
       tabIndex={0}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
@@ -124,4 +127,6 @@ export default function DesktopIcon({ app, onContextMenu }: DesktopIconProps) {
       </span>
     </div>
   );
-}
+});
+
+export default DesktopIcon;

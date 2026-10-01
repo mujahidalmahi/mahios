@@ -8,7 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -26,9 +26,8 @@ export default function DreamAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('dream_items').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setDreams(data as DreamItem[]);
+        const res = await adminFetch<DreamItem>('dream_items', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) setDreams(res.data);
       } catch {
         // Fallback
       } finally {
@@ -59,18 +58,27 @@ export default function DreamAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this vision manifesto?')) return;
+    const previous = [...dreams];
+    setDreams((prev) => prev.filter((d) => d.id !== id));
     try {
-      await adminMutate<DreamItem>({
+      const res = await adminMutate<DreamItem>({
         table: 'dream_items',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setDreams(previous);
+        setFeedback({ type: 'error', text: `Failed to delete dream: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: 'Vision manifesto deleted.' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setDreams(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setDreams((prev) => prev.filter((d) => d.id !== id));
-    setFeedback({ type: 'success', text: 'Vision manifesto deleted.' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -78,6 +86,7 @@ export default function DreamAdminPage() {
     if (!editingDream) return;
     setSaving(true);
 
+    const previous = [...dreams];
     if (isNew) {
       setDreams((prev) => [...prev, editingDream]);
     } else {
@@ -85,25 +94,35 @@ export default function DreamAdminPage() {
     }
 
     try {
-      await adminMutate<DreamItem>({
+      const res = await adminMutate<DreamItem>({
         table: 'dream_items',
         action: 'upsert',
         data: editingDream,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setDreams(previous);
+        setFeedback({ type: 'error', text: `Failed to save dream: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingDream(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: `Dream "${editingDream.title}" saved successfully!` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setDreams(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingDream(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Dream "${editingDream.title}" saved successfully!` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= dreams.length) return;
 
+    const previous = [...dreams];
     const newDreams = [...dreams];
     const temp = newDreams[index];
     newDreams[index] = newDreams[targetIdx];
@@ -112,17 +131,12 @@ export default function DreamAdminPage() {
     const updated = newDreams.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setDreams(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<DreamItem>({
-          table: 'dream_items',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('dream_items', orderUpdates);
+    if (!res.success) {
+      setDreams(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

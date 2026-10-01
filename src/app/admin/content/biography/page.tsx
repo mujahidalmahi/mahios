@@ -9,7 +9,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -27,9 +27,8 @@ export default function BiographyAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('biography_milestones').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setChapters(data as BiographyMilestone[]);
+        const res = await adminFetch<BiographyMilestone>('biography_milestones', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) setChapters(res.data);
       } catch {
         // Fallback
       } finally {
@@ -76,6 +75,7 @@ export default function BiographyAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this biography chapter?')) return;
+    const previous = [...chapters];
     setChapters((prev) => prev.filter((c) => c.id !== id));
     if (isUuid(id)) {
       const res = await adminMutate<BiographyMilestone>({
@@ -84,6 +84,7 @@ export default function BiographyAdminPage() {
         match: { id },
       });
       if (!res.success) {
+        setChapters(previous);
         setFeedback({ type: 'error', text: res.error || 'Failed to remove chapter from database.' });
       } else {
         setFeedback({ type: 'success', text: 'Chapter removed from database.' });
@@ -102,6 +103,7 @@ export default function BiographyAdminPage() {
     const safeId = isUuid(editingChapter.id) ? editingChapter.id : generateUuid();
     const payload = { ...editingChapter, id: safeId };
 
+    const previous = [...chapters];
     if (isNew) {
       setChapters((prev) => [...prev, payload]);
     } else {
@@ -117,6 +119,7 @@ export default function BiographyAdminPage() {
     setEditingChapter(null);
     setSaving(false);
     if (!res.success) {
+      setChapters(previous);
       setFeedback({ type: 'error', text: res.error || 'Failed to save chapter to database.' });
     } else {
       setFeedback({ type: 'success', text: `Chapter "${payload.title}" saved successfully!` });
@@ -124,10 +127,11 @@ export default function BiographyAdminPage() {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= chapters.length) return;
 
+    const previous = [...chapters];
     const newCh = [...chapters];
     const temp = newCh[index];
     newCh[index] = newCh[targetIdx];
@@ -136,17 +140,12 @@ export default function BiographyAdminPage() {
     const updated = newCh.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setChapters(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<BiographyMilestone>({
-          table: 'biography_milestones',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('biography_milestones', orderUpdates);
+    if (!res.success) {
+      setChapters(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

@@ -6,7 +6,7 @@ import {
   Search, AlertCircle, Clock, CheckCheck, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch } from '@/lib/api/adminMutate';
 import { ContactMessage } from '@/types/database';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -33,95 +33,137 @@ export default function MessagesInboxPage() {
   useEffect(() => {
     async function load() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
-        if (data && data.length > 0) {
-          setMessages(data);
-          setSelectedMessage(data[0]);
+        const res = await adminFetch<ContactMessage>('contact_messages', {
+          order: { column: 'created_at', ascending: false },
+        });
+        if (res.success && res.data && res.data.length > 0) {
+          setMessages(res.data);
+          setSelectedMessage(res.data[0]);
+        } else {
+          // Fallback to client Supabase if available
+          const supabase = createClient();
+          const { data } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
+          if (data && data.length > 0) {
+            setMessages(data);
+            setSelectedMessage(data[0]);
+          }
         }
-      } catch { /* ignore */ }
-      finally { setLoading(false); }
+      } catch (err) {
+        console.error('Failed to load contact messages:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
   const toggleRead = useCallback(async (msg: ContactMessage) => {
+    const prev = messages;
     const updated = messages.map((m) => m.id === msg.id ? { ...m, is_read: !m.is_read } : m);
     setMessages(updated);
     if (selectedMessage?.id === msg.id) setSelectedMessage({ ...selectedMessage, is_read: !selectedMessage.is_read });
-    try {
-      await adminMutate<ContactMessage>({
-        table: 'contact_messages',
-        action: 'update',
-        match: { id: msg.id },
-        data: { is_read: !msg.is_read },
-      });
-    } catch { /* ignore */ }
+    
+    const res = await adminMutate<ContactMessage>({
+      table: 'contact_messages',
+      action: 'update',
+      match: { id: msg.id },
+      data: { is_read: !msg.is_read },
+    });
+    if (!res.success) {
+      setMessages(prev);
+      if (selectedMessage?.id === msg.id) setSelectedMessage({ ...selectedMessage, is_read: msg.is_read });
+      showFeedback('error', res.error || 'Failed to update message status.');
+    }
   }, [messages, selectedMessage]);
 
   const toggleStar = useCallback(async (msg: ContactMessage) => {
+    const prev = messages;
     const updated = messages.map((m) => m.id === msg.id ? { ...m, is_starred: !m.is_starred } : m);
     setMessages(updated);
     if (selectedMessage?.id === msg.id) setSelectedMessage({ ...selectedMessage, is_starred: !selectedMessage.is_starred });
-    try {
-      await adminMutate<ContactMessage>({
-        table: 'contact_messages',
-        action: 'update',
-        match: { id: msg.id },
-        data: { is_starred: !msg.is_starred },
-      });
-    } catch { /* ignore */ }
+    
+    const res = await adminMutate<ContactMessage>({
+      table: 'contact_messages',
+      action: 'update',
+      match: { id: msg.id },
+      data: { is_starred: !msg.is_starred },
+    });
+    if (!res.success) {
+      setMessages(prev);
+      if (selectedMessage?.id === msg.id) setSelectedMessage({ ...selectedMessage, is_starred: msg.is_starred });
+      showFeedback('error', res.error || 'Failed to update star status.');
+    }
   }, [messages, selectedMessage]);
 
   const handleDelete = async (id: string) => {
+    const prev = messages;
     const remaining = messages.filter((m) => m.id !== id);
     setMessages(remaining);
     if (selectedMessage?.id === id) setSelectedMessage(remaining.length > 0 ? remaining[0] : null);
-    try {
-      await adminMutate<ContactMessage>({
-        table: 'contact_messages',
-        action: 'delete',
-        match: { id },
-      });
-    } catch { /* ignore */ }
-    showFeedback('success', 'Message deleted.');
+    
+    const res = await adminMutate<ContactMessage>({
+      table: 'contact_messages',
+      action: 'delete',
+      match: { id },
+    });
+    if (!res.success) {
+      setMessages(prev);
+      showFeedback('error', res.error || 'Failed to delete message.');
+    } else {
+      showFeedback('success', 'Message deleted.');
+    }
   };
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
+    const prev = messages;
     const remaining = messages.filter((m) => !selectedIds.has(m.id));
     setMessages(remaining);
     if (selectedMessage && selectedIds.has(selectedMessage.id)) {
       setSelectedMessage(remaining.length > 0 ? remaining[0] : null);
     }
     setSelectedIds(new Set());
-    try {
-      for (const id of ids) {
-        await adminMutate<ContactMessage>({
-          table: 'contact_messages',
-          action: 'delete',
-          match: { id },
-        });
-      }
-    } catch { /* ignore */ }
-    showFeedback('success', `${ids.length} message${ids.length > 1 ? 's' : ''} deleted.`);
+    
+    let anyError = false;
+    for (const id of ids) {
+      const res = await adminMutate<ContactMessage>({
+        table: 'contact_messages',
+        action: 'delete',
+        match: { id },
+      });
+      if (!res.success) anyError = true;
+    }
+
+    if (anyError) {
+      setMessages(prev);
+      showFeedback('error', 'Some messages could not be deleted.');
+    } else {
+      showFeedback('success', `${ids.length} message${ids.length > 1 ? 's' : ''} deleted.`);
+    }
   };
 
   const markAllRead = async () => {
+    const prev = messages;
     const updated = messages.map((m) => ({ ...m, is_read: true }));
     setMessages(updated);
     if (selectedMessage) setSelectedMessage({ ...selectedMessage, is_read: true });
-    try {
-      for (const m of messages.filter((msg) => !msg.is_read)) {
-        await adminMutate<ContactMessage>({
-          table: 'contact_messages',
-          action: 'update',
-          match: { id: m.id },
-          data: { is_read: true },
-        });
-      }
-    } catch { /* ignore */ }
-    showFeedback('success', 'All messages marked as read.');
+    
+    let anyError = false;
+    for (const m of messages.filter((msg) => !msg.is_read)) {
+      const res = await adminMutate<ContactMessage>({
+        table: 'contact_messages',
+        action: 'update',
+        match: { id: m.id },
+        data: { is_read: true },
+      });
+      if (!res.success) anyError = true;
+    }
+    if (anyError) {
+      setMessages(prev);
+      showFeedback('error', 'Failed to mark some messages as read.');
+    } else {
+      showFeedback('success', 'All messages marked as read.');
+    }
   };
 
   const toggleSelectId = (id: string) => {

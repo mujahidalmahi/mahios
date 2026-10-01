@@ -12,7 +12,7 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -81,18 +81,22 @@ export default function ProjectsAdminPage() {
   };
 
   const performDelete = async (id: string) => {
-    try {
-      await adminMutate<Project>({
-        table: 'projects',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevProjects = projects;
     setProjects((prev) => prev.filter((p) => p.id !== id));
-    setFeedback({ type: 'success', text: 'Project deleted successfully.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<Project>({
+      table: 'projects',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setProjects(prevProjects);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete project.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Project deleted successfully.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -106,24 +110,28 @@ export default function ProjectsAdminPage() {
       slug: autoSlug,
     };
 
+    const prevProjects = projects;
+    const res = await adminMutate<Project>({
+      table: 'projects',
+      action: 'upsert',
+      data: payload,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save project. Please check your data.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+
     if (isNew) {
       setProjects((prev) => [...prev, payload]);
     } else {
       setProjects((prev) => prev.map((p) => (p.id === payload.id ? payload : p)));
     }
 
-    try {
-      await adminMutate<Project>({
-        table: 'projects',
-        action: 'upsert',
-        data: payload,
-      });
-    } catch {
-      // Local fallback
-    }
-
     setEditingProject(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Project "${payload.title}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -148,10 +156,11 @@ export default function ProjectsAdminPage() {
     });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= projects.length) return;
 
+    const prevProjects = projects;
     const newProj = [...projects];
     const temp = newProj[index];
     newProj[index] = newProj[targetIdx];
@@ -160,17 +169,11 @@ export default function ProjectsAdminPage() {
     const updated = newProj.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setProjects(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<Project>({
-          table: 'projects',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const res = await adminBatchOrder('projects', updated.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+    if (!res.success) {
+      setProjects(prevProjects);
+      setFeedback({ type: 'error', text: res.error || 'Failed to reorder projects.' });
+      setTimeout(() => setFeedback(null), 3000);
     }
   };
 

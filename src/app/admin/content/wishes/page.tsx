@@ -9,7 +9,7 @@ import confetti from 'canvas-confetti';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import { WishItem } from '@/types/database';
 
@@ -25,9 +25,8 @@ export default function WishesAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('wish_items').select('*').order('wish_number', { ascending: true });
-        if (data && data.length > 0) setWishes(data as WishItem[]);
+        const res = await adminFetch<WishItem>('wish_items', { order: { column: 'wish_number', ascending: true } });
+        if (res.data && res.data.length > 0) setWishes(res.data);
       } catch {
         // Fallback
       } finally {
@@ -61,18 +60,27 @@ export default function WishesAdminPage() {
 
   const handleDelete = async (id: string, wishNum: number) => {
     if (!confirm(`Are you sure you want to delete Wish #${wishNum}?`)) return;
+    const previous = [...wishes];
+    setWishes((prev) => prev.filter((w) => w.id !== id));
     try {
-      await adminMutate<WishItem>({
+      const res = await adminMutate<WishItem>({
         table: 'wish_items',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setWishes(previous);
+        setFeedback({ type: 'error', text: `Failed to delete wish: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: `Wish #${wishNum} removed.` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setWishes(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setWishes((prev) => prev.filter((w) => w.id !== id));
-    setFeedback({ type: 'success', text: `Wish #${wishNum} removed.` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -80,6 +88,7 @@ export default function WishesAdminPage() {
     if (!editingWish) return;
     setSaving(true);
 
+    const previous = [...wishes];
     if (isNew) {
       setWishes((prev) => [...prev, editingWish]);
     } else {
@@ -87,19 +96,28 @@ export default function WishesAdminPage() {
     }
 
     try {
-      await adminMutate<WishItem>({
+      const res = await adminMutate<WishItem>({
         table: 'wish_items',
         action: 'upsert',
         data: editingWish,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setWishes(previous);
+        setFeedback({ type: 'error', text: `Failed to save wish: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingWish(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: `Wish #${editingWish.wish_number} updated successfully!` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setWishes(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingWish(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Wish #${editingWish.wish_number} updated successfully!` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const testWishConfetti = () => {

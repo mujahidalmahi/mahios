@@ -8,7 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -26,9 +26,8 @@ export default function FavouritesAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('favourite_items').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setItems(data as FavouriteItem[]);
+        const res = await adminFetch<FavouriteItem>('favourite_items', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) setItems(res.data);
       } catch {
         // Fallback
       } finally {
@@ -60,18 +59,27 @@ export default function FavouritesAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this favourite item?')) return;
+    const previous = [...items];
+    setItems((prev) => prev.filter((i) => i.id !== id));
     try {
-      await adminMutate<FavouriteItem>({
+      const res = await adminMutate<FavouriteItem>({
         table: 'favourite_items',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setItems(previous);
+        setFeedback({ type: 'error', text: `Failed to delete item: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: 'Favourite item removed.' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setItems(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    setFeedback({ type: 'success', text: 'Favourite item removed.' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -79,6 +87,7 @@ export default function FavouritesAdminPage() {
     if (!editingItem) return;
     setSaving(true);
 
+    const previous = [...items];
     if (isNew) {
       setItems((prev) => [...prev, editingItem]);
     } else {
@@ -86,25 +95,35 @@ export default function FavouritesAdminPage() {
     }
 
     try {
-      await adminMutate<FavouriteItem>({
+      const res = await adminMutate<FavouriteItem>({
         table: 'favourite_items',
         action: 'upsert',
         data: editingItem,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setItems(previous);
+        setFeedback({ type: 'error', text: `Failed to save item: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingItem(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: `Item "${editingItem.item_name}" saved!` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setItems(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingItem(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Item "${editingItem.item_name}" saved!` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= items.length) return;
 
+    const previous = [...items];
     const newItems = [...items];
     const temp = newItems[index];
     newItems[index] = newItems[targetIdx];
@@ -113,17 +132,12 @@ export default function FavouritesAdminPage() {
     const updated = newItems.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setItems(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<FavouriteItem>({
-          table: 'favourite_items',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('favourite_items', orderUpdates);
+    if (!res.success) {
+      setItems(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

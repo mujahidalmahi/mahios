@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { fallbackBiographyData } from './initialData';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
@@ -17,7 +18,7 @@ function getResultData<T>(
   return fallback;
 }
 
-export async function getBiographyData(): Promise<BiographyDatabaseData> {
+export const getBiographyData = cache(async function getBiographyData(): Promise<BiographyDatabaseData> {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     if (!url || url.includes('placeholder')) {
@@ -154,4 +155,4 @@ export async function getBiographyData(): Promise<BiographyDatabaseData> {
     console.warn('Failed to fetch from Supabase, falling back to local dataset:', error);
     return fallbackBiographyData;
   }
-}
+});

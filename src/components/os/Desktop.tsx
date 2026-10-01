@@ -12,41 +12,39 @@ import AppPropertiesDialog from './AppPropertiesDialog';
 import { resolveDeepLink } from '@/lib/utils/deepLinks';
 import { getWallpaperStyle } from '@/lib/utils/wallpaper';
 
-// Import All 28 Application Views
-import AboutApp from '@/components/apps/AboutApp';
-import ExperienceApp from '@/components/apps/ExperienceApp';
-import ProjectsApp from '@/components/apps/ProjectsApp';
-import SkillsApp from '@/components/apps/SkillsApp';
-import EducationApp from '@/components/apps/EducationApp';
-import TerminalApp from '@/components/apps/TerminalApp';
-import GalleryApp from '@/components/apps/GalleryApp';
-import AchievementsApp from '@/components/apps/AchievementsApp';
-import BlogApp from '@/components/apps/BlogApp';
-import ResumeApp from '@/components/apps/ResumeApp';
-import ContactApp from '@/components/apps/ContactApp';
-import SettingsApp from '@/components/apps/SettingsApp';
-
-// Additional Dynamic Applications
-import PhilosophyApp from '@/components/apps/PhilosophyApp';
-import FeedApp from '@/components/apps/FeedApp';
-import BiographyApp from '@/components/apps/BiographyApp';
-import SocialsApp from '@/components/apps/SocialsApp';
-import IdeologyApp from '@/components/apps/IdeologyApp';
-import EntertainmentApp from '@/components/apps/EntertainmentApp';
-import AimApp from '@/components/apps/AimApp';
-import DreamApp from '@/components/apps/DreamApp';
-import WishesApp from '@/components/apps/WishesApp';
-import FavouritesApp from '@/components/apps/FavouritesApp';
-
-// Authentic Mini-OS Built-in Tools
-import MyComputerApp from '@/components/apps/MyComputerApp';
-import RecycleBinApp from '@/components/apps/RecycleBinApp';
-import CalculatorApp from '@/components/apps/CalculatorApp';
-import NotepadApp from '@/components/apps/NotepadApp';
-import PaintApp from '@/components/apps/PaintApp';
-import TaskManagerApp from '@/components/apps/TaskManagerApp';
-import BlogPostReaderApp from '@/components/apps/BlogPostReaderApp';
-import BiographyChapterReaderApp from '@/components/apps/BiographyChapterReaderApp';
+// All 28 Applications Loaded Dynamically (Next.js Code-Splitting)
+import {
+  DynamicAboutApp,
+  DynamicExperienceApp,
+  DynamicProjectsApp,
+  DynamicSkillsApp,
+  DynamicEducationApp,
+  DynamicTerminalApp,
+  DynamicGalleryApp,
+  DynamicAchievementsApp,
+  DynamicBlogApp,
+  DynamicResumeApp,
+  DynamicContactApp,
+  DynamicSettingsApp,
+  DynamicPhilosophyApp,
+  DynamicFeedApp,
+  DynamicBiographyApp,
+  DynamicSocialsApp,
+  DynamicIdeologyApp,
+  DynamicEntertainmentApp,
+  DynamicAimApp,
+  DynamicDreamApp,
+  DynamicWishesApp,
+  DynamicFavouritesApp,
+  DynamicMyComputerApp,
+  DynamicRecycleBinApp,
+  DynamicCalculatorApp,
+  DynamicNotepadApp,
+  DynamicPaintApp,
+  DynamicTaskManagerApp,
+  DynamicBlogPostReaderApp,
+  DynamicBiographyChapterReaderApp,
+} from '@/components/apps/dynamicApps';
 
 interface DesktopProps {
   data: BiographyDatabaseData;
@@ -197,76 +195,76 @@ export default function Desktop({ data }: DesktopProps) {
     if (componentKey === 'BlogPostReaderApp' || appId?.startsWith('blog-')) {
       const postId = appId ? appId.replace('blog-', '') : '';
       const post = data.blogPosts.find((p) => p.id === postId || p.slug === postId) || data.blogPosts[0];
-      if (post) return <BlogPostReaderApp post={post} />;
+      if (post) return <DynamicBlogPostReaderApp post={post} />;
     }
 
     // Separate dedicated biography chapter reader window
     if (componentKey === 'BiographyChapterReaderApp' || appId?.startsWith('milestone-') || appId?.startsWith('bio-ch-')) {
       const milestoneId = appId ? appId.replace(/^(milestone-|bio-ch-)/, '') : '';
       const milestone = data.biographyTimeline.find((m) => m.id === milestoneId) || data.biographyTimeline[0];
-      if (milestone) return <BiographyChapterReaderApp milestone={milestone} allMilestones={data.biographyTimeline} />;
+      if (milestone) return <DynamicBiographyChapterReaderApp milestone={milestone} allMilestones={data.biographyTimeline} />;
     }
 
     switch (componentKey) {
       case 'AboutApp':
-        return <AboutApp about={data.about} philosophies={data.philosophies} />;
+        return <DynamicAboutApp about={data.about} philosophies={data.philosophies} />;
       case 'ExperienceApp':
-        return <ExperienceApp experiences={data.experiences} />;
+        return <DynamicExperienceApp experiences={data.experiences} />;
       case 'ProjectsApp':
-        return <ProjectsApp projects={data.projects} initialProjectId={deepLinkedProjectId} />;
+        return <DynamicProjectsApp projects={data.projects} initialProjectId={deepLinkedProjectId} />;
       case 'SkillsApp':
-        return <SkillsApp categories={data.categories} skills={data.skills} />;
+        return <DynamicSkillsApp categories={data.categories} skills={data.skills} />;
       case 'EducationApp':
-        return <EducationApp education={data.education} />;
+        return <DynamicEducationApp education={data.education} />;
       case 'TerminalApp':
-        return <TerminalApp commands={data.terminalCommands} data={data} />;
+        return <DynamicTerminalApp commands={data.terminalCommands} data={data} />;
       case 'GalleryApp':
-        return <GalleryApp categories={data.galleryCategories} images={data.galleryImages} />;
+        return <DynamicGalleryApp categories={data.galleryCategories} images={data.galleryImages} />;
       case 'AchievementsApp':
-        return <AchievementsApp achievements={data.achievements} />;
+        return <DynamicAchievementsApp achievements={data.achievements} />;
       case 'BlogApp':
-        return <BlogApp posts={data.blogPosts} />;
+        return <DynamicBlogApp posts={data.blogPosts} />;
       case 'ResumeApp':
-        return <ResumeApp resume={data.resumeConfig} data={data} />;
+        return <DynamicResumeApp resume={data.resumeConfig} data={data} />;
       case 'ContactApp':
-        return <ContactApp />;
+        return <DynamicContactApp />;
       case 'SettingsApp':
-        return <SettingsApp />;
+        return <DynamicSettingsApp />;
       case 'PhilosophyApp':
-        return <PhilosophyApp philosophies={data.philosophies} />;
+        return <DynamicPhilosophyApp philosophies={data.philosophies} />;
       case 'FeedApp':
-        return <FeedApp feedPosts={data.feedPosts} />;
+        return <DynamicFeedApp feedPosts={data.feedPosts} />;
       case 'BiographyApp':
-        return <BiographyApp biographyTimeline={data.biographyTimeline} />;
+        return <DynamicBiographyApp biographyTimeline={data.biographyTimeline} />;
       case 'SocialsApp':
-        return <SocialsApp socialLinks={data.socialLinks} />;
+        return <DynamicSocialsApp socialLinks={data.socialLinks} />;
       case 'IdeologyApp':
-        return <IdeologyApp ideologies={data.ideologies} />;
+        return <DynamicIdeologyApp ideologies={data.ideologies} />;
       case 'EntertainmentApp':
-        return <EntertainmentApp entertainment={data.entertainment} />;
+        return <DynamicEntertainmentApp entertainment={data.entertainment} />;
       case 'AimApp':
-        return <AimApp aims={data.aims} />;
+        return <DynamicAimApp aims={data.aims} />;
       case 'DreamApp':
-        return <DreamApp dreams={data.dreams} />;
+        return <DynamicDreamApp dreams={data.dreams} />;
       case 'WishesApp':
-        return <WishesApp wishes={data.wishes} />;
+        return <DynamicWishesApp wishes={data.wishes} />;
       case 'FavouritesApp':
-        return <FavouritesApp favourites={data.favourites} />;
+        return <DynamicFavouritesApp favourites={data.favourites} />;
       // 6 Authentic Mini-OS Built-in Tools
       case 'MyComputerApp':
-        return <MyComputerApp />;
+        return <DynamicMyComputerApp />;
       case 'RecycleBinApp':
-        return <RecycleBinApp />;
+        return <DynamicRecycleBinApp />;
       case 'CalculatorApp':
-        return <CalculatorApp />;
+        return <DynamicCalculatorApp />;
       case 'NotepadApp':
-        return <NotepadApp />;
+        return <DynamicNotepadApp />;
       case 'PaintApp':
-        return <PaintApp />;
+        return <DynamicPaintApp />;
       case 'TaskManagerApp':
-        return <TaskManagerApp />;
+        return <DynamicTaskManagerApp />;
       default:
-        return <AboutApp about={data.about} />;
+        return <DynamicAboutApp about={data.about} />;
     }
   };
 

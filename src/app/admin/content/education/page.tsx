@@ -75,18 +75,22 @@ export default function EducationAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this education entry?')) return;
-    try {
-      await adminMutate<Education>({
-        table: 'education',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevList = educationList;
     setEducationList((prev) => prev.filter((e) => e.id !== id));
-    setFeedback({ type: 'success', text: 'Education entry removed.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<Education>({
+      table: 'education',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setEducationList(prevList);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete education entry.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Education entry removed.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -97,34 +101,29 @@ export default function EducationAdminPage() {
     const isCreating = isNew;
     const savedRecord = { ...editingEdu };
 
-    if (isCreating) {
-      setEducationList((prev) => [...prev, savedRecord]);
-    } else {
-      setEducationList((prev) => prev.map((e) => (e.id === savedRecord.id ? savedRecord : e)));
+    const res = await adminMutate<Education>({
+      table: 'education',
+      action: isCreating ? 'insert' : 'update',
+      match: isCreating ? undefined : { id: savedRecord.id },
+      data: savedRecord,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save education entry.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
     }
 
-    try {
-      const res = await adminMutate<Education>({
-        table: 'education',
-        action: isCreating ? 'insert' : 'update',
-        match: isCreating ? undefined : { id: savedRecord.id },
-        data: savedRecord,
-      });
-
-      if (res.success && res.data) {
-        const dbRecord = (Array.isArray(res.data) ? res.data[0] : res.data) as Education;
-        if (dbRecord && dbRecord.id) {
-          setEducationList((prev) =>
-            prev.map((e) => (e.id === savedRecord.id ? dbRecord : e))
-          );
-        }
-      }
-    } catch {
-      // Local fallback
+    const finalRecord = (res.data ? (Array.isArray(res.data) ? res.data[0] : res.data) : savedRecord) as Education;
+    if (isCreating) {
+      setEducationList((prev) => [...prev, finalRecord]);
+    } else {
+      setEducationList((prev) => prev.map((e) => (e.id === savedRecord.id ? finalRecord : e)));
     }
 
     setEditingEdu(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Education at "${savedRecord.institution}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };

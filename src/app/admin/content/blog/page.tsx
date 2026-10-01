@@ -15,7 +15,7 @@ import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
 import { BlogPost } from '@/types/database';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 
 export default function BlogAdminPage() {
   const [posts, setPosts] = useState<BlogPost[]>(fallbackBiographyData.blogPosts);
@@ -33,17 +33,24 @@ export default function BlogAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .order('sort_order', { ascending: true });
+        const res = await adminFetch<BlogPost>('blog_posts', {
+          order: { column: 'sort_order', ascending: true },
+        });
+        if (res.success && res.data && res.data.length > 0) {
+          setPosts(res.data);
+        } else {
+          const supabase = createClient();
+          const { data } = await supabase
+            .from('blog_posts')
+            .select('*')
+            .order('sort_order', { ascending: true });
 
-        if (data && data.length > 0) {
-          setPosts(data as BlogPost[]);
+          if (data && data.length > 0) {
+            setPosts(data as BlogPost[]);
+          }
         }
-      } catch {
-        // Fallback
+      } catch (e) {
+        console.error('Failed to load blog posts:', e);
       } finally {
         setLoading(false);
       }
@@ -76,18 +83,22 @@ export default function BlogAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this dev note / article?')) return;
-    try {
-      await adminMutate<BlogPost>({
-        table: 'blog_posts',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevPosts = posts;
     setPosts((prev) => prev.filter((p) => p.id !== id));
-    setFeedback({ type: 'success', text: 'Article deleted.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<BlogPost>({
+      table: 'blog_posts',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setPosts(prevPosts);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete article.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Article deleted.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -106,24 +117,28 @@ export default function BlogAdminPage() {
       updated_at: new Date().toISOString(),
     };
 
+    const prevPosts = posts;
+    const res = await adminMutate<BlogPost>({
+      table: 'blog_posts',
+      action: 'upsert',
+      data: payload,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save article. Please check your data.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+
     if (isNew) {
       setPosts((prev) => [...prev, payload]);
     } else {
       setPosts((prev) => prev.map((p) => (p.id === payload.id ? payload : p)));
     }
 
-    try {
-      await adminMutate<BlogPost>({
-        table: 'blog_posts',
-        action: 'upsert',
-        data: payload,
-      });
-    } catch {
-      // Local fallback
-    }
-
     setEditingPost(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Article "${payload.title}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -148,10 +163,11 @@ export default function BlogAdminPage() {
     });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= posts.length) return;
 
+    const prevPosts = posts;
     const newPosts = [...posts];
     const temp = newPosts[index];
     newPosts[index] = newPosts[targetIdx];
@@ -160,17 +176,11 @@ export default function BlogAdminPage() {
     const updated = newPosts.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setPosts(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<BlogPost>({
-          table: 'blog_posts',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const res = await adminBatchOrder('blog_posts', updated.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+    if (!res.success) {
+      setPosts(prevPosts);
+      setFeedback({ type: 'error', text: res.error || 'Failed to reorder articles.' });
+      setTimeout(() => setFeedback(null), 3000);
     }
   };
 

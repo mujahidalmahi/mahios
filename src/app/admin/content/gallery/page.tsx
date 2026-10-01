@@ -10,7 +10,7 @@ import MediaUploader from '@/components/admin/MediaUploader';
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -42,12 +42,13 @@ export default function GalleryAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data: catData } = await supabase.from('gallery_categories').select('*').order('sort_order', { ascending: true });
-        const { data: imgData } = await supabase.from('gallery_images').select('*').order('sort_order', { ascending: true });
+        const [catRes, imgRes] = await Promise.all([
+          adminFetch<GalleryCategory>('gallery_categories', { order: { column: 'sort_order', ascending: true } }),
+          adminFetch<GalleryImage>('gallery_images', { order: { column: 'sort_order', ascending: true } }),
+        ]);
 
-        if (catData && catData.length > 0) setCategories(catData);
-        if (imgData && imgData.length > 0) setImages(imgData);
+        if (catRes.data && catRes.data.length > 0) setCategories(catRes.data);
+        if (imgRes.data && imgRes.data.length > 0) setImages(imgRes.data);
       } catch {
         // Fallback
       } finally {
@@ -78,7 +79,7 @@ export default function GalleryAdminPage() {
     setEditingImage({ ...img });
   };
 
-  const handleImageCategoryChange = (catName: string) => {
+  const handleImageCategoryChange = async (catName: string) => {
     if (!editingImage) return;
     const existing = categories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
     if (existing) {
@@ -93,27 +94,41 @@ export default function GalleryAdminPage() {
       };
       setCategories((prev) => [...prev, newCat]);
       setEditingImage({ ...editingImage, category_id: newCatId });
-      adminMutate<GalleryCategory>({
+      const res = await adminMutate<GalleryCategory>({
         table: 'gallery_categories',
         action: 'insert',
         data: newCat,
-      }).catch(() => {});
+      });
+      if (!res.success) {
+        setCategories((prev) => prev.filter((c) => c.id !== newCatId));
+        setFeedback({ type: 'error', text: `Failed to create category: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+      }
     }
   };
 
   const performDeleteImage = async (id: string) => {
+    const previous = [...images];
+    setImages((prev) => prev.filter((i) => i.id !== id));
     try {
-      await adminMutate<GalleryImage>({
+      const res = await adminMutate<GalleryImage>({
         table: 'gallery_images',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setImages(previous);
+        setFeedback({ type: 'error', text: `Failed to delete photo: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: 'Photo deleted successfully.' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setImages(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setImages((prev) => prev.filter((i) => i.id !== id));
-    setFeedback({ type: 'success', text: 'Photo deleted successfully.' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSaveImage = async (e: React.FormEvent) => {
@@ -121,6 +136,7 @@ export default function GalleryAdminPage() {
     if (!editingImage) return;
     setSaving(true);
 
+    const previous = [...images];
     if (isNewImage) {
       setImages((prev) => [...prev, editingImage]);
     } else {
@@ -128,19 +144,28 @@ export default function GalleryAdminPage() {
     }
 
     try {
-      await adminMutate<GalleryImage>({
+      const res = await adminMutate<GalleryImage>({
         table: 'gallery_images',
         action: 'upsert',
         data: editingImage,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setImages(previous);
+        setFeedback({ type: 'error', text: `Failed to save photo: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingImage(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: `Photo "${editingImage.title}" saved successfully!` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setImages(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingImage(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Photo "${editingImage.title}" saved successfully!` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   // --- CATEGORY HANDLERS ---
@@ -160,18 +185,27 @@ export default function GalleryAdminPage() {
   };
 
   const performDeleteCategory = async (id: string) => {
+    const previous = [...categories];
+    setCategories((prev) => prev.filter((c) => c.id !== id));
     try {
-      await adminMutate<GalleryCategory>({
+      const res = await adminMutate<GalleryCategory>({
         table: 'gallery_categories',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setCategories(previous);
+        setFeedback({ type: 'error', text: `Failed to delete category: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: 'Album category removed.' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setCategories(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    setFeedback({ type: 'success', text: 'Album category removed.' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSaveCategory = async (e: React.FormEvent) => {
@@ -182,6 +216,7 @@ export default function GalleryAdminPage() {
     const autoSlug = editingCategory.slug || editingCategory.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const payload = { ...editingCategory, slug: autoSlug };
 
+    const previous = [...categories];
     if (isNewCategory) {
       setCategories((prev) => [...prev, payload]);
     } else {
@@ -189,25 +224,35 @@ export default function GalleryAdminPage() {
     }
 
     try {
-      await adminMutate<GalleryCategory>({
+      const res = await adminMutate<GalleryCategory>({
         table: 'gallery_categories',
         action: 'upsert',
         data: payload,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setCategories(previous);
+        setFeedback({ type: 'error', text: `Failed to save category: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingCategory(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: `Category "${payload.name}" saved!` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setCategories(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingCategory(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Category "${payload.name}" saved!` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= images.length) return;
 
+    const previous = [...images];
     const newImgs = [...images];
     const temp = newImgs[index];
     newImgs[index] = newImgs[targetIdx];
@@ -216,17 +261,12 @@ export default function GalleryAdminPage() {
     const updated = newImgs.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setImages(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<GalleryImage>({
-          table: 'gallery_images',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('gallery_images', orderUpdates);
+    if (!res.success) {
+      setImages(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

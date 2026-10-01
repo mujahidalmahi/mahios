@@ -13,6 +13,7 @@ interface WindowStore {
   focusWindow: (appId: string) => void;
   updateWindowPosition: (appId: string, position: { x: number; y: number }) => void;
   updateWindowSize: (appId: string, size: { width: number; height: number }) => void;
+  snapWindow: (appId: string, side: 'left' | 'right' | 'top') => void;
   closeAllWindows: () => void;
   cascadeWindows: () => void;
   tileHorizontally: () => void;
@@ -194,6 +195,48 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         w.appId === appId ? { ...w, size } : w
       ),
     }));
+  },
+
+  snapWindow: (appId: string, side: 'left' | 'right' | 'top') => {
+    const { windows, highestZIndex, maximizeWindow } = get();
+    if (side === 'top') {
+      const target = windows.find((w) => w.appId === appId);
+      if (target && !target.isMaximized) {
+        maximizeWindow(appId);
+      }
+      return;
+    }
+
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const currentMaxZ = Math.max(highestZIndex, ...windows.map((w) => w.zIndex || 0), 100);
+    const newZ = currentMaxZ + 1;
+    const halfWidth = Math.floor(vw / 2);
+    const fullHeight = Math.max(300, vh - 34);
+
+    set({
+      windows: windows.map((w) => {
+        if (w.appId !== appId) return w;
+        return {
+          ...w,
+          isMaximized: false,
+          isMinimized: false,
+          zIndex: newZ,
+          prevPosition: w.prevPosition || { ...w.position },
+          prevSize: w.prevSize || { ...w.size },
+          position: {
+            x: side === 'left' ? 0 : halfWidth,
+            y: 0,
+          },
+          size: {
+            width: halfWidth,
+            height: fullHeight,
+          },
+        };
+      }),
+      activeWindowId: appId,
+      highestZIndex: newZ,
+    });
   },
 
   closeAllWindows: () => {

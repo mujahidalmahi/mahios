@@ -8,7 +8,7 @@ import {
 import CategoryPicker from '@/components/admin/CategoryPicker';
 import { fallbackBiographyData } from '@/lib/data/initialData';
 import { createClient } from '@/lib/supabase/client';
-import { adminMutate } from '@/lib/api/adminMutate';
+import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
@@ -27,9 +27,8 @@ export default function AimAdminPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('aim_items').select('*').order('sort_order', { ascending: true });
-        if (data && data.length > 0) setAims(data as AimItem[]);
+        const res = await adminFetch<AimItem>('aim_items', { order: { column: 'sort_order', ascending: true } });
+        if (res.data && res.data.length > 0) setAims(res.data);
       } catch {
         // Fallback
       } finally {
@@ -62,18 +61,27 @@ export default function AimAdminPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this strategic goal?')) return;
+    const previous = [...aims];
+    setAims((prev) => prev.filter((a) => a.id !== id));
     try {
-      await adminMutate<AimItem>({
+      const res = await adminMutate<AimItem>({
         table: 'aim_items',
         action: 'delete',
         match: { id },
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setAims(previous);
+        setFeedback({ type: 'error', text: `Failed to delete goal: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        return;
+      }
+      setFeedback({ type: 'success', text: 'Strategic goal deleted.' });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setAims(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Delete failed' });
+      setTimeout(() => setFeedback(null), 4000);
     }
-    setAims((prev) => prev.filter((a) => a.id !== id));
-    setFeedback({ type: 'success', text: 'Strategic goal deleted.' });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -81,6 +89,7 @@ export default function AimAdminPage() {
     if (!editingAim) return;
     setSaving(true);
 
+    const previous = [...aims];
     if (isNew) {
       setAims((prev) => [...prev, editingAim]);
     } else {
@@ -88,19 +97,28 @@ export default function AimAdminPage() {
     }
 
     try {
-      await adminMutate<AimItem>({
+      const res = await adminMutate<AimItem>({
         table: 'aim_items',
         action: 'upsert',
         data: editingAim,
       });
-    } catch {
-      // Local fallback
+      if (!res.success) {
+        setAims(previous);
+        setFeedback({ type: 'error', text: `Failed to save goal: ${res.error || 'Unknown error'}` });
+        setTimeout(() => setFeedback(null), 4000);
+        setSaving(false);
+        return;
+      }
+      setEditingAim(null);
+      setSaving(false);
+      setFeedback({ type: 'success', text: `Aim "${editingAim.goal_title}" saved successfully!` });
+      setTimeout(() => setFeedback(null), 3000);
+    } catch (err: any) {
+      setAims(previous);
+      setFeedback({ type: 'error', text: err?.message || 'Save failed' });
+      setTimeout(() => setFeedback(null), 4000);
+      setSaving(false);
     }
-
-    setEditingAim(null);
-    setSaving(false);
-    setFeedback({ type: 'success', text: `Aim "${editingAim.goal_title}" saved successfully!` });
-    setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleAddDeliverable = () => {
@@ -120,10 +138,11 @@ export default function AimAdminPage() {
     });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIdx = direction === 'up' ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= aims.length) return;
 
+    const previous = [...aims];
     const newAims = [...aims];
     const temp = newAims[index];
     newAims[index] = newAims[targetIdx];
@@ -132,17 +151,12 @@ export default function AimAdminPage() {
     const updated = newAims.map((item, idx) => ({ ...item, sort_order: idx + 1 }));
     setAims(updated);
 
-    try {
-      updated.forEach(async (item) => {
-        await adminMutate<AimItem>({
-          table: 'aim_items',
-          action: 'update',
-          match: { id: item.id },
-          data: { sort_order: item.sort_order },
-        });
-      });
-    } catch {
-      // Local fallback
+    const orderUpdates = updated.map((item) => ({ id: item.id, sort_order: item.sort_order }));
+    const res = await adminBatchOrder('aim_items', orderUpdates);
+    if (!res.success) {
+      setAims(previous);
+      setFeedback({ type: 'error', text: `Failed to reorder: ${res.error || 'Server error'}` });
+      setTimeout(() => setFeedback(null), 4000);
     }
   };
 

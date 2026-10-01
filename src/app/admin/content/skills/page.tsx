@@ -113,18 +113,22 @@ export default function SkillsAdminPage() {
 
   const handleDeleteSkill = async (id: string) => {
     if (!confirm('Are you sure you want to delete this skill?')) return;
-    try {
-      await adminMutate<Skill>({
-        table: 'skills',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevSkills = skills;
     setSkills((prev) => prev.filter((s) => s.id !== id));
-    setFeedback({ type: 'success', text: 'Skill removed successfully.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<Skill>({
+      table: 'skills',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setSkills(prevSkills);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete skill.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Skill removed successfully.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSaveSkill = async (e: React.FormEvent) => {
@@ -133,32 +137,38 @@ export default function SkillsAdminPage() {
     setSaving(true);
 
     const skillToSave = { ...editingSkill };
+    const prevSkills = skills;
+
+    const res = await adminMutate<Skill>({
+      table: 'skills',
+      action: 'upsert',
+      data: skillToSave,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save skill. Please check your data.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+
     if (isNewSkill) {
       setSkills((prev) => [...prev, skillToSave]);
     } else {
       setSkills((prev) => prev.map((s) => (s.id === skillToSave.id ? skillToSave : s)));
     }
 
-    try {
-      const res = await adminMutate<Skill>({
-        table: 'skills',
-        action: 'upsert',
-        data: skillToSave,
-      });
-      if (res?.data) {
-        const saved = Array.isArray(res.data) ? res.data[0] : res.data;
-        if (saved?.id) {
-          setSkills((prev) =>
-            prev.map((s) => (s.id === skillToSave.id || s.id === saved.id ? saved : s))
-          );
-        }
+    if (res?.data) {
+      const saved = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (saved?.id) {
+        setSkills((prev) =>
+          prev.map((s) => (s.id === skillToSave.id || s.id === saved.id ? saved : s))
+        );
       }
-    } catch {
-      // Local fallback
     }
 
     setEditingSkill(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Skill "${editingSkill.name}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };
@@ -190,18 +200,22 @@ export default function SkillsAdminPage() {
       if (!confirm('Are you sure you want to delete this skill category?')) return;
     }
 
-    try {
-      await adminMutate<SkillCategory>({
-        table: 'skill_categories',
-        action: 'delete',
-        match: { id },
-      });
-    } catch {
-      // Local fallback
-    }
+    const prevCats = categories;
     setCategories((prev) => prev.filter((c) => c.id !== id));
-    setFeedback({ type: 'success', text: 'Skill category deleted.' });
-    setTimeout(() => setFeedback(null), 3000);
+    
+    const res = await adminMutate<SkillCategory>({
+      table: 'skill_categories',
+      action: 'delete',
+      match: { id },
+    });
+    
+    if (!res.success) {
+      setCategories(prevCats);
+      setFeedback({ type: 'error', text: res.error || 'Failed to delete skill category.' });
+    } else {
+      setFeedback({ type: 'success', text: 'Skill category deleted.' });
+    }
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const handleSaveCategory = async (e: React.FormEvent) => {
@@ -210,32 +224,38 @@ export default function SkillsAdminPage() {
     setSaving(true);
 
     const catToSave = { ...editingCategory };
+    const prevCats = categories;
+
+    const res = await adminMutate<SkillCategory>({
+      table: 'skill_categories',
+      action: 'upsert',
+      data: catToSave,
+    });
+
+    setSaving(false);
+
+    if (!res.success) {
+      setFeedback({ type: 'error', text: res.error || 'Failed to save category.' });
+      setTimeout(() => setFeedback(null), 5000);
+      return;
+    }
+
     if (isNewCategory) {
       setCategories((prev) => [...prev, catToSave]);
     } else {
       setCategories((prev) => prev.map((c) => (c.id === catToSave.id ? catToSave : c)));
     }
 
-    try {
-      const res = await adminMutate<SkillCategory>({
-        table: 'skill_categories',
-        action: 'upsert',
-        data: catToSave,
-      });
-      if (res?.data) {
-        const savedCat = Array.isArray(res.data) ? res.data[0] : res.data;
-        if (savedCat?.id) {
-          setCategories((prev) =>
-            prev.map((c) => (c.id === catToSave.id || c.id === savedCat.id ? savedCat : c))
-          );
-        }
+    if (res?.data) {
+      const savedCat = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (savedCat?.id) {
+        setCategories((prev) =>
+          prev.map((c) => (c.id === catToSave.id || c.id === savedCat.id ? savedCat : c))
+        );
       }
-    } catch {
-      // Local fallback
     }
 
     setEditingCategory(null);
-    setSaving(false);
     setFeedback({ type: 'success', text: `Category "${editingCategory.name}" saved successfully!` });
     setTimeout(() => setFeedback(null), 3000);
   };

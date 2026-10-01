@@ -81,7 +81,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (action === 'upsert') {
+    if (action === 'select') {
+      let query = supabase.from(table).select(body.select || '*');
+      if (match) {
+        Object.entries(match).forEach(([k, v]) => {
+          query = query.eq(k, v);
+        });
+      }
+      if (body.order && typeof body.order === 'object' && body.order.column) {
+        query = query.order(body.order.column, { ascending: body.order.ascending ?? true });
+      }
+      if (typeof body.limit === 'number') {
+        query = query.limit(body.limit);
+      }
+      queryResult = await query;
+      if (queryResult.error) {
+        return NextResponse.json({ error: queryResult.error.message }, { status: 500 });
+      }
+      return NextResponse.json({
+        success: true,
+        data: queryResult.data,
+      });
+    } else if (action === 'batch_order') {
+      const items = Array.isArray(body.items) ? body.items : [];
+      const updates = items.map((item: any) => {
+        const orderKey = 'sort_order' in item ? 'sort_order' : 'sort_index';
+        return supabase.from(table).update({ [orderKey]: item[orderKey] }).eq('id', item.id);
+      });
+      await Promise.all(updates);
+      try {
+        revalidatePath('/', 'layout');
+        revalidatePath('/admin', 'layout');
+      } catch (e) {
+        console.warn('Revalidation warning:', e);
+      }
+      return NextResponse.json({ success: true });
+    } else if (action === 'upsert') {
       queryResult = await supabase.from(table).upsert(sanitizedData).select();
     } else if (action === 'insert') {
       queryResult = await supabase.from(table).insert(sanitizedData).select();
