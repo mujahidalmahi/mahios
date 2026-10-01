@@ -707,10 +707,10 @@ export const fallbackBiographyData: BiographyDatabaseData = {
   ],
 
   terminalCommands: [
-    { id: 't-1', command: 'help', response_text: 'Available MahiOS Commands:\n  help        - List all executable CLI commands\n  about       - Print summary biographical story\n  skills      - Survey technical stack and competencies\n  experience  - Review career milestones & companies\n  projects    - Browse active software projects\n  contact     - Direct communication channels\n  calc <expr> - Evaluate mathematical expression\n  theme <clr> - Change wallpaper color (teal, navy, charcoal)\n  neofetch    - System telemetry report\n  dir / ls    - Directory list of virtual files\n  cat <file>  - Output contents of a file\n  matrix      - Toggle matrix phosphor rain\n  reboot      - Cold system reboot\n  clear / cls - Clear terminal display', description: 'Displays system commands', is_hidden: false, sort_order: 1 },
+    { id: 't-1', command: 'help', response_text: 'Available MahiOS Commands:\n  help        - Displays command instructions\n  about       - Displays biographical summary\n  whoami      - Displays current session user\n  quote       - Prints random tech & engineering quote\n\nShortcuts: clear/cls, exit, [TAB], [↑/↓]', description: 'Displays system commands', is_hidden: false, sort_order: 1 },
     { id: 't-2', command: 'about', response_text: 'Mujahid Al Mahi -- Full-Stack Software Engineer based in Dhaka, Bangladesh. Passionate about Next.js 16, Supabase, TypeScript, and high-performance tactile software.', description: 'Displays biographical summary', is_hidden: false, sort_order: 2 },
     { id: 't-3', command: 'whoami', response_text: 'Guest Operator @ MahiOS Terminal [Authenticated via SSL Session]', description: 'Displays current session user', is_hidden: false, sort_order: 3 },
-    { id: 't-4', command: 'quote', response_text: '"Simplicity is prerequisite for reliability." -- Edsger W. Dijkstra', description: 'Prints random engineering wisdom', is_hidden: false, sort_order: 4 },
+    { id: 't-4', command: 'quote', response_text: 'Generates a different random technology & engineering quote on each run (from 30+ curated tech quotes).', description: 'Prints random tech wisdom', is_hidden: false, sort_order: 4 },
   ],
 
   resumeConfig: {

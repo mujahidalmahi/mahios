@@ -5,6 +5,7 @@ import { TerminalCommand, BiographyDatabaseData } from '@/types/database';
 import { useWindowStore } from '@/stores/windowStore';
 import { useBootStore } from '@/stores/bootStore';
 import { useSystemStore } from '@/stores/systemStore';
+import { getRandomTechQuote } from '@/lib/data/techQuotes';
 
 interface TerminalAppProps {
   commands?: TerminalCommand[];
@@ -35,14 +36,15 @@ const getVirtualFiles = (data?: BiographyDatabaseData): Record<string, string> =
 
 export default function TerminalApp({ commands = [], data }: TerminalAppProps) {
   const ownerName = data?.settings?.owner_name || 'Mujahid Al Mahi';
+  const lastQuoteRef = useRef<string>('');
   const [history, setHistory] = useState<HistoryItem[]>([
     { id: '1', type: 'output', text: '========================================================================' },
     { id: '2', type: 'output', text: '  MahiOS 05 MS-DOS Subsystem [Version 5.10.2005 - 32-Bit DPMI]' },
     { id: '3', type: 'output', text: `  (C) 2005-2026 ${ownerName}. All rights reserved.` },
     { id: '4', type: 'output', text: '========================================================================' },
-    { id: '5', type: 'output', text: 'Type "help" to display instructions & all available system commands.' },
-    { id: '6', type: 'output', text: 'Quick start: "about", "skills", "projects", "experience", "resume", "contact", "dir"' },
-    { id: '7', type: 'output', text: 'Shortcuts:   [TAB] to auto-complete commands  •  [↑/↓] for command history' },
+    { id: '5', type: 'output', text: 'Type "help" to display instructions & available system commands.' },
+    { id: '6', type: 'output', text: 'Available commands: "help", "about", "whoami", "quote"' },
+    { id: '7', type: 'output', text: 'Shortcuts: [TAB] to auto-complete commands  •  [↑/↓] for command history' },
     { id: '8', type: 'output', text: '========================================================================' },
     { id: '9', type: 'output', text: '' },
   ]);
@@ -668,12 +670,12 @@ Filesystem driver: Next.js Virtual VirtualFS / V8 Memory Space
       return;
     }
 
-    // QUOTE
+    // QUOTE - Generates a new random tech & engineering quote on each execution
     if (cmd === 'quote') {
-      const ab = data?.about;
-      const quote = ab?.quote || 'Simplicity is prerequisite for reliability.';
-      const author = ab?.quote_author || 'Edsger W. Dijkstra';
-      newHistory.push({ id: `out-${Date.now()}`, type: 'output', text: `\n"${quote}"\n  -- ${author}\n` });
+      const q = getRandomTechQuote(lastQuoteRef.current);
+      lastQuoteRef.current = q.quote;
+      const quoteText = `\n"${q.quote}"\n  -- ${q.author}${q.source ? ` (${q.source})` : ''}\n`;
+      newHistory.push({ id: `out-${Date.now()}`, type: 'output', text: quoteText });
       setHistory(newHistory);
       setInputVal('');
       return;
@@ -767,51 +769,33 @@ Filesystem driver: Next.js Virtual VirtualFS / V8 Memory Space
       return;
     }
 
-    // HELP
+    // HELP - Displays instructions for configured commands only
     if (cmd === 'help') {
-      const customCmdsText = commands.length > 0
-        ? `\n5. CUSTOM REGISTERED COMMANDS:\n` + commands.map((c) => `  ${c.command.padEnd(17, ' ')} - ${c.description || 'Custom command'}`).join('\n')
+      const customCmds = commands.filter(
+        (c) => !['help', 'about', 'whoami', 'quote'].includes(c.command.toLowerCase())
+      );
+      const customText = customCmds.length > 0
+        ? `\nADDITIONAL REGISTERED COMMANDS:\n` + customCmds.map((c) => `  ${c.command.padEnd(16, ' ')} - ${c.description || 'Custom command'}`).join('\n') + '\n'
         : '';
 
       const helpText = `
 ================================================================================
-  MAHIOS 05 MS-DOS COMMAND DIRECTORY & OPERATING INSTRUCTIONS
+  MAHIOS 05 COMMAND DIRECTORY & INSTRUCTIONS
 ================================================================================
 
-1. CORE SYSTEM COMMANDS:
-  help              - Displays this complete instruction directory
+  help              - Displays system commands and operating instructions
+  about             - Displays biographical summary & developer profile
+  whoami            - Displays current session user & security credentials
+  quote             - Prints a random technology & engineering quote
+${customText}
+SYSTEM UTILITIES:
   cls / clear       - Clears the terminal screen buffer
-  whoami            - Displays active user session & security privileges
-  sysinfo           - Dumps kernel, memory, host and environment telemetry
-  date / time       - Prints current system timestamp (Dhaka Time, GMT+6)
-  reboot            - Initiates a clean system restart
   exit              - Closes the active command terminal window
 
-2. BIOGRAPHY & PORTFOLIO EXPLORATION:
-  about / bio       - Reads developer biography, background & technical focus
-  skills / stack    - Displays technical competencies, frameworks & tools
-  projects          - Lists engineered applications, repositories & links
-  experience / exp  - Outlines professional engineering history & tenure
-  resume / cv       - Displays official Curriculum Vitae credentials
-  contact / socials - Official email, location, phone & verified web profiles
-  feed              - Shows latest live engineering broadcasts & status updates
-
-3. ADVANCED COMMANDS WITH ARGUMENTS:
-  show <target>     - Inspect data: show about, show skills, show projects,
-                      show exp, show cv, show contact, show feed, show sysinfo
-  open <app_name>   - Launch GUI window: open blog, open projects, open resume,
-                      open about, open feed, open socials, open paint, open calc
-  cat <filename>    - Read virtual file content: cat bio.txt, cat contact.txt,
-                      cat stack.txt, cat system.ini
-  dir / ls          - List all virtual files stored on disk drive C:
-  calc <expression> - Evaluate mathematical expression (e.g. calc 1024 * 768)
-  theme <color/url> - Dynamically updates wallpaper (e.g. theme #008080)
-  matrix            - Toggles digital Matrix rainfall overlay
-
-4. KEYBOARD SHORTCUTS:
-  [TAB]             - Auto-completes commands and targets
-  [UP / DOWN]       - Cycles through previously executed command history
-================================================================================${customCmdsText}`;
+KEYBOARD NAVIGATION:
+  [TAB]             - Auto-completes command keywords
+  [↑/↓]             - Browse command execution history
+================================================================================`;
       newHistory.push({ id: `out-${Date.now()}`, type: 'output', text: helpText });
       setHistory(newHistory);
       setInputVal('');

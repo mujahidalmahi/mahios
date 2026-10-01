@@ -142,64 +142,44 @@ export default function TerminalAdminPage() {
         </button>
       </div>
 
-      {/* MS-DOS Command Instructions & Directory */}
+      {/* Command Instructions Guide - For Configured Commands Only */}
       <div className="p-4 bg-slate-900 border border-blue-900/50 rounded-xl space-y-3 shadow-md">
         <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
           <div className="flex items-center gap-2">
             <Terminal className="w-4 h-4 text-emerald-400" />
-            <span className="font-bold text-sm text-white font-mono">MS-DOS Terminal Commands & Operating Instructions</span>
+            <span className="font-bold text-sm text-white font-mono">Terminal Commands &amp; Operating Instructions</span>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/80 text-emerald-300">
-            DPMI 32-Bit Shell
+            {commands.length} Active Commands
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          {/* Column 1: Core System */}
-          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5 font-mono">
-            <div className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">1. Core System</div>
-            <ul className="space-y-1 text-[11px] text-slate-300">
-              <li><strong className="text-emerald-400">help</strong>: Show command directory</li>
-              <li><strong className="text-emerald-400">cls / clear</strong>: Wipe terminal screen</li>
-              <li><strong className="text-emerald-400">whoami</strong>: Current shell security profile</li>
-              <li><strong className="text-emerald-400">sysinfo</strong>: Hardware & kernel dump</li>
-              <li><strong className="text-emerald-400">date / time</strong>: Display Dhaka Time (GMT+6)</li>
-              <li><strong className="text-emerald-400">reboot</strong>: Cold restart operating system</li>
-            </ul>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          {commands.map((cmd) => (
+            <div key={cmd.id} className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-2 font-mono flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="font-bold text-emerald-400">&gt; {cmd.command}</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-950/70 border border-blue-800/60 text-blue-300">Active</span>
+                </div>
+                <p className="text-[11px] text-slate-300 font-sans leading-relaxed">
+                  {cmd.description || 'Executes registered command.'}
+                </p>
+              </div>
 
-          {/* Column 2: Portfolio Exploration */}
-          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5 font-mono">
-            <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">2. Data Inspection</div>
-            <ul className="space-y-1 text-[11px] text-slate-300">
-              <li><strong className="text-emerald-400">about / bio</strong>: Biography summary</li>
-              <li><strong className="text-emerald-400">skills / stack</strong>: Competencies & stack</li>
-              <li><strong className="text-emerald-400">projects</strong>: Software repo directory</li>
-              <li><strong className="text-emerald-400">experience / exp</strong>: Career roles & tenure</li>
-              <li><strong className="text-emerald-400">resume / cv</strong>: Curriculum Vitae</li>
-              <li><strong className="text-emerald-400">contact / socials</strong>: Channels & ID</li>
-              <li><strong className="text-emerald-400">feed</strong>: Micro-logs & broadcast</li>
-            </ul>
-          </div>
-
-          {/* Column 3: Advanced & Virtual Files */}
-          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5 font-mono">
-            <div className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">3. Action & Files</div>
-            <ul className="space-y-1 text-[11px] text-slate-300">
-              <li><strong className="text-emerald-400">open &lt;app&gt;</strong>: Launch window</li>
-              <li><strong className="text-emerald-400">show &lt;target&gt;</strong>: Inspect telemetry</li>
-              <li><strong className="text-emerald-400">cat &lt;file&gt;</strong>: Read virtual files</li>
-              <li><strong className="text-emerald-400">dir / ls</strong>: List drive C: files</li>
-              <li><strong className="text-emerald-400">calc &lt;expr&gt;</strong>: Math evaluation</li>
-              <li><strong className="text-emerald-400">theme &lt;val&gt;</strong>: Set wallpaper</li>
-              <li><strong className="text-emerald-400">matrix</strong>: Toggle Matrix rain</li>
-            </ul>
-          </div>
+              <div className="pt-2 border-t border-slate-900 text-[10px] text-slate-400 space-y-1">
+                <div>Usage: <code className="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">{cmd.command}</code></div>
+                {cmd.command === 'quote' && (
+                  <div className="text-amber-400 text-[10px] font-sans">★ Picks a new random tech quote each run</div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="pt-1 text-[11px] text-slate-400 font-mono flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80">
-          <span>Shortcuts: <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 text-[10px]">TAB</kbd> Auto-completes commands • <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 text-[10px]">↑/↓</kbd> History Navigation</span>
-          <span className="text-emerald-400 font-semibold">Live Real-time Sync Active</span>
+        <div className="pt-2 text-[11px] text-slate-400 font-mono flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80">
+          <span>Shortcuts: <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 text-[10px]">TAB</kbd> Auto-completes • <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 text-[10px]">↑/↓</kbd> History Navigation • <code className="text-emerald-400">clear</code> / <code className="text-emerald-400">cls</code> Screen Clear</span>
+          <span className="text-emerald-400 font-semibold">Real-time Terminal Sync</span>
         </div>
       </div>
 
