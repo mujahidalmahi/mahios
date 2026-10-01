@@ -294,12 +294,54 @@
   100% { transform: translateX(350%); }
 }
 
-/* Retro OS Gold/Bronze Badge */
-.retro-badge-gold {
-  background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%);
-  color: #3e2723;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+/* Authentic 3D Royal Blue Retro Progress Block (Windows 2000 / 95 style) */
+.retro-progress-block {
+  background: linear-gradient(
+    180deg,
+    #93c5fd 0%,
+    #3b82f6 25%,
+    #1d4ed8 55%,
+    #1e3a8a 85%,
+    #172554 100%
+  );
+  border-top: 1px solid #bfdbfe;
+  border-left: 1px solid #60a5fa;
+  border-right: 1px solid #1e3a8a;
+  border-bottom: 1px solid #0f172a;
+  box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
 }
+
+/* Active leading block pulse on the front edge */
+.retro-progress-block-lead {
+  background: linear-gradient(
+    180deg,
+    #f0f9ff 0%,
+    #7dd3fc 20%,
+    #0284c7 55%,
+    #0369a1 85%,
+    #082f49 100%
+  );
+  border-top: 1px solid #ffffff;
+  border-left: 1px solid #bae6fd;
+  border-right: 1px solid #0369a1;
+  border-bottom: 1px solid #082f49;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.95);
+  animation: retro-lead-pulse 0.4s infinite alternate ease-in-out;
+}
+
+@keyframes retro-lead-pulse {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.35); }
+}
+
+/* Empty recessed track slot */
+.retro-progress-block-empty {
+  background-color: #030712;
+  border-top: 1px solid #000000;
+  border-left: 1px solid #000000;
+  border-right: 1px solid #111827;
+  border-bottom: 1px solid #111827;
+}
+
 
 
