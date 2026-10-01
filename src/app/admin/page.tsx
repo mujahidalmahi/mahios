@@ -8,7 +8,7 @@ import {
   Plus, ExternalLink, Download, Upload, CheckCircle2,
   AlertCircle, ShieldCheck, Database, Zap, RefreshCw, Compass,
   Radio, BookOpen, Share2, Scale, Gamepad2, Target, Sparkles, Flame, Star,
-  Clock, Mail, ArrowUpRight, Activity
+  Clock, Mail, ArrowUpRight, Activity, Monitor
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { adminFetch } from '@/lib/api/adminMutate';
@@ -124,21 +124,22 @@ export default function AdminOverviewPage() {
   };
 
   const statCards = [
-    { label: 'Projects & Apps', count: data.projects.length, href: '/admin/content/projects', icon: FolderGit2, color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-800/60' },
-    { label: 'Skills & Stack', count: data.skills.length, href: '/admin/content/skills', icon: Cpu, color: 'text-emerald-400', bg: 'bg-emerald-950/40 border-emerald-800/60' },
-    { label: 'Career Positions', count: data.experiences.length, href: '/admin/content/experience', icon: Briefcase, color: 'text-amber-400', bg: 'bg-amber-950/40 border-amber-800/60' },
-    { label: 'Education & Academics', count: data.education.length, href: '/admin/content/education', icon: GraduationCap, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-800/60' },
-    { label: 'Honors & Awards', count: data.achievements.length, href: '/admin/content/achievements', icon: Award, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-800/60' },
-    { label: 'Dev Notes & Blog', count: data.blogPosts.length, href: '/admin/content/blog', icon: FileText, color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-800/60' },
-    { label: 'Live Status Posts', count: data.feedPosts.length, href: '/admin/content/feed', icon: Radio, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-800/60' },
-    { label: 'Philosophy & Rules', count: data.philosophies.length, href: '/admin/content/philosophy', icon: Compass, color: 'text-indigo-400', bg: 'bg-indigo-950/40 border-indigo-800/60' },
-    { label: 'Strategic Aims', count: data.aims.length, href: '/admin/content/aim', icon: Target, color: 'text-rose-400', bg: 'bg-rose-950/40 border-rose-800/60' },
-    { label: 'Media & Games', count: data.entertainment.length, href: '/admin/content/entertainment', icon: Gamepad2, color: 'text-orange-400', bg: 'bg-orange-950/40 border-orange-800/60' },
-    { label: 'Social Channels', count: data.socialLinks.length, href: '/admin/content/socials', icon: Share2, color: 'text-sky-400', bg: 'bg-sky-950/40 border-sky-800/60' },
-    { label: 'Favourites Hall', count: data.favourites.length, href: '/admin/content/favourites', icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-800/60' },
-    { label: 'Photo Archives', count: data.galleryImages.length, href: '/admin/content/gallery', icon: ImageIcon, color: 'text-teal-400', bg: 'bg-teal-950/40 border-teal-800/60' },
-    { label: 'Desktop OS Apps', count: data.apps.length, href: '/admin/apps', icon: Terminal, color: 'text-slate-300', bg: 'bg-slate-950 border-slate-800' },
+    { label: 'Projects & Apps', count: data.projects.length, href: '/admin/content/projects', appId: 'projects', icon: FolderGit2, color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-800/60' },
+    { label: 'Skills & Stack', count: data.skills.length, href: '/admin/content/skills', appId: 'skills', icon: Cpu, color: 'text-emerald-400', bg: 'bg-emerald-950/40 border-emerald-800/60' },
+    { label: 'Career Positions', count: data.experiences.length, href: '/admin/content/experience', appId: 'experience', icon: Briefcase, color: 'text-amber-400', bg: 'bg-amber-950/40 border-amber-800/60' },
+    { label: 'Education & Academics', count: data.education.length, href: '/admin/content/education', appId: 'education', icon: GraduationCap, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-800/60' },
+    { label: 'Honors & Awards', count: data.achievements.length, href: '/admin/content/achievements', appId: 'achievements', icon: Award, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-800/60' },
+    { label: 'Dev Notes & Blog', count: data.blogPosts.length, href: '/admin/content/blog', appId: 'blog', icon: FileText, color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-800/60' },
+    { label: 'Live Status Posts', count: data.feedPosts.length, href: '/admin/content/feed', appId: 'feed', icon: Radio, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-800/60' },
+    { label: 'Philosophy & Rules', count: data.philosophies.length, href: '/admin/content/philosophy', appId: 'philosophy', icon: Compass, color: 'text-indigo-400', bg: 'bg-indigo-950/40 border-indigo-800/60' },
+    { label: 'Strategic Aims', count: data.aims.length, href: '/admin/content/aim', appId: 'aim', icon: Target, color: 'text-rose-400', bg: 'bg-rose-950/40 border-rose-800/60' },
+    { label: 'Media & Games', count: data.entertainment.length, href: '/admin/content/entertainment', appId: 'entertainment', icon: Gamepad2, color: 'text-orange-400', bg: 'bg-orange-950/40 border-orange-800/60' },
+    { label: 'Social Channels', count: data.socialLinks.length, href: '/admin/content/socials', appId: 'socials', icon: Share2, color: 'text-sky-400', bg: 'bg-sky-950/40 border-sky-800/60' },
+    { label: 'Favourites Hall', count: data.favourites.length, href: '/admin/content/favourites', appId: 'favourites', icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-800/60' },
+    { label: 'Photo Archives', count: data.galleryImages.length, href: '/admin/content/gallery', appId: 'gallery', icon: ImageIcon, color: 'text-teal-400', bg: 'bg-teal-950/40 border-teal-800/60' },
+    { label: 'Desktop OS Apps', count: data.apps.length, href: '/admin/apps', appId: 'settings', icon: Terminal, color: 'text-slate-300', bg: 'bg-slate-950 border-slate-800' },
   ];
+
 
   const quickActions = [
     { label: '+ Add Project', href: '/admin/content/projects', color: 'bg-blue-600 hover:bg-blue-500' },
@@ -311,12 +312,26 @@ export default function AdminOverviewPage() {
                     <h4 className="text-xs font-semibold text-slate-200 group-hover:text-white truncate">
                       {card.label}
                     </h4>
-                    <p className="text-[10px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
-                      <span>Manage</span>
-                      <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                    </p>
+                    <div className="flex items-center justify-between mt-1 pt-1.5 border-t border-slate-800/80">
+                      <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1 group-hover:text-slate-300">
+                        <span>Studio</span>
+                        <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                      </span>
+                      <a
+                        href={`/?app=${card.appId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        title={`Preview ${card.label} in Desktop OS`}
+                        className="px-1.5 py-0.5 rounded bg-slate-800/90 hover:bg-blue-600/30 text-slate-400 hover:text-blue-300 text-[10px] font-mono flex items-center gap-1 transition-colors cursor-pointer border border-slate-700/50"
+                      >
+                        <Monitor className="w-3 h-3 text-blue-400" />
+                        <span>Desktop</span>
+                      </a>
+                    </div>
                   </div>
                 </Link>
+
               );
             })}
           </div>

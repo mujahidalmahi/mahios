@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Database, X } from 'lucide-react';
+import { Volume2, VolumeX, Database, X, Monitor } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { DesktopApp, BiographyMilestone, BlogPost } from '@/types/database';
+import { getAppIcon } from '@/lib/utils/appIcons';
 import StartMenu from './StartMenu';
 
 interface TaskbarProps {
@@ -14,7 +15,14 @@ interface TaskbarProps {
 }
 
 export default function Taskbar({ apps, milestones = [], blogPosts = [] }: TaskbarProps) {
-  const { windows, activeWindowId, focusWindow, minimizeWindow } = useWindowStore();
+  const {
+    windows,
+    activeWindowId,
+    focusWindow,
+    minimizeWindow,
+    minimizeAllWindows,
+    restoreAllWindows,
+  } = useWindowStore();
   const {
     soundEnabled, toggleSound,
     timeFormat, showSeconds,
@@ -139,22 +147,45 @@ export default function Taskbar({ apps, milestones = [], blogPosts = [] }: Taskb
           blogPosts={blogPosts}
         />
 
-        {/* Divider */}
-        <div className="w-0.5 h-5 bg-gray-400 border-r border-white mx-0.5 hidden sm:block" />
+        {/* Quick Launch & Show Desktop */}
+        <div className="flex items-center gap-1 shrink-0 px-0.5 border-l border-gray-400 border-r border-white/60 mx-0.5 h-6">
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              const allMin = windows.length > 0 && windows.every((w) => w.isMinimized);
+              if (allMin) {
+                restoreAllWindows();
+              } else {
+                minimizeAllWindows();
+              }
+            }}
+            className="retro-btn h-full px-1.5 flex items-center justify-center cursor-pointer hover:bg-white/20 active:translate-y-px"
+            title="Show Desktop (Minimize/Restore All)"
+            aria-label="Show Desktop"
+          >
+            <Monitor className="w-3.5 h-3.5 text-blue-900" />
+          </button>
+        </div>
 
         {/* Window Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto h-full flex-1">
           {windows.map((win) => {
             const isActive = activeWindowId === win.appId && !win.isMinimized;
+            const TabIcon = getAppIcon(win.iconName);
             return (
               <button
                 key={win.id}
                 type="button"
                 onClick={() => handleWindowTabClick(win.appId, win.isMinimized)}
-                className={`h-full px-2 max-w-[150px] min-w-[90px] flex items-center gap-1.5 truncate text-left text-[11px] font-medium cursor-pointer ${
-                  isActive ? 'retro-btn-pressed bg-[#dfdfdf] font-bold' : 'retro-btn'
+                className={`h-full px-2 max-w-[160px] min-w-[90px] flex items-center gap-1.5 truncate text-left text-[11px] cursor-pointer transition-none select-none ${
+                  isActive
+                    ? 'retro-btn-pressed bg-[#e0e0e0] font-bold [background-image:radial-gradient(#ffffff_1px,transparent_1px)] [background-size:2px_2px]'
+                    : 'retro-btn font-normal hover:bg-[#d8d8d8]'
                 }`}
+                title={win.title}
               >
+                <TabIcon className="w-3.5 h-3.5 shrink-0 opacity-90" />
                 <span className="truncate">{win.title}</span>
               </button>
             );

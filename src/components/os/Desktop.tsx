@@ -130,15 +130,18 @@ export default function Desktop({ data }: DesktopProps) {
     return [...visibleApps].sort((a, b) => {
       if (desktopSortBy === 'name') return a.title.localeCompare(b.title);
       if (desktopSortBy === 'category') return (a.category || '').localeCompare(b.category || '');
+      // System priorities: my-computer first, recycle-bin second, then sort_order
+      const getPriority = (id: string) => {
+        if (id === 'my-computer') return -2;
+        if (id === 'recycle-bin') return -1;
+        return 0;
+      };
+      const pA = getPriority(a.app_id);
+      const pB = getPriority(b.app_id);
+      if (pA !== pB) return pA - pB;
       return (a.sort_order ?? 999) - (b.sort_order ?? 999);
     });
   }, [visibleApps, desktopSortBy]);
-
-  // Distribute sorted applications across 4 symmetrical columns (7 per column)
-  const leftCol1 = sortedVisibleApps.slice(0, 7);
-  const leftCol2 = sortedVisibleApps.slice(7, 14);
-  const rightCol1 = sortedVisibleApps.slice(14, 21);
-  const rightCol2 = sortedVisibleApps.slice(21);
 
   const handleDesktopClick = (e: React.MouseEvent) => {
     const isIconClick = (e.target as HTMLElement)?.closest('[data-desktop-icon="true"]');
@@ -315,62 +318,21 @@ export default function Desktop({ data }: DesktopProps) {
       )}
 
       {/* ========================================================= */}
-      {/* 28 APPLICATIONS SYMMETRICAL ARCHITECTURE */}
-      {/* 14 ON LEFT (2 COLUMNS OF 7) | 14 ON RIGHT (2 COLUMNS OF 7) */}
+      {/* AUTHENTIC WINDOWS 95/98 DESKTOP ICONS CANVAS */}
+      {/* Flows vertically from top to bottom, wrapping left-to-right */}
+      {/* Leaves entire middle and right screen clear for open windows */}
       {/* ========================================================= */}
-
-      {/* LEFT SIDE: 14 APPS (2 COLUMNS OF 7 EACH) */}
       <div
-        className="absolute top-2 left-2 bottom-10 flex gap-2 z-0 pointer-events-auto"
+        className="absolute top-2 left-2 bottom-10 flex flex-col flex-wrap content-start items-start gap-y-1 gap-x-1.5 z-0 pointer-events-none max-h-[calc(100vh-48px)] overflow-hidden"
       >
-        {/* Column 1 (Leftmost 7) */}
-        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
-          {leftCol1.map((app) => (
+        {sortedVisibleApps.map((app) => (
+          <div key={app.id} className="pointer-events-auto">
             <DesktopIcon
-              key={app.id}
               app={app}
               onContextMenu={(e, a) => handleContextMenu(e, a)}
             />
-          ))}
-        </div>
-
-        {/* Column 2 (Second Left 7) */}
-        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
-          {leftCol2.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT SIDE: 14 APPS (2 COLUMNS OF 7 EACH) */}
-      <div
-        className="absolute top-2 right-2 bottom-10 flex gap-2 z-0 pointer-events-auto"
-      >
-        {/* Column 3 (First Right 7) */}
-        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
-          {rightCol1.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
-          ))}
-        </div>
-
-        {/* Column 4 (Rightmost 7) */}
-        <div className="grid grid-rows-7 h-full w-20 justify-items-center">
-          {rightCol2.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
       {/* Render All Open Draggable Windows sorted strictly by zIndex ascending */}

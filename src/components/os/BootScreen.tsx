@@ -46,15 +46,16 @@ export default function BootScreen({ bootLogs, settings, onBootComplete }: BootS
           logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
         }
 
-        // Calculate realistic delay (slower, deliberate hacker boot)
-        // Base delay from log item or settings * multiplier
-        const baseDelay = nextLog.delay_ms ? Math.max(260, nextLog.delay_ms * 2.8) : 320;
+        // Fast, authentic BIOS hardware check streaming (~70-140ms per log)
+        const baseDelay = nextLog.delay_ms
+          ? Math.max(60, Math.min(160, Math.round(nextLog.delay_ms * 0.75)))
+          : 85;
         
         timeoutId = setTimeout(() => {
           runBootStep(index + 1);
         }, baseDelay);
       } else {
-        // Final completion pause
+        // Final completion pause before launching desktop
         setProgress(100);
         timeoutId = setTimeout(() => {
           if (!isCancelled) {
@@ -62,14 +63,14 @@ export default function BootScreen({ bootLogs, settings, onBootComplete }: BootS
             finishBoot();
             onBootComplete();
           }
-        }, 800);
+        }, 400);
       }
     };
 
-    // Initial brief 300ms pause before logs begin
+    // Initial brief pause before logs begin
     timeoutId = setTimeout(() => {
       runBootStep(0);
-    }, 350);
+    }, 180);
 
     const handleKeyDown = () => {
       isCancelled = true;

@@ -5,6 +5,7 @@ import { Minus, Square, X } from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { WindowState } from '@/types/os';
+import { getAppIcon } from '@/lib/utils/appIcons';
 
 interface WindowProps {
   window: WindowState;
@@ -223,12 +224,17 @@ function WindowComponent({ window: win, children }: WindowProps) {
             playSound('click');
             maximizeWindow(win.appId);
           }}
-          className={`h-7 px-2 flex items-center justify-between cursor-move text-xs font-bold shrink-0 ${
+          className={`h-7 px-2 flex items-center justify-between cursor-move text-xs font-bold shrink-0 select-none ${
             isActive ? 'retro-titlebar' : 'retro-titlebar-inactive'
           }`}
         >
           <div className="flex items-center gap-1.5 truncate min-w-0 mr-2">
-            <span className="text-[11px] truncate">{win.title}</span>
+            {/* Authentic 16x16 Title Bar App Icon */}
+            {(() => {
+              const TitleIcon = getAppIcon(win.iconName);
+              return <TitleIcon className="w-3.5 h-3.5 shrink-0 opacity-95" />;
+            })()}
+            <span className="text-[11px] truncate tracking-wide">{win.title}</span>
           </div>
 
           {/* Window Control Buttons */}
@@ -280,8 +286,8 @@ function WindowComponent({ window: win, children }: WindowProps) {
           </div>
         </div>
 
-        {/* Sunken Content Area */}
-        <div className="flex-1 min-h-0 bg-[#ffffff] m-1 retro-box-inset overflow-y-auto overflow-x-hidden text-[#000000] p-3 sm:p-4 text-xs font-sans leading-normal break-words">
+        {/* Sunken Content Area with Retro Scrollbars */}
+        <div className="flex-1 min-h-0 bg-[#ffffff] m-1 retro-box-inset retro-scroll retro-window overflow-y-auto overflow-x-hidden text-[#000000] p-3 sm:p-4 text-xs font-sans leading-normal break-words">
           {children}
         </div>
 
