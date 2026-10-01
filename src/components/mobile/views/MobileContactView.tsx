@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Send, Phone, MessageSquare, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useSystemStore } from '@/stores/systemStore';
 
 export default function MobileContactView() {
@@ -12,8 +12,6 @@ export default function MobileContactView() {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const phone = process.env.NEXT_PUBLIC_PHONE_NUMBER || '+880 1805128639';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,26 +54,23 @@ export default function MobileContactView() {
 
   return (
     <div className="space-y-4 pb-6">
-      {/* Quick Mobile Touch Shortcuts */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Quick Direct Email Banner */}
+      <div className="bg-slate-100 rounded-2xl p-3 flex items-center justify-between border border-slate-200">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+            <Mail className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-900">Direct Email</div>
+            <div className="text-[11px] text-slate-600 font-mono">almahi.cs@gmail.com</div>
+          </div>
+        </div>
         <a
-          href={`tel:${phone}`}
+          href="mailto:almahi.cs@gmail.com"
           onClick={() => playSound('open')}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl p-3 flex items-center justify-center gap-2 text-xs font-bold shadow-xs active:scale-95 transition-transform"
+          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl active:scale-95 transition-transform"
         >
-          <Phone className="w-4 h-4" />
-          <span>Call: {phone}</span>
-        </a>
-
-        <a
-          href={`https://wa.me/${phone.replace(/[^0-9]/g, '')}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => playSound('open')}
-          className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl p-3 flex items-center justify-center gap-2 text-xs font-bold shadow-xs active:scale-95 transition-transform"
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>WhatsApp Chat</span>
+          Compose
         </a>
       </div>
 

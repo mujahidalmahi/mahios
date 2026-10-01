@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Wifi, Battery, ArrowLeft, X, Search, ChevronLeft,
   User, Briefcase, FolderGit2, Cpu, GraduationCap,
   Image as ImageIcon, Award, FileText, FileBadge,
-  Mail, Settings, Compass, Radio, BookOpen, Share2,
+  Mail, Compass, Radio, BookOpen, Share2,
   Scale, Gamepad2, Target, Sparkles, Flame, Star,
   Calculator, FileEdit, Activity, Clock, Shield,
-  Phone, PhoneCall, Volume2, VolumeX, Copy, Check,
-  Send, ExternalLink, RefreshCw, MessageSquare, Smartphone, Grid
+  Volume2, VolumeX, Copy, Check,
+  Send, ExternalLink, RefreshCw, Smartphone, Grid
 } from 'lucide-react';
 import { BiographyDatabaseData, DesktopApp } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -41,41 +41,25 @@ import {
   MobileFavouritesView,
   MobileCalculatorView,
   MobileNotepadView,
-  MobileSettingsView,
 } from './views';
 
-// Desktop-only applications strictly excluded from Mobile OS
+// Desktop-only and non-mobile applications strictly excluded from Mobile OS
 const DESKTOP_ONLY_APPS = new Set([
   'my-computer',
   'recycle-bin',
   'terminal',
   'paint',
   'task-manager',
+  'settings',
 ]);
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   User, Briefcase, FolderGit2, Cpu, GraduationCap,
   Image: ImageIcon, Award, FileText, FileBadge,
-  Mail, Settings, Compass, Radio, BookOpen, Share2,
+  Mail, Compass, Radio, BookOpen, Share2,
   Scale, Gamepad2, Target, Sparkles, Flame, Star,
   Calculator, FileEdit, Activity, Clock, Shield,
-  Phone, Smartphone, MessageSquare
-};
-
-// DTMF audio frequencies for authentic vintage dialer
-const DTMF_FREQUENCIES: Record<string, [number, number]> = {
-  '1': [697, 1209],
-  '2': [697, 1336],
-  '3': [697, 1477],
-  '4': [770, 1209],
-  '5': [770, 1336],
-  '6': [770, 1477],
-  '7': [852, 1209],
-  '8': [852, 1336],
-  '9': [852, 1477],
-  '*': [941, 1209],
-  '0': [941, 1336],
-  '#': [941, 1477],
+  Smartphone, Grid
 };
 
 const CATEGORY_TABS = [
@@ -117,7 +101,6 @@ const getAppCategoryGroup = (appId: string): CategoryTabId => {
     case 'contact':
     case 'notepad':
     case 'calculator':
-    case 'settings':
       return 'tools';
     default:
       return 'core';
@@ -148,7 +131,6 @@ const getAppGradient = (appId: string): string => {
     case 'favourites': return 'from-yellow-600 via-amber-700 to-yellow-900';
     case 'notepad': return 'from-amber-600 via-yellow-700 to-amber-900';
     case 'calculator': return 'from-slate-700 via-gray-800 to-slate-950';
-    case 'settings': return 'from-gray-600 via-slate-700 to-gray-900';
     default: return 'from-blue-600 via-indigo-700 to-blue-900';
   }
 };
@@ -163,13 +145,8 @@ export default function MobileShell({ data }: MobileShellProps) {
   const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryTabId>('all');
-  const [isDialerOpen, setIsDialerOpen] = useState(false);
-  const [copiedNumber, setCopiedNumber] = useState(false);
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
-
-  const targetPhoneNumber = data.settings?.phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '+880 1805128639';
-  const [dialedNumber, setDialedNumber] = useState(targetPhoneNumber);
 
   const { playSound, soundEnabled, toggleSound } = useSystemStore();
 
@@ -272,68 +249,6 @@ export default function MobileShell({ data }: MobileShellProps) {
     return list;
   }, [mobileApps, selectedCategory, searchQuery]);
 
-  // DTMF Tone Playback on Key Press
-  const playDtmfTone = useCallback((key: string) => {
-    if (!soundEnabled || typeof window === 'undefined') return;
-    const freqs = DTMF_FREQUENCIES[key];
-    if (!freqs) return;
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const ctx = new AudioCtx();
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc1.frequency.value = freqs[0];
-      osc2.frequency.value = freqs[1];
-      gain.gain.setValueAtTime(0.06, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-      osc1.start();
-      osc2.start();
-      osc1.stop(ctx.currentTime + 0.12);
-      osc2.stop(ctx.currentTime + 0.12);
-    } catch {}
-  }, [soundEnabled]);
-
-  const handleDialKeyPress = (char: string) => {
-    playDtmfTone(char);
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate(15);
-    }
-    setDialedNumber((prev) => (prev.length < 16 ? prev + char : prev));
-  };
-
-  const handleDialBackspace = () => {
-    playSound('click');
-    setDialedNumber((prev) => prev.slice(0, -1));
-  };
-
-  const handleDialCall = () => {
-    playSound('open');
-    if (typeof window !== 'undefined') {
-      window.location.href = `tel:${dialedNumber}`;
-    }
-  };
-
-  const handleWhatsApp = () => {
-    playSound('open');
-    if (typeof window !== 'undefined') {
-      const clean = dialedNumber.replace(/[^0-9]/g, '');
-      window.open(`https://wa.me/${clean}`, '_blank');
-    }
-  };
-
-  const handleCopyPhone = () => {
-    playSound('click');
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(dialedNumber);
-      setCopiedNumber(true);
-      setTimeout(() => setCopiedNumber(false), 2000);
-    }
-  };
-
   const handleOpenApp = (app: DesktopApp) => {
     playSound('open');
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -341,7 +256,6 @@ export default function MobileShell({ data }: MobileShellProps) {
     }
     setActiveApp(app);
     setIsAppDrawerOpen(false);
-    setIsDialerOpen(false);
   };
 
   const handleCloseApp = () => {
@@ -412,10 +326,8 @@ export default function MobileShell({ data }: MobileShellProps) {
         return <MobileCalculatorView />;
       case 'notepad':
         return <MobileNotepadView />;
-      case 'settings':
-        return <MobileSettingsView />;
       default:
-        return <MobileAboutView about={data.about} phone={data.settings?.phone} />;
+        return <MobileAboutView about={data.about} philosophies={data.philosophies} />;
     }
   };
 
@@ -573,48 +485,48 @@ export default function MobileShell({ data }: MobileShellProps) {
               type="button"
               onClick={() => {
                 playSound('open');
-                setIsDialerOpen(true);
+                setIsAppDrawerOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-600 shadow-sm cursor-pointer active:scale-95"
             >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Dial</span>
+              <Grid className="w-3.5 h-3.5 text-cyan-300" />
+              <span>Apps</span>
             </button>
           </div>
         ) : (
-          /* Home Navigation Dock: Navigators to Apps & Others */
-          <div className="w-full grid grid-cols-4 gap-2">
-            {/* 1. Phone / Dialer */}
+          /* Home Navigation Dock: Clean Navigators to Apps & Others */
+          <div className="w-full grid grid-cols-5 gap-1.5">
+            {/* 1. About / Profile */}
             <button
               type="button"
               onClick={() => {
-                playSound('open');
-                setIsDialerOpen(true);
+                const app = data.apps.find((a) => a.app_id === 'about');
+                if (app) handleOpenApp(app);
               }}
               className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
             >
-              <div className="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg border border-emerald-400/40">
-                <PhoneCall className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg border border-blue-400/40">
+                <User className="w-5 h-5 text-white" />
               </div>
-              <span className="text-[10px] font-bold tracking-tight">Dialer</span>
+              <span className="text-[10px] font-bold tracking-tight">About</span>
             </button>
 
-            {/* 2. Messages / Mail */}
+            {/* 2. Projects / Portfolio */}
             <button
               type="button"
               onClick={() => {
-                const contactApp = data.apps.find((a) => a.app_id === 'contact');
-                if (contactApp) handleOpenApp(contactApp);
+                const app = data.apps.find((a) => a.app_id === 'projects');
+                if (app) handleOpenApp(app);
               }}
               className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
             >
-              <div className="w-10 h-10 rounded-2xl bg-sky-600 flex items-center justify-center shadow-lg border border-sky-400/40">
-                <Mail className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg border border-indigo-400/40">
+                <FolderGit2 className="w-5 h-5 text-white" />
               </div>
-              <span className="text-[10px] font-bold tracking-tight">Mail</span>
+              <span className="text-[10px] font-bold tracking-tight">Projects</span>
             </button>
 
-            {/* 3. Primary App Drawer Navigator */}
+            {/* 3. Primary App Launcher Navigator */}
             <button
               type="button"
               onClick={() => {
@@ -623,25 +535,40 @@ export default function MobileShell({ data }: MobileShellProps) {
               }}
               className="flex flex-col items-center justify-center gap-0.5 text-white cursor-pointer active:scale-90 transition-transform"
             >
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-xl border-2 border-white/60">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-xl border-2 border-white/60">
                 <Grid className="w-5 h-5 text-white" />
               </div>
               <span className="text-[10px] font-black tracking-tight text-cyan-300">All Apps</span>
             </button>
 
-            {/* 4. Settings */}
+            {/* 4. Notes / Memo */}
             <button
               type="button"
               onClick={() => {
-                const settingsApp = data.apps.find((a) => a.app_id === 'settings');
-                if (settingsApp) handleOpenApp(settingsApp);
+                const app = data.apps.find((a) => a.app_id === 'notepad');
+                if (app) handleOpenApp(app);
               }}
               className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
             >
-              <div className="w-10 h-10 rounded-2xl bg-slate-700 flex items-center justify-center shadow-lg border border-slate-500/40">
-                <Settings className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-2xl bg-amber-600 flex items-center justify-center shadow-lg border border-amber-400/40">
+                <FileEdit className="w-5 h-5 text-white" />
               </div>
-              <span className="text-[10px] font-bold tracking-tight">Settings</span>
+              <span className="text-[10px] font-bold tracking-tight">Notes</span>
+            </button>
+
+            {/* 5. Contact / Email */}
+            <button
+              type="button"
+              onClick={() => {
+                const app = data.apps.find((a) => a.app_id === 'contact');
+                if (app) handleOpenApp(app);
+              }}
+              className="flex flex-col items-center justify-center gap-0.5 text-white/90 hover:text-white cursor-pointer active:scale-90 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg border border-emerald-400/40">
+                <Mail className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-[10px] font-bold tracking-tight">Contact</span>
             </button>
           </div>
         )}
@@ -771,117 +698,6 @@ export default function MobileShell({ data }: MobileShellProps) {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 7. VINTAGE CELLULAR PHONE DIALER MODAL                     */}
-      {/* ========================================================= */}
-      {isDialerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full max-w-sm bg-gradient-to-b from-[#1e293b] via-[#0f172a] to-[#020617] rounded-t-3xl sm:rounded-2xl border-2 border-slate-600 shadow-2xl p-4 flex flex-col space-y-3.5 select-none animate-slideUp">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-700">
-              <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-xs font-black">
-                <Phone className="w-4 h-4 text-emerald-400" />
-                <span>Mahi Cellular (GSM/CDMA)</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  playSound('close');
-                  setIsDialerOpen(false);
-                }}
-                className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center cursor-pointer border border-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Green LCD Number Display */}
-            <div className="bg-[#14261d] rounded-2xl p-3 border-2 border-[#1e4630] shadow-inner text-right">
-              <div className="text-[10px] text-emerald-400/80 font-mono font-bold tracking-wider mb-1 flex items-center justify-between">
-                <span>RECIPIENT:</span>
-                <span>{data.settings?.owner_name || 'Mujahid Al Mahi'}</span>
-              </div>
-              <div className="text-2xl font-mono font-black text-emerald-400 tracking-wider truncate">
-                {dialedNumber || '—'}
-              </div>
-            </div>
-
-            {/* 12-Key Vintage Dial Pad */}
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: '1', sub: ' ' },
-                { key: '2', sub: 'ABC' },
-                { key: '3', sub: 'DEF' },
-                { key: '4', sub: 'GHI' },
-                { key: '5', sub: 'JKL' },
-                { key: '6', sub: 'MNO' },
-                { key: '7', sub: 'PQRS' },
-                { key: '8', sub: 'TUV' },
-                { key: '9', sub: 'WXYZ' },
-                { key: '*', sub: ' ' },
-                { key: '0', sub: '+' },
-                { key: '#', sub: ' ' },
-              ].map(({ key, sub }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleDialKeyPress(key)}
-                  className="vintage-phone-key h-12 rounded-2xl flex flex-col items-center justify-center active:scale-95"
-                >
-                  <span className="text-lg font-mono font-bold leading-none">{key}</span>
-                  {sub.trim() && (
-                    <span className="text-[8px] font-mono font-bold text-slate-500 tracking-wider mt-0.5">
-                      {sub}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Dialer Action Buttons */}
-            <div className="grid grid-cols-4 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={handleDialBackspace}
-                className="py-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 rounded-xl text-xs font-bold border border-slate-600 flex items-center justify-center cursor-pointer"
-                title="Backspace"
-              >
-                <span>⌫</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCopyPhone}
-                className="py-2.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 rounded-xl text-xs font-bold border border-slate-600 flex items-center justify-center gap-1 cursor-pointer"
-                title="Copy Number"
-              >
-                {copiedNumber ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span className="text-[10px]">{copiedNumber ? 'Copied' : 'Copy'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleWhatsApp}
-                className="py-2.5 bg-teal-700 hover:bg-teal-600 active:bg-teal-800 text-white rounded-xl text-xs font-bold border border-teal-500 flex items-center justify-center gap-1 cursor-pointer"
-                title="Chat on WhatsApp"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span className="text-[10px]">WA</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDialCall}
-                className="py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:from-emerald-700 active:to-emerald-800 text-white rounded-xl text-xs font-bold border border-emerald-400 shadow-md flex items-center justify-center gap-1 cursor-pointer"
-                title="Place Call"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>Call</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

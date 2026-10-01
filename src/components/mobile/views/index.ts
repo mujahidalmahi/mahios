@@ -20,4 +20,3 @@ export { default as MobileWishesView } from './MobileWishesView';
 export { default as MobileFavouritesView } from './MobileFavouritesView';
 export { default as MobileCalculatorView } from './MobileCalculatorView';
 export { default as MobileNotepadView } from './MobileNotepadView';
-export { default as MobileSettingsView } from './MobileSettingsView';

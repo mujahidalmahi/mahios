@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {
-  FileBadge, Printer, Download, Mail, Phone, MapPin,
+  FileBadge, Printer, Download, Mail, MapPin,
   Briefcase, GraduationCap, Cpu, FolderGit2, ArrowUpRight
 } from 'lucide-react';
 import { ResumeConfig, BiographyDatabaseData } from '@/types/database';
@@ -15,7 +15,6 @@ interface MobileResumeViewProps {
 
 export default function MobileResumeView({ resume, data }: MobileResumeViewProps) {
   const { playSound } = useSystemStore();
-  const phone = data.settings?.phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '+880 1805128639';
   const email = data.settings?.email || 'almahi.cs@gmail.com';
 
   const handlePrint = () => {
@@ -54,11 +53,6 @@ export default function MobileResumeView({ resume, data }: MobileResumeViewProps
 
         {/* Contact Strip */}
         <div className="flex flex-wrap gap-2 text-[11px] text-slate-600 pt-2 border-t border-slate-100 font-mono">
-          <a href={`tel:${phone}`} className="flex items-center gap-1 hover:text-blue-600">
-            <Phone className="w-3 h-3 text-slate-400" />
-            <span>{phone}</span>
-          </a>
-          <span>•</span>
           <a href={`mailto:${email}`} className="flex items-center gap-1 hover:text-blue-600">
             <Mail className="w-3 h-3 text-slate-400" />
             <span>{email}</span>

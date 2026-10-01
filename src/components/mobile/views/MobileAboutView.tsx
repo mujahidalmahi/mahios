@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   User, MapPin, Briefcase, Award, Coffee, Code2,
-  Phone, Mail, Sparkles, Heart, Quote, ArrowUpRight
+  Mail, Sparkles, Heart, Quote, ArrowUpRight
 } from 'lucide-react';
 import { AboutContent, PhilosophyItem } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
@@ -14,9 +14,8 @@ interface MobileAboutViewProps {
   phone?: string;
 }
 
-export default function MobileAboutView({ about, philosophies = [], phone }: MobileAboutViewProps) {
+export default function MobileAboutView({ about, philosophies = [] }: MobileAboutViewProps) {
   const { playSound } = useSystemStore();
-  const contactPhone = phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '+880 1805128639';
 
   return (
     <div className="space-y-4 pb-6">
@@ -48,16 +47,8 @@ export default function MobileAboutView({ about, philosophies = [], phone }: Mob
           </div>
         </div>
 
-        {/* Quick Contact Mobile Pills */}
+        {/* Quick Contact & Portfolio Pills */}
         <div className="grid grid-cols-2 gap-2 w-full pt-1">
-          <a
-            href={`tel:${contactPhone}`}
-            onClick={() => playSound('open')}
-            className="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-95 transition-transform"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            <span>Call Mahi</span>
-          </a>
           <a
             href="mailto:almahi.cs@gmail.com"
             onClick={() => playSound('open')}
@@ -65,6 +56,14 @@ export default function MobileAboutView({ about, philosophies = [], phone }: Mob
           >
             <Mail className="w-3.5 h-3.5" />
             <span>Send Email</span>
+          </a>
+          <a
+            href="#socials"
+            onClick={() => playSound('open')}
+            className="py-2 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-95 transition-transform"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+            <span>Social Links</span>
           </a>
         </div>
       </div>
