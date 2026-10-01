@@ -49,9 +49,8 @@ export default function AdminCommandPalette() {
     { id: 'messages', title: 'Messages Inbox', description: 'Visitor contact inquiries & replies', category: 'General', href: '/admin/messages', icon: Mail },
     { id: 'apps', title: 'Desktop Applications Studio', description: 'Window dimensions, icons, coordinates & badges', category: 'System', href: '/admin/apps', icon: AppWindow },
     { id: 'terminal', title: 'Terminal MS-DOS CLI', description: 'Custom shell commands & easter eggs', category: 'System', href: '/admin/terminal', icon: Terminal },
-    { id: 'boot', title: 'BIOS Boot Stream', description: 'Log stream delays, status badges & sequence', category: 'System', href: '/admin/boot', icon: SlidersHorizontal },
     { id: 'seo', title: 'SEO & Favicon Studio', description: 'Meta tags, OpenGraph cards & Google preview', category: 'System', href: '/admin/seo', icon: Search },
-    { id: 'theme', title: 'Theme & CRT Shaders', description: '12 color palettes, wallpaper textures & curvature', category: 'System', href: '/admin/theme', icon: Palette },
+    { id: 'theme', title: 'Theme', description: 'Color palettes, wallpaper textures & custom styles', category: 'System', href: '/admin/theme', icon: Palette },
     { id: 'settings', title: 'Site Identity Settings', description: 'Owner name, bio, favicon & social links', category: 'System', href: '/admin/settings', icon: Settings },
   ];
 

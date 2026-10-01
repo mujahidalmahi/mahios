@@ -142,14 +142,64 @@ export default function TerminalAdminPage() {
         </button>
       </div>
 
-      {/* Real-time sync information callout */}
-      <div className="p-3.5 bg-blue-950/40 border border-blue-800/60 rounded-xl text-xs text-blue-200 flex items-start gap-3">
-        <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-semibold text-white">Live Data Synchronization Active</p>
-          <p className="text-slate-300 text-[11px] leading-relaxed">
-            Core CLI commands (<code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">contact</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">about</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">skills</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">projects</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">experience</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">resume</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">theme</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">show</code>, <code className="bg-blue-900/60 px-1 py-0.5 rounded text-blue-300 font-mono">cat</code>) are automatically synchronized in real-time with your admin changes. The table below lets you define additional custom terminal commands, jokes, and easter eggs.
-          </p>
+      {/* MS-DOS Command Instructions & Directory */}
+      <div className="p-4 bg-slate-900 border border-blue-900/50 rounded-xl space-y-3 shadow-md">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-emerald-400" />
+            <span className="font-bold text-sm text-white font-mono">MS-DOS Terminal Commands & Operating Instructions</span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/80 text-emerald-300">
+            DPMI 32-Bit Shell
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          {/* Column 1: Core System */}
+          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5 font-mono">
+            <div className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">1. Core System</div>
+            <ul className="space-y-1 text-[11px] text-slate-300">
+              <li><strong className="text-emerald-400">help</strong>: Show command directory</li>
+              <li><strong className="text-emerald-400">cls / clear</strong>: Wipe terminal screen</li>
+              <li><strong className="text-emerald-400">whoami</strong>: Current shell security profile</li>
+              <li><strong className="text-emerald-400">sysinfo</strong>: Hardware & kernel dump</li>
+              <li><strong className="text-emerald-400">date / time</strong>: Display Dhaka Time (GMT+6)</li>
+              <li><strong className="text-emerald-400">reboot</strong>: Cold restart operating system</li>
+            </ul>
+          </div>
+
+          {/* Column 2: Portfolio Exploration */}
+          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5 font-mono">
+            <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">2. Data Inspection</div>
+            <ul className="space-y-1 text-[11px] text-slate-300">
+              <li><strong className="text-emerald-400">about / bio</strong>: Biography summary</li>
+              <li><strong className="text-emerald-400">skills / stack</strong>: Competencies & stack</li>
+              <li><strong className="text-emerald-400">projects</strong>: Software repo directory</li>
+              <li><strong className="text-emerald-400">experience / exp</strong>: Career roles & tenure</li>
+              <li><strong className="text-emerald-400">resume / cv</strong>: Curriculum Vitae</li>
+              <li><strong className="text-emerald-400">contact / socials</strong>: Channels & ID</li>
+              <li><strong className="text-emerald-400">feed</strong>: Micro-logs & broadcast</li>
+            </ul>
+          </div>
+
+          {/* Column 3: Advanced & Virtual Files */}
+          <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-lg space-y-1.5 font-mono">
+            <div className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">3. Action & Files</div>
+            <ul className="space-y-1 text-[11px] text-slate-300">
+              <li><strong className="text-emerald-400">open &lt;app&gt;</strong>: Launch window</li>
+              <li><strong className="text-emerald-400">show &lt;target&gt;</strong>: Inspect telemetry</li>
+              <li><strong className="text-emerald-400">cat &lt;file&gt;</strong>: Read virtual files</li>
+              <li><strong className="text-emerald-400">dir / ls</strong>: List drive C: files</li>
+              <li><strong className="text-emerald-400">calc &lt;expr&gt;</strong>: Math evaluation</li>
+              <li><strong className="text-emerald-400">theme &lt;val&gt;</strong>: Set wallpaper</li>
+              <li><strong className="text-emerald-400">matrix</strong>: Toggle Matrix rain</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-1 text-[11px] text-slate-400 font-mono flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80">
+          <span>Shortcuts: <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 text-[10px]">TAB</kbd> Auto-completes commands • <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 text-[10px]">↑/↓</kbd> History Navigation</span>
+          <span className="text-emerald-400 font-semibold">Live Real-time Sync Active</span>
         </div>
       </div>
 

@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Settings, Monitor, Volume2, Palette,
-  Clock, Cpu, ShieldCheck, RotateCcw,
+  Clock, Cpu, RotateCcw,
   Sparkles, CheckCircle2, Sliders, MousePointer,
   Image as ImageIcon
 } from 'lucide-react';
-import Link from 'next/link';
 import { useSystemStore, CursorStyle, TimeFormat } from '@/stores/systemStore';
 import { getWallpaperStyle, isImageWallpaper } from '@/lib/utils/wallpaper';
 
@@ -46,7 +45,7 @@ const imageWallpaperPresets = [
 ];
 
 export default function SettingsApp() {
-  const [activeTab, setActiveTab] = useState<'display' | 'audio' | 'time' | 'system' | 'admin'>('display');
+  const [activeTab, setActiveTab] = useState<'display' | 'audio' | 'time' | 'system'>('display');
   const [uptimeStr, setUptimeStr] = useState('0s');
 
   const {
@@ -164,21 +163,6 @@ export default function SettingsApp() {
           <span className="flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5" />
             <span>System Telemetry</span>
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => { playSound('click'); setActiveTab('admin'); }}
-          className={`px-3 py-1 font-bold text-xs rounded-t-xs cursor-pointer ${
-            activeTab === 'admin'
-              ? 'retro-btn-pressed bg-[#e5e7eb] text-[#000080]'
-              : 'retro-btn text-gray-700'
-          }`}
-        >
-          <span className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Administration</span>
           </span>
         </button>
       </div>
@@ -537,7 +521,7 @@ export default function SettingsApp() {
 
                 <div className="p-2.5 bg-[#f3f4f6] border border-gray-300">
                   <div className="text-[10px] text-gray-500 uppercase">Registered To</div>
-                  <div className="font-bold text-[#000080]">Mujahid Islam Mahi</div>
+                  <div className="font-bold text-[#000080]">Mujahid Al Mahi</div>
                 </div>
 
                 <div className="p-2.5 bg-[#f3f4f6] border border-gray-300">
@@ -559,34 +543,6 @@ export default function SettingsApp() {
                   <div className="text-[10px] text-gray-500 uppercase">Database Driver</div>
                   <div className="font-bold text-emerald-700">Supabase PG OK</div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: ADMINISTRATION */}
-        {activeTab === 'admin' && (
-          <div className="space-y-4">
-            <div className="p-4 bg-white retro-box-inset space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 retro-box-outset bg-amber-50 flex items-center justify-center text-amber-700 shrink-0">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-xs text-[#000080]">Master Content Management Control Center</h3>
-                  <p className="text-[11px] text-gray-600">Full CRUD editing authority over all biography sections, projects, experiences, and SEO tags.</p>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Link
-                  href="/admin"
-                  target="_blank"
-                  className="retro-btn px-4 py-2 font-bold text-xs text-[#000080] inline-flex items-center gap-2"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Launch Master Admin Dashboard &gt;</span>
-                </Link>
               </div>
             </div>
           </div>

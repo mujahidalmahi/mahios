@@ -36,10 +36,15 @@ const getVirtualFiles = (data?: BiographyDatabaseData): Record<string, string> =
 export default function TerminalApp({ commands = [], data }: TerminalAppProps) {
   const ownerName = data?.settings?.owner_name || 'Mujahid Al Mahi';
   const [history, setHistory] = useState<HistoryItem[]>([
-    { id: '1', type: 'output', text: 'MahiOS 05 Command Terminal [Version 5.10.2005]' },
-    { id: '2', type: 'output', text: `(C) 2005-2026 ${ownerName}. All rights reserved.` },
-    { id: '3', type: 'output', text: 'Type "help" for commands, or "contact" for communication coordinates.' },
-    { id: '4', type: 'output', text: '' },
+    { id: '1', type: 'output', text: '========================================================================' },
+    { id: '2', type: 'output', text: '  MahiOS 05 MS-DOS Subsystem [Version 5.10.2005 - 32-Bit DPMI]' },
+    { id: '3', type: 'output', text: `  (C) 2005-2026 ${ownerName}. All rights reserved.` },
+    { id: '4', type: 'output', text: '========================================================================' },
+    { id: '5', type: 'output', text: 'Type "help" to display instructions & all available system commands.' },
+    { id: '6', type: 'output', text: 'Quick start: "about", "skills", "projects", "experience", "resume", "contact", "dir"' },
+    { id: '7', type: 'output', text: 'Shortcuts:   [TAB] to auto-complete commands  •  [↑/↓] for command history' },
+    { id: '8', type: 'output', text: '========================================================================' },
+    { id: '9', type: 'output', text: '' },
   ]);
 
   const [inputVal, setInputVal] = useState('');
@@ -764,25 +769,49 @@ Filesystem driver: Next.js Virtual VirtualFS / V8 Memory Space
 
     // HELP
     if (cmd === 'help') {
+      const customCmdsText = commands.length > 0
+        ? `\n5. CUSTOM REGISTERED COMMANDS:\n` + commands.map((c) => `  ${c.command.padEnd(17, ' ')} - ${c.description || 'Custom command'}`).join('\n')
+        : '';
+
       const helpText = `
-MahiOS 05 Command Directory:
-  help            - Show this command directory
-  contact         - Official communication coordinates & social channels
-  about           - Biographical summary and engineering focus
-  skills / stack  - Technical radar and competencies
-  projects        - Active software repositories and architectures
-  experience      - Career history, employers and tenure
-  resume / cv     - Curriculum Vitae and PDF document
-  show [target]   - Inspect telemetry (show feed, show bio, show sysinfo, etc.)
-  open <app_id>   - Launch graphical window (e.g. open projects, open resume)
-  theme <value>   - Change desktop wallpaper color or image URL
-  dir / ls        - Directory list of virtual files
-  cat <file>      - Output contents of a file (cat contact.txt, cat bio.txt)
-  calc <expr>     - Arithmetic evaluation (e.g. calc 1024 * 768)
-  sysinfo         - Print system architecture telemetry
-  reboot          - Cold system reboot
-  clear / cls     - Clear terminal screen
-`;
+================================================================================
+  MAHIOS 05 MS-DOS COMMAND DIRECTORY & OPERATING INSTRUCTIONS
+================================================================================
+
+1. CORE SYSTEM COMMANDS:
+  help              - Displays this complete instruction directory
+  cls / clear       - Clears the terminal screen buffer
+  whoami            - Displays active user session & security privileges
+  sysinfo           - Dumps kernel, memory, host and environment telemetry
+  date / time       - Prints current system timestamp (Dhaka Time, GMT+6)
+  reboot            - Initiates a clean system restart
+  exit              - Closes the active command terminal window
+
+2. BIOGRAPHY & PORTFOLIO EXPLORATION:
+  about / bio       - Reads developer biography, background & technical focus
+  skills / stack    - Displays technical competencies, frameworks & tools
+  projects          - Lists engineered applications, repositories & links
+  experience / exp  - Outlines professional engineering history & tenure
+  resume / cv       - Displays official Curriculum Vitae credentials
+  contact / socials - Official email, location, phone & verified web profiles
+  feed              - Shows latest live engineering broadcasts & status updates
+
+3. ADVANCED COMMANDS WITH ARGUMENTS:
+  show <target>     - Inspect data: show about, show skills, show projects,
+                      show exp, show cv, show contact, show feed, show sysinfo
+  open <app_name>   - Launch GUI window: open blog, open projects, open resume,
+                      open about, open feed, open socials, open paint, open calc
+  cat <filename>    - Read virtual file content: cat bio.txt, cat contact.txt,
+                      cat stack.txt, cat system.ini
+  dir / ls          - List all virtual files stored on disk drive C:
+  calc <expression> - Evaluate mathematical expression (e.g. calc 1024 * 768)
+  theme <color/url> - Dynamically updates wallpaper (e.g. theme #008080)
+  matrix            - Toggles digital Matrix rainfall overlay
+
+4. KEYBOARD SHORTCUTS:
+  [TAB]             - Auto-completes commands and targets
+  [UP / DOWN]       - Cycles through previously executed command history
+================================================================================${customCmdsText}`;
       newHistory.push({ id: `out-${Date.now()}`, type: 'output', text: helpText });
       setHistory(newHistory);
       setInputVal('');

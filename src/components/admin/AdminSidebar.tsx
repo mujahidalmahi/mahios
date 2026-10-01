@@ -54,9 +54,8 @@ const navGroups = [
     items: [
       { label: 'Desktop Apps', href: '/admin/apps', icon: AppWindow },
       { label: 'Terminal MS-DOS', href: '/admin/terminal', icon: Terminal },
-      { label: 'BIOS Boot Stream', href: '/admin/boot', icon: SlidersHorizontal },
       { label: 'SEO & Favicon', href: '/admin/seo', icon: Search },
-      { label: 'Theme & CRT Shaders', href: '/admin/theme', icon: Palette },
+      { label: 'Theme', href: '/admin/theme', icon: Palette },
       { label: 'Site Settings', href: '/admin/settings', icon: Settings },
     ],
   },
