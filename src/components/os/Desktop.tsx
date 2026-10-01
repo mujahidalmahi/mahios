@@ -125,23 +125,23 @@ export default function Desktop({ data }: DesktopProps) {
   // Visible applications filtered by admin toggle
   const visibleApps = data.apps.filter((a) => a.is_visible);
 
-  // Dynamically sort apps based on desktopSortBy context or custom sort_order
+  // Dynamically sort apps strictly according to the rank (sort_order) from the admin dashboard (1 to 28)
   const sortedVisibleApps = React.useMemo(() => {
     return [...visibleApps].sort((a, b) => {
       if (desktopSortBy === 'name') return a.title.localeCompare(b.title);
       if (desktopSortBy === 'category') return (a.category || '').localeCompare(b.category || '');
-      // System priorities: my-computer first, recycle-bin second, then sort_order
-      const getPriority = (id: string) => {
-        if (id === 'my-computer') return -2;
-        if (id === 'recycle-bin') return -1;
-        return 0;
-      };
-      const pA = getPriority(a.app_id);
-      const pB = getPriority(b.app_id);
-      if (pA !== pB) return pA - pB;
       return (a.sort_order ?? 999) - (b.sort_order ?? 999);
     });
   }, [visibleApps, desktopSortBy]);
+
+  // Left Side: 2 Columns of 7 Rows (Rank 1 - 14)
+  const leftCol1 = sortedVisibleApps.slice(0, 7);
+  const leftCol2 = sortedVisibleApps.slice(7, 14);
+
+  // Right Side: 2 Columns of 7 Rows (Rank 15 - 28)
+  const rightCol1 = sortedVisibleApps.slice(14, 21);
+  const rightCol2 = sortedVisibleApps.slice(21, 28);
+
 
   const handleDesktopClick = (e: React.MouseEvent) => {
     const isIconClick = (e.target as HTMLElement)?.closest('[data-desktop-icon="true"]');
@@ -318,22 +318,62 @@ export default function Desktop({ data }: DesktopProps) {
       )}
 
       {/* ========================================================= */}
-      {/* AUTHENTIC WINDOWS 95/98 DESKTOP ICONS CANVAS */}
-      {/* Flows vertically from top to bottom, wrapping left-to-right */}
-      {/* Leaves entire middle and right screen clear for open windows */}
+      {/* 28 APPLICATIONS SYMMETRICAL ARCHITECTURE */}
+      {/* LEFT: 2 COLUMNS OF 7 ROWS (Rank 1-14 from Admin Dashboard) */}
+      {/* RIGHT: 2 COLUMNS OF 7 ROWS (Rank 15-28 from Admin Dashboard) */}
+      {/* Strictly aligned vertically and horizontally */}
       {/* ========================================================= */}
-      <div
-        className="absolute top-2 left-2 bottom-10 flex flex-col flex-wrap content-start items-start gap-y-1 gap-x-1.5 z-0 pointer-events-none max-h-[calc(100vh-48px)] overflow-hidden"
-      >
-        {sortedVisibleApps.map((app) => (
-          <div key={app.id} className="pointer-events-auto">
+
+      {/* LEFT SIDE: 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
+      <div className="absolute top-2 left-2 flex gap-x-2 z-0 pointer-events-auto">
+        {/* Column 1 (Rank 1-7) */}
+        <div className="flex flex-col gap-y-1 w-[76px]">
+          {leftCol1.map((app) => (
             <DesktopIcon
+              key={app.id}
               app={app}
               onContextMenu={(e, a) => handleContextMenu(e, a)}
             />
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* Column 2 (Rank 8-14) */}
+        <div className="flex flex-col gap-y-1 w-[76px]">
+          {leftCol2.map((app) => (
+            <DesktopIcon
+              key={app.id}
+              app={app}
+              onContextMenu={(e, a) => handleContextMenu(e, a)}
+            />
+          ))}
+        </div>
       </div>
+
+      {/* RIGHT SIDE: 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
+      <div className="absolute top-2 right-2 flex gap-x-2 z-0 pointer-events-auto">
+        {/* Column 3 (Rank 15-21) */}
+        <div className="flex flex-col gap-y-1 w-[76px]">
+          {rightCol1.map((app) => (
+            <DesktopIcon
+              key={app.id}
+              app={app}
+              onContextMenu={(e, a) => handleContextMenu(e, a)}
+            />
+          ))}
+        </div>
+
+        {/* Column 4 (Rank 22-28) */}
+        <div className="flex flex-col gap-y-1 w-[76px]">
+          {rightCol2.map((app) => (
+            <DesktopIcon
+              key={app.id}
+              app={app}
+              onContextMenu={(e, a) => handleContextMenu(e, a)}
+            />
+          ))}
+        </div>
+      </div>
+
 
       {/* Render All Open Draggable Windows sorted strictly by zIndex ascending */}
       {[...windows]

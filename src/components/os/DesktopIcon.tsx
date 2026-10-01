@@ -104,10 +104,10 @@ const DesktopIcon = React.memo(function DesktopIcon({ app, onContextMenu }: Desk
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
-      className="group w-[74px] min-h-[70px] p-1 flex flex-col items-center justify-start text-center select-none cursor-pointer focus:outline-none transition-none"
+      className="group w-[76px] h-[72px] p-1 flex flex-col items-center justify-start text-center select-none cursor-pointer focus:outline-none transition-none overflow-hidden"
     >
       {/* Authentic Windows 95 Desktop Icon (No gray button box) */}
-      <div className="relative w-9 h-9 flex items-center justify-center shrink-0 mb-1">
+      <div className="relative w-9 h-9 flex items-center justify-center shrink-0 mb-0.5">
         <IconComponent
           className={`w-7 h-7 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.8)] transition-none ${
             app.app_id === 'my-computer' || app.app_id === 'settings'
@@ -134,17 +134,20 @@ const DesktopIcon = React.memo(function DesktopIcon({ app, onContextMenu }: Desk
         )}
       </div>
 
-      {/* Windows 95 Authentic Label (Solid Blue on selection with dotted focus) */}
-      <span
-        className={`text-[11px] font-sans leading-tight line-clamp-2 px-1 py-0.5 transition-none select-none max-w-[72px] ${
-          isSelected
-            ? 'bg-[#000080] text-white outline-1 outline-dotted outline-white shadow-xs'
-            : 'text-white drop-shadow-[1px_1px_1px_rgba(0,0,0,1)]'
-        }`}
-      >
-        {app.title}
-      </span>
+      {/* Fixed-height Icon Label Container ensures horizontal and vertical alignment for 1 or 2 lines */}
+      <div className="h-[28px] w-full flex items-center justify-center px-0.5">
+        <span
+          className={`text-[11px] font-sans leading-[13px] line-clamp-2 px-1 py-0.5 transition-none select-none max-w-[72px] text-center ${
+            isSelected
+              ? 'bg-[#000080] text-white outline-1 outline-dotted outline-white shadow-xs'
+              : 'text-white drop-shadow-[1px_1px_1px_rgba(0,0,0,1)]'
+          }`}
+        >
+          {app.title}
+        </span>
+      </div>
     </div>
+
   );
 });
 
