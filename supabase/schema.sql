@@ -591,6 +591,8 @@ CREATE POLICY "Admin can modify wish items" ON wish_items FOR ALL USING (auth.ro
 DROP POLICY IF EXISTS "Public can view favourite items" ON favourite_items;
 DROP POLICY IF EXISTS "Admin can modify favourite items" ON favourite_items;
 CREATE POLICY "Public can view favourite items" ON favourite_items FOR SELECT USING (true);
+CREATE POLICY "Admin can modify favourite items" ON favourite_items FOR ALL USING (auth.role() = 'authenticated');
+
 -- =========================================================
 -- AUTOMATIC TIMESTAMP TRIGGERS (updated_at)
 -- =========================================================
