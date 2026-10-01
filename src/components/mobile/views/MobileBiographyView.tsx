@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { BookOpen, Calendar, MapPin, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import {
+  BookOpen, Calendar, MapPin, ChevronLeft, ChevronRight,
+  Share2, Printer, Check, Copy, Sparkles, ArrowLeft, ArrowRight
+} from 'lucide-react';
 import { BiographyMilestone } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import { printDocument } from '@/lib/utils/printDocument';
 
 interface MobileBiographyViewProps {
   biographyTimeline: BiographyMilestone[];
@@ -19,55 +23,176 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
     return null;
   });
 
-  const sortedMilestones = [...biographyTimeline].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-  );
+  const [readingTheme, setReadingTheme] = useState<'normal' | 'sepia' | 'terminal'>('normal');
+  const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const sortedMilestones = useMemo(() => {
+    return [...biographyTimeline].sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
+  }, [biographyTimeline]);
+
+  const currentIndex = activeMilestone
+    ? sortedMilestones.findIndex((m) => m.id === activeMilestone.id)
+    : -1;
+  const prevMilestone = currentIndex > 0 ? sortedMilestones[currentIndex - 1] : null;
+  const nextMilestone =
+    currentIndex >= 0 && currentIndex < sortedMilestones.length - 1
+      ? sortedMilestones[currentIndex + 1]
+      : null;
+
+  const handleShare = () => {
+    if (!activeMilestone) return;
+    playSound('click');
+    const shareUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/?app=biography&chapter=${activeMilestone.id}`
+      : `https://mujahidmahi.me/?app=biography&chapter=${activeMilestone.id}`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: activeMilestone.title,
+        text: activeMilestone.chapter || activeMilestone.title,
+        url: shareUrl,
+      }).catch(() => {});
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    }
+  };
+
+  const handlePrint = () => {
+    if (!activeMilestone) return;
+    playSound('click');
+    printDocument({
+      title: activeMilestone.title,
+      categoryBadge: activeMilestone.chapter,
+      periodOrDate: activeMilestone.period,
+      location: activeMilestone.location,
+      contentHtml: activeMilestone.story_html,
+      calloutTitle: 'Key Realization & Takeaway',
+      calloutText: activeMilestone.key_learning,
+      author: 'Mujahid Al Mahi',
+      footerNote: 'Mujahid Al Mahi Digital Biography • Timeline Chapter',
+    });
+  };
 
   // Chapter Reader Mode
   if (activeMilestone) {
-    return (
-      <div className="space-y-4 pb-6 animate-fadeIn">
-        <button
-          type="button"
-          onClick={() => {
-            playSound('click');
-            setActiveMilestone(null);
-          }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 active:scale-95 cursor-pointer"
-        >
-          <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-          <span>Timeline View</span>
-        </button>
+    const themeStyles = {
+      normal: 'bg-white text-slate-900 border-slate-200',
+      sepia: 'bg-[#fbf0d9] text-[#433422] border-[#e6d3af]',
+      terminal: 'bg-[#0f172a] text-[#34d399] border-[#1e293b]',
+    }[readingTheme];
 
-        <article className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-slate-400" />
-              {activeMilestone.period}
-            </span>
-            {activeMilestone.location && (
-              <>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-slate-400" />
-                  {activeMilestone.location}
-                </span>
-              </>
+    const fontSizeClass = {
+      sm: 'text-xs',
+      base: 'text-sm',
+      lg: 'text-base',
+    }[fontSize];
+
+    return (
+      <div className="space-y-3 pb-6 flex flex-col min-h-full">
+        {/* Top Navigation & Controls */}
+        <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => {
+              playSound('click');
+              setActiveMilestone(null);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 active:scale-95 transition-all cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            <span>Timeline</span>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {/* Theme selector */}
+            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold">
+              {(['normal', 'sepia', 'terminal'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setReadingTheme(t)}
+                  className={`px-2 py-1 rounded capitalize ${
+                    readingTheme === t ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                  }`}
+                >
+                  {t === 'terminal' ? 'Term' : t}
+                </button>
+              ))}
+            </div>
+
+            {/* Font size */}
+            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold">
+              {(['sm', 'base', 'lg'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setFontSize(s)}
+                  className={`px-2 py-1 rounded uppercase ${
+                    fontSize === s ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+                  }`}
+                >
+                  {s === 'sm' ? 'A' : s === 'base' ? 'A+' : 'A++'}
+                </button>
+              ))}
+            </div>
+
+            {/* Print & Share */}
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs"
+              title="Print Chapter"
+            >
+              <Printer className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleShare}
+              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs flex items-center gap-1"
+              title="Share Chapter"
+            >
+              {copiedShare ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Chapter Article Container */}
+        <article className={`rounded-2xl p-5 border shadow-2xs space-y-4 transition-colors ${themeStyles}`}>
+          <div className="space-y-1.5 border-b pb-3 border-current/10">
+            <div className="flex items-center gap-2 text-[11px] font-mono opacity-70">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {activeMilestone.period}
+              </span>
+              {activeMilestone.location && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {activeMilestone.location}
+                  </span>
+                </>
+              )}
+            </div>
+
+            <h1 className="text-lg font-black leading-snug tracking-tight">
+              {activeMilestone.title}
+            </h1>
+
+            {activeMilestone.chapter && (
+              <div className="text-xs font-semibold text-blue-600 opacity-90">
+                {activeMilestone.chapter}
+              </div>
             )}
           </div>
 
-          <h2 className="text-base font-black text-slate-900 leading-snug">
-            {activeMilestone.title}
-          </h2>
-
-          {activeMilestone.chapter && (
-            <div className="text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg inline-block">
-              {activeMilestone.chapter}
-            </div>
-          )}
-
           {activeMilestone.image_url && (
-            <div className="w-full h-44 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+            <div className="w-full h-44 rounded-xl overflow-hidden bg-black/5 border border-current/10">
               <img
                 src={activeMilestone.image_url}
                 alt={activeMilestone.title}
@@ -77,28 +202,68 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
           )}
 
           <div
-            className="text-xs text-slate-800 leading-relaxed space-y-3 pt-2"
+            className={`leading-relaxed space-y-3 ${fontSizeClass}`}
             dangerouslySetInnerHTML={{ __html: activeMilestone.story_html || '' }}
           />
 
           {activeMilestone.key_learning && (
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs text-slate-700 space-y-1">
-              <span className="font-bold text-slate-900 block text-[10px] uppercase tracking-wider">Key Takeaway</span>
-              <p className="italic">&ldquo;{activeMilestone.key_learning}&rdquo;</p>
+            <div className="bg-black/5 p-3.5 rounded-xl border border-current/10 text-xs space-y-1.5 mt-4">
+              <span className="font-bold block text-[10px] uppercase tracking-wider opacity-75">
+                Key Realization & Takeaway
+              </span>
+              <p className="italic opacity-90">&ldquo;{activeMilestone.key_learning}&rdquo;</p>
             </div>
           )}
         </article>
+
+        {/* Previous / Next Chapter Soft Buttons */}
+        <div className="flex items-center justify-between gap-2 pt-2">
+          {prevMilestone ? (
+            <button
+              type="button"
+              onClick={() => {
+                playSound('click');
+                setActiveMilestone(prevMilestone);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex-1 px-3 py-2 bg-white text-slate-800 rounded-xl text-xs font-bold border border-slate-200 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="truncate">Prev: {prevMilestone.period}</span>
+            </button>
+          ) : (
+            <div className="flex-1" />
+          )}
+
+          {nextMilestone ? (
+            <button
+              type="button"
+              onClick={() => {
+                playSound('click');
+                setActiveMilestone(nextMilestone);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="flex-1 px-3 py-2 bg-white text-slate-800 rounded-xl text-xs font-bold border border-slate-200 flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition-all"
+            >
+              <span className="truncate">Next: {nextMilestone.period}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <div className="flex-1" />
+          )}
+        </div>
       </div>
     );
   }
 
+  // Timeline List View
   return (
-    <div className="space-y-3 pb-6">
+    <div className="space-y-3 pb-6 flex flex-col min-h-full flex-1">
       <div className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
         Life Milestones & Timeline ({sortedMilestones.length})
       </div>
 
-      <div className="relative pl-6 space-y-4 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5 before:bg-blue-200">
+      <div className="relative pl-6 space-y-3.5 before:absolute before:top-2 before:bottom-2 before:left-2.5 before:w-0.5 before:bg-blue-200">
         {sortedMilestones.map((milestone) => (
           <div
             key={milestone.id}
@@ -126,6 +291,13 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
               <p className="text-xs text-slate-600 font-medium line-clamp-1">
                 {milestone.chapter}
               </p>
+            )}
+
+            {milestone.location && (
+              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-100">
+                <MapPin className="w-3 h-3 text-slate-300" />
+                <span>{milestone.location}</span>
+              </div>
             )}
           </div>
         ))}

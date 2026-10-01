@@ -276,7 +276,7 @@ export default function TabletShell({ data }: TabletShellProps) {
   const renderAppContent = (appId: string) => {
     switch (appId) {
       case 'about':
-        return <MobileAboutView about={data.about} philosophies={data.philosophies} />;
+        return <MobileAboutView about={data.about} philosophies={data.philosophies} phone={data.settings?.phone} />;
       case 'projects':
         return <MobileProjectsView projects={data.projects} initialProjectId={deepLinkedProjectId} />;
       case 'experience':

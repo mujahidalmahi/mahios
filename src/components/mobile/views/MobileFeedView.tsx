@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Radio, Heart, Share2, Clock, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { Radio, Heart, Share2, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { FeedPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 
@@ -18,6 +18,7 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
     feedPosts.reduce((acc, p) => ({ ...acc, [p.id]: p.likes_count || 0 }), {})
   );
   const [userLiked, setUserLiked] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -58,22 +59,31 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
         entityId: id,
         action: isLiked ? 'unlike' : 'like',
       }),
-    }).catch(() => {});
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && typeof res.likes_count === 'number') {
+          setLikes((prev) => ({ ...prev, [id]: res.likes_count }));
+        }
+      })
+      .catch(() => {});
   };
 
   const handleShare = (post: FeedPost) => {
     playSound('click');
-    if (typeof navigator !== 'undefined') {
-      if (navigator.share) {
-        navigator.share({
-          title: 'Live Pulse | Mujahid Al Mahi',
-          text: post.content,
-          url: window.location.href,
-        }).catch(() => {});
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(`"${post.content}" — Mujahid Al Mahi (${window.location.href})`);
-        alert('Post copied to clipboard!');
-      }
+    const textToShare = `"${post.content}" — Mujahid Al Mahi`;
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : 'https://mujahidmahi.me';
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: 'Live Pulse | Mujahid Al Mahi',
+        text: textToShare,
+        url: shareUrl,
+      }).catch(() => {});
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(`${textToShare} (${shareUrl})`);
+      setCopiedId(post.id);
+      setTimeout(() => setCopiedId(null), 2000);
     }
   };
 
@@ -86,32 +96,42 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
   return (
     <div className="space-y-3 pb-6 flex flex-col min-h-full flex-1">
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
-          <Radio className="w-3.5 h-3.5 text-red-500 animate-pulse" />
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 tracking-wider">
+          <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
           <span>Live Pulse Stream ({feedPosts.length})</span>
         </div>
+        <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
+          ONLINE
+        </span>
       </div>
 
       <div className="space-y-2.5">
         {paginatedPosts.map((post) => {
           const isLiked = !!userLiked[post.id];
           const count = likes[post.id] ?? post.likes_count ?? 0;
+          const isCopied = copiedId === post.id;
 
           return (
             <div
               key={post.id}
               className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-2.5"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 p-0.5 shrink-0 flex items-center justify-center">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                   <img
-                    src="/images/mahios-logo.png"
+                    src="/images/formal.png"
                     alt="Mujahid Al Mahi"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/images/mahios-logo.png';
+                    }}
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-slate-900 leading-tight">Mujahid Al Mahi</h4>
+                  <div className="flex items-center gap-1">
+                    <h4 className="text-xs font-bold text-slate-900 leading-tight">Mujahid Al Mahi</h4>
+                    <span className="text-[10px] text-blue-600 font-bold">✓</span>
+                  </div>
                   <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
                     <Clock className="w-3 h-3" />
                     <span>{post.timestamp}</span>
@@ -119,7 +139,7 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
                 </div>
               </div>
 
-              <p className="text-xs text-slate-800 leading-relaxed">
+              <p className="text-xs text-slate-800 leading-relaxed whitespace-pre-line">
                 {post.content}
               </p>
 
@@ -127,7 +147,7 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
                 <button
                   type="button"
                   onClick={() => toggleLike(post.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                     isLiked
                       ? 'bg-rose-50 text-rose-600 border border-rose-200 shadow-2xs'
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -140,10 +160,20 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
                 <button
                   type="button"
                   onClick={() => handleShare(post)}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+                  className="px-2.5 py-1 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer border border-slate-200 transition-colors"
                   title="Share pulse"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
+                  {isCopied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-600">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

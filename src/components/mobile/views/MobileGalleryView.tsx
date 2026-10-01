@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Image as ImageIcon, ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Image as ImageIcon, ChevronLeft, ChevronRight, X,
+  Maximize2, Play, Pause, Download, ExternalLink
+} from 'lucide-react';
 import { GalleryCategory, GalleryImage } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 
@@ -16,7 +19,8 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
   const { playSound } = useSystemStore();
   const [selectedCatId, setSelectedCatId] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [isSlideshow, setIsSlideshow] = useState(false);
 
   const filteredImages = useMemo(() => {
     let list = images;
@@ -31,6 +35,44 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredImages.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredImages, currentPage]);
+
+  const activeImage = selectedImageIndex !== null ? filteredImages[selectedImageIndex] : null;
+
+  // Slideshow timer
+  useEffect(() => {
+    if (!isSlideshow || selectedImageIndex === null || filteredImages.length === 0) return;
+
+    const timer = setInterval(() => {
+      setSelectedImageIndex((prev) => {
+        if (prev === null) return 0;
+        return (prev + 1) % filteredImages.length;
+      });
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [isSlideshow, selectedImageIndex, filteredImages.length]);
+
+  const handleOpenLightbox = (image: GalleryImage) => {
+    playSound('open');
+    const idx = filteredImages.findIndex((img) => img.id === image.id);
+    setSelectedImageIndex(idx !== -1 ? idx : 0);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    playSound('click');
+    if (selectedImageIndex !== null) {
+      setSelectedImageIndex((selectedImageIndex + 1) % filteredImages.length);
+    }
+  };
+
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    playSound('click');
+    if (selectedImageIndex !== null) {
+      setSelectedImageIndex((selectedImageIndex - 1 + filteredImages.length) % filteredImages.length);
+    }
+  };
 
   const handlePageChange = (page: number) => {
     playSound('click');
@@ -49,32 +91,35 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             setSelectedCatId('all');
             setCurrentPage(1);
           }}
-          className={`px-3 py-1 rounded-full text-[11px] font-bold shrink-0 transition-colors cursor-pointer ${
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer border ${
             selectedCatId === 'all'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
           }`}
         >
           All ({images.length})
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            type="button"
-            onClick={() => {
-              playSound('click');
-              setSelectedCatId(cat.id);
-              setCurrentPage(1);
-            }}
-            className={`px-3 py-1 rounded-full text-[11px] font-bold shrink-0 transition-colors cursor-pointer ${
-              selectedCatId === cat.id
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            {cat.name}
-          </button>
-        ))}
+        {categories.map((cat) => {
+          const count = images.filter((img) => img.category_id === cat.id).length;
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => {
+                playSound('click');
+                setSelectedCatId(cat.id);
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer border ${
+                selectedCatId === cat.id
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {cat.name} ({count})
+            </button>
+          );
+        })}
       </div>
 
       {/* Photo Stream */}
@@ -82,10 +127,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
         {paginatedImages.map((image) => (
           <div
             key={image.id}
-            onClick={() => {
-              playSound('open');
-              setLightboxImage(image);
-            }}
+            onClick={() => handleOpenLightbox(image)}
             className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xs group cursor-pointer active:scale-98 transition-transform"
           >
             <div className="w-full h-32 bg-slate-100 overflow-hidden relative">
@@ -95,7 +137,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
             </div>
-            <div className="p-2">
+            <div className="p-2.5">
               <h4 className="text-xs font-bold text-slate-900 truncate">{image.title || 'Untitled'}</h4>
               {image.caption && (
                 <p className="text-[10px] text-slate-500 truncate mt-0.5">{image.caption}</p>
@@ -105,34 +147,102 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
         ))}
       </div>
 
-      {/* Lightbox Modal */}
-      {lightboxImage && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col justify-between p-4 animate-fadeIn">
-          <div className="flex items-center justify-between text-white">
-            <span className="text-xs font-bold truncate pr-4">{lightboxImage.title}</span>
+      {/* Lightbox Modal with Next/Prev and Slideshow */}
+      {activeImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 animate-in fade-in duration-150 select-none"
+          onClick={() => {
+            setSelectedImageIndex(null);
+            setIsSlideshow(false);
+          }}
+        >
+          {/* Top Bar */}
+          <div
+            className="flex items-center justify-between text-white py-1 px-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="min-w-0 pr-3">
+              <span className="text-xs font-bold block truncate">{activeImage.title || 'Photo'}</span>
+              <span className="text-[10px] font-mono text-slate-400">
+                {selectedImageIndex! + 1} of {filteredImages.length}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsSlideshow(!isSlideshow)}
+                className={`p-2 rounded-xl text-xs flex items-center gap-1 border transition-colors ${
+                  isSlideshow
+                    ? 'bg-amber-500 text-black border-amber-400 font-bold'
+                    : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                }`}
+                title="Play / Pause Slideshow"
+              >
+                {isSlideshow ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              </button>
+
+              <a
+                href={activeImage.image_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20"
+                title="Open original"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('close');
+                  setSelectedImageIndex(null);
+                  setIsSlideshow(false);
+                }}
+                className="p-2 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Image & Prev/Next Nav */}
+          <div
+            className="relative flex-1 flex items-center justify-center p-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={activeImage.image_url}
+              alt={activeImage.title || 'Photo'}
+              className="max-h-[70vh] max-w-full object-contain rounded-xl shadow-2xl"
+            />
+
+            {/* Prev Button */}
             <button
               type="button"
-              onClick={() => {
-                playSound('close');
-                setLightboxImage(null);
-              }}
-              className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/30 cursor-pointer"
+              onClick={handlePrev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-white border border-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
             >
-              <X className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            {/* Next Button */}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-white border border-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
+            >
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="flex-1 flex items-center justify-center p-2">
-            <img
-              src={lightboxImage.image_url}
-              alt={lightboxImage.title || 'Photo'}
-              className="max-h-[75vh] max-w-full object-contain rounded-lg shadow-2xl"
-            />
-          </div>
-
-          {lightboxImage.caption && (
-            <div className="text-center text-xs text-slate-300 font-medium pb-2">
-              {lightboxImage.caption}
+          {/* Caption */}
+          {activeImage.caption && (
+            <div
+              className="text-center text-xs text-slate-300 font-medium pb-2 px-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {activeImage.caption}
             </div>
           )}
         </div>
