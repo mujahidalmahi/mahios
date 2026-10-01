@@ -6,6 +6,7 @@ import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { WindowState } from '@/types/os';
 import { getAppIcon } from '@/lib/utils/appIcons';
+import VintageOsIcon from './VintageOsIcon';
 
 interface WindowProps {
   window: WindowState;
@@ -230,10 +231,7 @@ function WindowComponent({ window: win, children }: WindowProps) {
         >
           <div className="flex items-center gap-1.5 truncate min-w-0 mr-2">
             {/* Authentic 16x16 Title Bar App Icon */}
-            {(() => {
-              const TitleIcon = getAppIcon(win.iconName);
-              return <TitleIcon className="w-3.5 h-3.5 shrink-0 opacity-95" />;
-            })()}
+            <VintageOsIcon appId={win.appId} className="w-3.5 h-3.5 shrink-0" />
             <span className="text-[11px] truncate tracking-wide">{win.title}</span>
           </div>
 

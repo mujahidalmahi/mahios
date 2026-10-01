@@ -9,6 +9,7 @@ import { useBootStore } from '@/stores/bootStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { DesktopApp, BiographyMilestone, BlogPost } from '@/types/database';
 import { getAppIcon } from '@/lib/utils/appIcons';
+import VintageOsIcon from './VintageOsIcon';
 
 
 interface StartMenuProps {
@@ -251,29 +252,27 @@ export default function StartMenu({
                       Applications ({filteredApps.length})
                     </div>
                   )}
-                  {filteredApps.map((app) => {
-                    const Icon = getAppIcon(app.icon_name);
-                    return (
-                      <button
-                        key={app.id}
-                        type="button"
-                        onClick={() => handleLaunchApp(app)}
-                        className="w-full px-2 py-1.5 flex items-center gap-2.5 hover:bg-[#000080] hover:text-white rounded-xs transition-none text-left cursor-pointer group text-black"
-                      >
-                        <div className="w-5 h-5 flex items-center justify-center text-[#000080] group-hover:text-white shrink-0">
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="truncate block font-medium text-xs">{app.title}</span>
-                        </div>
-                        {searchQuery.trim() && (
-                          <span className="text-[9px] font-mono px-1 rounded bg-gray-200 text-gray-700 group-hover:bg-blue-800 group-hover:text-white shrink-0">
-                            App
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                  {filteredApps.map((app) => (
+                    <button
+                      key={app.id}
+                      type="button"
+                      onClick={() => handleLaunchApp(app)}
+                      className="w-full px-2 py-1.5 flex items-center gap-2.5 hover:bg-[#000080] hover:text-white rounded-xs transition-none text-left cursor-pointer group text-black"
+                    >
+                      <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                        <VintageOsIcon appId={app.app_id} className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="truncate block font-medium text-xs">{app.title}</span>
+                      </div>
+                      {searchQuery.trim() && (
+                        <span className="text-[9px] font-mono px-1 rounded bg-gray-200 text-gray-700 group-hover:bg-blue-800 group-hover:text-white shrink-0">
+                          App
+                        </span>
+                      )}
+                    </button>
+                  ))}
+
                 </div>
               )}
 

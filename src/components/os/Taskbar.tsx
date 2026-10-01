@@ -6,6 +6,7 @@ import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { DesktopApp, BiographyMilestone, BlogPost } from '@/types/database';
 import { getAppIcon } from '@/lib/utils/appIcons';
+import VintageOsIcon from './VintageOsIcon';
 import StartMenu from './StartMenu';
 
 interface TaskbarProps {
@@ -172,7 +173,6 @@ export default function Taskbar({ apps, milestones = [], blogPosts = [] }: Taskb
         <div className="flex items-center gap-1 overflow-x-auto h-full flex-1">
           {windows.map((win) => {
             const isActive = activeWindowId === win.appId && !win.isMinimized;
-            const TabIcon = getAppIcon(win.iconName);
             return (
               <button
                 key={win.id}
@@ -185,11 +185,12 @@ export default function Taskbar({ apps, milestones = [], blogPosts = [] }: Taskb
                 }`}
                 title={win.title}
               >
-                <TabIcon className="w-3.5 h-3.5 shrink-0 opacity-90" />
+                <VintageOsIcon appId={win.appId} className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">{win.title}</span>
               </button>
             );
           })}
+
         </div>
       </div>
 

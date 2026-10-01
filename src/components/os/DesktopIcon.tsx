@@ -1,49 +1,11 @@
 'use client';
 
 import React from 'react';
-import {
-  User, Briefcase, FolderGit2, Cpu, GraduationCap,
-  Terminal, Image as ImageIcon, Award, FileText, FileBadge,
-  Mail, Settings, HelpCircle, Compass, Radio, BookOpen,
-  Share2, Scale, Gamepad2, Target, Sparkles, Flame, Star, Globe, Rocket,
-  Monitor, Trash2, Calculator, FileEdit, Palette, Activity
-} from 'lucide-react';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { DesktopApp } from '@/types/database';
+import VintageOsIcon from './VintageOsIcon';
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  User,
-  Briefcase,
-  FolderGit2,
-  Cpu,
-  GraduationCap,
-  Terminal,
-  Image: ImageIcon,
-  Award,
-  FileText,
-  FileBadge,
-  Mail,
-  Settings,
-  Compass,
-  Radio,
-  BookOpen,
-  Share2,
-  Scale,
-  Gamepad2,
-  Target,
-  Sparkles,
-  Flame,
-  Star,
-  Globe,
-  Rocket,
-  Monitor,
-  Trash2,
-  Calculator,
-  FileEdit,
-  Palette,
-  Activity,
-};
 
 interface DesktopIconProps {
   app: DesktopApp;
@@ -54,7 +16,6 @@ const DesktopIcon = React.memo(function DesktopIcon({ app, onContextMenu }: Desk
   const { openWindow } = useWindowStore();
   const { playSound, selectedIconId, setSelectedIconId } = useSystemStore();
 
-  const IconComponent = iconMap[app.icon_name] || HelpCircle;
   const isSelected = selectedIconId === app.id;
 
   const handleOpen = () => {
@@ -106,33 +67,11 @@ const DesktopIcon = React.memo(function DesktopIcon({ app, onContextMenu }: Desk
       onContextMenu={handleContextMenu}
       className="group w-[76px] h-[72px] p-1 flex flex-col items-center justify-start text-center select-none cursor-pointer focus:outline-none transition-none overflow-hidden"
     >
-      {/* Authentic Windows 95 Desktop Icon (No gray button box) */}
-      <div className="relative w-9 h-9 flex items-center justify-center shrink-0 mb-0.5">
-        <IconComponent
-          className={`w-7 h-7 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.8)] transition-none ${
-            app.app_id === 'my-computer' || app.app_id === 'settings'
-              ? 'text-sky-300'
-              : app.app_id === 'recycle-bin'
-              ? 'text-emerald-300'
-              : app.app_id === 'terminal'
-              ? 'text-green-400'
-              : app.app_id === 'projects' || app.app_id === 'experience'
-              ? 'text-amber-300'
-              : app.app_id === 'gallery' || app.app_id === 'paint'
-              ? 'text-pink-300'
-              : app.app_id === 'blog' || app.app_id === 'biography' || app.app_id === 'resume'
-              ? 'text-blue-200'
-              : app.app_id === 'achievements' || app.app_id === 'favourites'
-              ? 'text-yellow-300'
-              : 'text-amber-200'
-          } ${isSelected ? 'brightness-125 saturate-150' : 'group-hover:brightness-110'}`}
-        />
-
-        {/* Windows 95 Authentic Dither Selection Mask over Icon */}
-        {isSelected && (
-          <div className="absolute inset-0 bg-[#000080]/45 pointer-events-none mix-blend-color-burn [background-image:radial-gradient(#000080_1px,transparent_1px)] [background-size:2px_2px]" />
-        )}
+      {/* Authentic Windows 95 Vintage OS Icon Sprite */}
+      <div className="relative w-8 h-8 flex items-center justify-center shrink-0 mb-0.5">
+        <VintageOsIcon appId={app.app_id} isSelected={isSelected} className="w-8 h-8" />
       </div>
+
 
       {/* Fixed-height Icon Label Container ensures horizontal and vertical alignment for 1 or 2 lines */}
       <div className="h-[28px] w-full flex items-center justify-center px-0.5">
