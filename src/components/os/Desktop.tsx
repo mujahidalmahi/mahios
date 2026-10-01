@@ -321,58 +321,75 @@ export default function Desktop({ data }: DesktopProps) {
       {/* 28 APPLICATIONS SYMMETRICAL ARCHITECTURE */}
       {/* LEFT: 2 COLUMNS OF 7 ROWS (Rank 1-14 from Admin Dashboard) */}
       {/* RIGHT: 2 COLUMNS OF 7 ROWS (Rank 15-28 from Admin Dashboard) */}
-      {/* Strictly aligned vertically and horizontally */}
+      {/* Distributed equally across full desktop height (no empty space at bottom) */}
       {/* ========================================================= */}
 
       {/* LEFT SIDE: 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
-      <div className="absolute top-2 left-2 flex gap-x-2 z-0 pointer-events-auto">
+      <div className="absolute top-2 left-2 bottom-10 flex gap-x-2 z-0 pointer-events-auto">
         {/* Column 1 (Rank 1-7) */}
-        <div className="flex flex-col gap-y-1 w-[76px]">
+        <div
+          style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
+          className="grid h-full w-[76px] justify-items-center items-center"
+        >
           {leftCol1.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
+            <div key={app.id} className="w-full h-full flex items-center justify-center">
+              <DesktopIcon
+                app={app}
+                onContextMenu={(e, a) => handleContextMenu(e, a)}
+              />
+            </div>
           ))}
         </div>
 
         {/* Column 2 (Rank 8-14) */}
-        <div className="flex flex-col gap-y-1 w-[76px]">
+        <div
+          style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
+          className="grid h-full w-[76px] justify-items-center items-center"
+        >
           {leftCol2.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
+            <div key={app.id} className="w-full h-full flex items-center justify-center">
+              <DesktopIcon
+                app={app}
+                onContextMenu={(e, a) => handleContextMenu(e, a)}
+              />
+            </div>
           ))}
         </div>
       </div>
 
       {/* RIGHT SIDE: 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
-      <div className="absolute top-2 right-2 flex gap-x-2 z-0 pointer-events-auto">
+      <div className="absolute top-2 right-2 bottom-10 flex gap-x-2 z-0 pointer-events-auto">
         {/* Column 3 (Rank 15-21) */}
-        <div className="flex flex-col gap-y-1 w-[76px]">
+        <div
+          style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
+          className="grid h-full w-[76px] justify-items-center items-center"
+        >
           {rightCol1.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
+            <div key={app.id} className="w-full h-full flex items-center justify-center">
+              <DesktopIcon
+                app={app}
+                onContextMenu={(e, a) => handleContextMenu(e, a)}
+              />
+            </div>
           ))}
         </div>
 
         {/* Column 4 (Rank 22-28) */}
-        <div className="flex flex-col gap-y-1 w-[76px]">
+        <div
+          style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
+          className="grid h-full w-[76px] justify-items-center items-center"
+        >
           {rightCol2.map((app) => (
-            <DesktopIcon
-              key={app.id}
-              app={app}
-              onContextMenu={(e, a) => handleContextMenu(e, a)}
-            />
+            <div key={app.id} className="w-full h-full flex items-center justify-center">
+              <DesktopIcon
+                app={app}
+                onContextMenu={(e, a) => handleContextMenu(e, a)}
+              />
+            </div>
           ))}
         </div>
       </div>
+
 
 
       {/* Render All Open Draggable Windows sorted strictly by zIndex ascending */}
