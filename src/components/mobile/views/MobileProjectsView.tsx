@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   FolderGit2, Search, ExternalLink, Sparkles,
   ChevronLeft, ChevronRight, Star, Eye, Share2,
-  Check, Copy, Code2, Tag, Layers
+  Check, Copy, Code2, Tag, Layers, LayoutGrid, List
 } from 'lucide-react';
 import { GithubIcon } from '@/components/shared/Icons';
 import { Project } from '@/types/database';
@@ -22,6 +22,7 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'card' | 'compact'>('card');
   const [activeProject, setActiveProject] = useState<Project | null>(() => {
     if (initialProjectId) {
       return projects.find((p) => p.id === initialProjectId || p.slug === initialProjectId) || null;
@@ -221,6 +222,24 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
             </p>
           </div>
 
+          {/* Operational Metrics (Parity with Desktop Stats) */}
+          {(activeProject.stats?.users || activeProject.stats?.uptime) && (
+            <div className="grid grid-cols-2 gap-2 pt-0.5">
+              {activeProject.stats.users && (
+                <div className="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-center">
+                  <div className="text-sm font-black font-mono text-blue-700">{activeProject.stats.users}</div>
+                  <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Active Users</div>
+                </div>
+              )}
+              {activeProject.stats.uptime && (
+                <div className="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-center">
+                  <div className="text-sm font-black font-mono text-emerald-700">{activeProject.stats.uptime}</div>
+                  <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Uptime SLA</div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Action Links (Live Demo & Source Code) */}
           <div className="grid grid-cols-2 gap-2 pt-1">
             {activeProject.live_url ? (
@@ -257,6 +276,23 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
               </div>
             )}
           </div>
+
+          {/* System Screenshots Gallery (100% Parity with Project Images) */}
+          {activeProject.images && activeProject.images.length > 0 && (
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-blue-600" />
+                <span>Visual Screenshots & Interface ({activeProject.images.length})</span>
+              </h4>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {activeProject.images.map((imgUrl, idx) => (
+                  <div key={idx} className="w-48 h-32 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-2xs">
+                    <img src={imgUrl} alt={`${activeProject.title} screenshot ${idx + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Project Narrative & Technical Details */}
           {activeProject.description_html && (
@@ -347,6 +383,46 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
             );
           })}
         </div>
+
+        {/* View Mode Toggle & Telemetry */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => {
+                playSound('click');
+                setViewMode('card');
+              }}
+              className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                viewMode === 'card'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LayoutGrid className="w-3 h-3" />
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                playSound('click');
+                setViewMode('compact');
+              }}
+              className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                viewMode === 'compact'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <List className="w-3 h-3" />
+              <span>Compact</span>
+            </button>
+          </div>
+
+          <span className="text-[10px] font-mono text-slate-500 font-semibold">
+            {filteredProjects.length} Projects Total
+          </span>
+        </div>
       </div>
 
       {/* Projects List */}
@@ -360,6 +436,51 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
             const isStarred = !!userStarred[project.id];
             const starCount = projectStars[project.id] ?? project.stats?.stars ?? 0;
 
+            if (viewMode === 'compact') {
+              return (
+                <div
+                  key={project.id}
+                  onClick={() => {
+                    playSound('open');
+                    setActiveProject(project);
+                  }}
+                  className="bg-white rounded-xl p-3 border border-slate-200/90 shadow-2xs cursor-pointer hover:border-blue-400 active:scale-[0.99] transition-all flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900 truncate">{project.title}</span>
+                      {project.featured && (
+                        <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1 py-0.2 rounded border border-amber-200 shrink-0">
+                          ★ Core
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                      <span className="font-mono text-blue-700 font-semibold">{project.category}</span>
+                      <span>•</span>
+                      <span className="truncate">{project.tags?.slice(0, 3).join(', ')}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => handleToggleStar(project.id, e)}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold flex items-center gap-1 border transition-all ${
+                        isStarred
+                          ? 'bg-amber-50 border-amber-300 text-amber-900'
+                          : 'bg-slate-50 border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <Star className={`w-3 h-3 ${isStarred ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
+                      <span>{starCount}</span>
+                    </button>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={project.id}
@@ -369,41 +490,70 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
                 }}
                 className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs space-y-2.5 cursor-pointer hover:border-blue-400 active:scale-[0.99] transition-all"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200/60">
-                        {project.category || 'Engineering'}
-                      </span>
-                      {project.featured && (
-                        <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200/60">
-                          ★ Featured
-                        </span>
-                      )}
+                <div className="flex items-start gap-3">
+                  {project.thumbnail_url && (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                      <img
+                        src={project.thumbnail_url}
+                        alt={project.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200/60 shrink-0">
+                          {project.category || 'Engineering'}
+                        </span>
+                        {project.featured && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200/60 shrink-0">
+                            ★ Featured
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Star Action */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleStar(project.id, e)}
+                        className={`px-2 py-0.5 rounded-xl text-[10px] font-bold flex items-center gap-1 shrink-0 border transition-all ${
+                          isStarred
+                            ? 'bg-amber-50 border-amber-300 text-amber-900'
+                            : 'bg-slate-50 border-slate-200 text-slate-600'
+                        }`}
+                      >
+                        <Star className={`w-3 h-3 ${isStarred ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
+                        <span>{starCount}</span>
+                      </button>
+                    </div>
+
                     <h3 className="text-sm font-black text-slate-900 mt-1 leading-snug">
                       {project.title}
                     </h3>
                   </div>
-
-                  {/* Star Action */}
-                  <button
-                    type="button"
-                    onClick={(e) => handleToggleStar(project.id, e)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 shrink-0 border transition-all ${
-                      isStarred
-                        ? 'bg-amber-50 border-amber-300 text-amber-900'
-                        : 'bg-slate-50 border-slate-200 text-slate-600'
-                    }`}
-                  >
-                    <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
-                    <span>{starCount}</span>
-                  </button>
                 </div>
 
                 <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                   {project.summary}
                 </p>
+
+                {/* Stats Metrics (Users, Uptime) */}
+                {(project.stats?.users || project.stats?.uptime) && (
+                  <div className="flex items-center gap-2 text-[10px] font-mono pt-0.5">
+                    {project.stats.users && (
+                      <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 font-bold border border-blue-200">
+                        👥 {project.stats.users}
+                      </span>
+                    )}
+                    {project.stats.uptime && (
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                        ⚡ {project.stats.uptime}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {project.tags && project.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1 border-t border-slate-100">

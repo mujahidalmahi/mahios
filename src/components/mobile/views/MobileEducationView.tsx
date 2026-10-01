@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { GraduationCap, Calendar, Award, CheckCircle2, Building2 } from 'lucide-react';
+import { GraduationCap, Calendar, Award, CheckCircle2, Building2, ExternalLink } from 'lucide-react';
 import { Education } from '@/types/database';
 
 interface MobileEducationViewProps {
@@ -84,6 +84,21 @@ export default function MobileEducationView({ education = [] }: MobileEducationV
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Certificate Link if present */}
+            {edu.certificate_url && (
+              <div className="pt-2 border-t border-slate-100 flex justify-end">
+                <a
+                  href={edu.certificate_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 active:scale-95 transition-transform"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>View Certificate / Diploma</span>
+                </a>
               </div>
             )}
           </div>
