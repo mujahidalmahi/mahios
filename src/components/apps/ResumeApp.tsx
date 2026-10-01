@@ -11,6 +11,7 @@ import { printDocument } from '@/lib/utils/printDocument';
 import { renderMarkdownToHtml } from '@/lib/utils/markdownRenderer';
 import { resolveCVData, CVData } from '@/lib/data/cvData';
 import { downloadVCard } from '@/lib/utils/vcardGenerator';
+import RetroShareModal from '@/components/shared/RetroShareModal';
 
 interface ResumeAppProps {
   resume: ResumeConfig;
@@ -21,6 +22,7 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
   const [viewMode, setViewMode] = useState<'document' | 'plaintext'>('document');
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { playSound } = useSystemStore();
 
   // Resolve CV data strictly using user's JSON with support for dynamic overrides
@@ -105,13 +107,7 @@ ${refText}
 
   const handleShareLink = () => {
     playSound('click');
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
-    const url = `${origin}/?app=resume`;
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(url);
-    }
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    setIsShareModalOpen(true);
   };
 
   const handleCopyText = () => {
@@ -337,11 +333,11 @@ ${refText}
             <button
               type="button"
               onClick={handleShareLink}
-              className="retro-btn px-1.5 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer"
-              title="Copy Share Link"
+              className="retro-btn px-2 py-1 text-[11px] font-bold text-[#000080] flex items-center gap-1 cursor-pointer hover:bg-blue-50"
+              title="Share Curriculum Vitae on Social Media or Copy Link"
             >
-              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{copiedLink ? 'Copied' : 'Share'}</span>
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Share</span>
             </button>
 
             <button
@@ -623,6 +619,19 @@ ${refText}
           </pre>
         </div>
       )}
+
+      {/* Retro 90s Share Dialog */}
+      <RetroShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${cv.profile.fullName} — Curriculum Vitae & Resume`}
+        summary={`${cv.profile.title} | ${cv.profile.summary.slice(0, 140)}...`}
+        url={
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/?app=resume`
+            : 'https://mujahidmahi.me/?app=resume'
+        }
+      />
     </div>
   );
 }

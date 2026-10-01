@@ -879,7 +879,7 @@ export const fallbackBiographyData: BiographyDatabaseData = {
     {
       id: 'ent-3',
       title: 'Steins;Gate',
-      type: 'anime',
+      type: 'series',
       creator: 'White Fox / 5pb.',
       rating_score: 9.7,
       review_summary: 'The ultimate hard sci-fi masterwork on causality, time travel theory, and moral accountability.',

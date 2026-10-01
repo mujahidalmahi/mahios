@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Radio, Heart, MessageSquare, Send, Sparkles, Clock, Share2, Check } from 'lucide-react';
 import { FeedPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import RetroShareModal from '@/components/shared/RetroShareModal';
 
 interface FeedAppProps {
   feedPosts: FeedPost[];
@@ -15,7 +16,7 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
     feedPosts.reduce((acc, p) => ({ ...acc, [p.id]: p.likes_count }), {})
   );
   const [userLiked, setUserLiked] = useState<Record<string, boolean>>({});
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [activeSharePost, setActiveSharePost] = useState<FeedPost | null>(null);
 
   // Restore liked status from localStorage
   useEffect(() => {
@@ -66,13 +67,7 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
 
   const handleShareFeed = (post: FeedPost) => {
     playSound('click');
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
-    const text = `"${post.content}" — Mujahid Al Mahi (${origin}/?app=feed)`;
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-    }
-    setCopiedId(post.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setActiveSharePost(post);
   };
 
   return (
@@ -152,11 +147,11 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
                 <button
                   type="button"
                   onClick={() => handleShareFeed(post)}
-                  className="px-2 py-1 bg-[#d4d0c8] text-gray-700 retro-box-outset hover:bg-[#e4e4e4] active:retro-btn-pressed rounded-2xs flex items-center gap-1 text-[11px] cursor-pointer select-none"
-                  title="Share Broadcast"
+                  className="px-2.5 py-1 bg-[#d4d0c8] text-[#000080] font-bold retro-box-outset hover:bg-[#e4e4e4] active:retro-btn-pressed rounded-2xs flex items-center gap-1.5 text-[11px] cursor-pointer select-none"
+                  title="Share Broadcast on Social Media or Copy Link"
                 >
-                  {copiedId === post.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Share2 className="w-3 h-3" />}
-                  <span>{copiedId === post.id ? 'Copied' : 'Share'}</span>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
                 </button>
               </div>
 
@@ -167,6 +162,17 @@ export default function FeedApp({ feedPosts }: FeedAppProps) {
           </div>
         ))}
       </div>
+
+      {/* Retro 90s Share Dialog */}
+      {activeSharePost && (
+        <RetroShareModal
+          isOpen={!!activeSharePost}
+          onClose={() => setActiveSharePost(null)}
+          title={`Status Update from ${activeSharePost.author_name}`}
+          summary={activeSharePost.content}
+          url={typeof window !== 'undefined' ? `${window.location.origin}/?app=feed` : 'https://mujahidmahi.me/?app=feed'}
+        />
+      )}
     </div>
   );
 }

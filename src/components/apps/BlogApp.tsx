@@ -10,6 +10,7 @@ import { BlogPost } from '@/types/database';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
 import RetroPagination from '@/components/shared/RetroPagination';
+import RetroShareModal from '@/components/shared/RetroShareModal';
 
 interface BlogAppProps {
   posts: BlogPost[];
@@ -20,7 +21,7 @@ const ITEMS_PER_PAGE = 6;
 export default function BlogApp({ posts }: BlogAppProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [activeSharePost, setActiveSharePost] = useState<BlogPost | null>(null);
 
   const { openWindow } = useWindowStore();
   const { playSound } = useSystemStore();
@@ -69,18 +70,6 @@ export default function BlogApp({ posts }: BlogAppProps) {
       sort_order: 99,
       category: 'Dev Notes',
     });
-  };
-
-  const handleCopyLink = (e: React.MouseEvent, post: BlogPost) => {
-    e.stopPropagation();
-    playSound('click');
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
-    const url = `${origin}/?app=blog&post=${post.slug}`;
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(url);
-    }
-    setCopiedId(post.id);
-    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -207,21 +196,16 @@ export default function BlogApp({ posts }: BlogAppProps) {
 
                   <button
                     type="button"
-                    onClick={(e) => handleCopyLink(e, post)}
-                    className="retro-btn px-2 py-1 text-gray-700 flex items-center gap-1 text-[11px] cursor-pointer"
-                    title="Copy direct link"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playSound('click');
+                      setActiveSharePost(post);
+                    }}
+                    className="retro-btn px-2.5 py-1 text-[#000080] font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-blue-50 active:retro-btn-pressed"
+                    title="Share note on social media or copy link"
                   >
-                    {copiedId === post.id ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600" />
-                        <span className="text-emerald-700 font-bold">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Share2 className="w-3 h-3" />
-                        <span>Link</span>
-                      </>
-                    )}
+                    <Share2 className="w-3 h-3" />
+                    <span>Share</span>
                   </button>
                 </div>
               </div>
@@ -245,6 +229,21 @@ export default function BlogApp({ posts }: BlogAppProps) {
         <span>Click any card to open in a separate reading window.</span>
         <span>MahiOS 05 Dev Notes Subsystem</span>
       </div>
+
+      {/* Retro 90s Share Dialog */}
+      {activeSharePost && (
+        <RetroShareModal
+          isOpen={!!activeSharePost}
+          onClose={() => setActiveSharePost(null)}
+          title={activeSharePost.title}
+          summary={activeSharePost.excerpt}
+          url={
+            typeof window !== 'undefined'
+              ? `${window.location.origin}/?app=blog&post=${activeSharePost.slug}`
+              : `https://mujahidmahi.me/?app=blog&post=${activeSharePost.slug}`
+          }
+        />
+      )}
     </div>
   );
 }

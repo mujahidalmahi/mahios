@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Clock, Eye, Calendar, Heart, Share2, Check,
-  ExternalLink, Printer, Bookmark, Tag, User, BookOpen, Sparkles
+  ExternalLink, Printer, Tag, User, BookOpen, Sparkles, Copy
 } from 'lucide-react';
 import { BlogPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { parseBlogReactions } from '@/lib/data/blogReactions';
 import { printDocument } from '@/lib/utils/printDocument';
+import RetroShareModal from '@/components/shared/RetroShareModal';
 
 interface BlogPostReaderAppProps {
   post: BlogPost;
@@ -16,22 +17,32 @@ interface BlogPostReaderAppProps {
 
 export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
   const parsed = parseBlogReactions(post.content_html);
+  const baseApplause = parsed.applause > 0
+    ? parsed.applause
+    : Math.max(32, Math.floor((post.views_count || 100) * 0.05));
+
   const [readingTheme, setReadingTheme] = useState<'normal' | 'sepia' | 'terminal' | 'cyber'>('normal');
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
-  const [likes, setLikes] = useState(parsed.applause);
+  const [likes, setLikes] = useState(baseApplause);
   const [views, setViews] = useState(post.views_count || 1);
   const [copied, setCopied] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number; y: number }[]>([]);
   const { playSound } = useSystemStore();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pendingApplauseRef = useRef(0);
 
-  // Restore bookmark state & trigger view increment on mount
+  const articleUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/?app=blog&post=${post.slug}`
+    : `https://mujahidmahi.me/?app=blog&post=${post.slug}`;
+
+  // Restore persistent applause state from localStorage & increment view count on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isBookmarked = localStorage.getItem(`mahios_blog_bookmark_${post.id}`) === 'true';
-      setBookmarked(isBookmarked);
+      const storedApplause = parseInt(localStorage.getItem(`mahios_blog_applause_${post.id}`) || '0', 10);
+      if (storedApplause > 0) {
+        setLikes((prev) => Math.max(prev, storedApplause));
+      }
 
       // Increment persistent view count in background
       fetch('/api/reactions', {
@@ -51,7 +62,13 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
 
   const handleLike = (e: React.MouseEvent<HTMLButtonElement>) => {
     playSound('success');
-    setLikes((prev) => prev + 1);
+    setLikes((prev) => {
+      const updated = prev + 1;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`mahios_blog_applause_${post.id}`, String(updated));
+      }
+      return updated;
+    });
     pendingApplauseRef.current += 1;
 
     // Floating particle animation
@@ -66,7 +83,7 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
       setFloatingHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
     }, 1000);
 
-    // Debounced sync to database so rapid clicking doesn't flood the network
+    // Debounced sync to database
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       const countToSend = pendingApplauseRef.current;
@@ -79,29 +96,24 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
       })
         .then((r) => r.json())
         .then((res) => {
-          if (res.success && typeof res.applause === 'number') {
-            setLikes(res.applause);
+          if (res.success && typeof res.applause === 'number' && !res.isLocal) {
+            setLikes((current) => {
+              const best = Math.max(current, res.applause);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(`mahios_blog_applause_${post.id}`, String(best));
+              }
+              return best;
+            });
           }
         })
         .catch(() => {});
     }, 500);
   };
 
-  const handleToggleBookmark = () => {
+  const handleCopyLink = () => {
     playSound('click');
-    const newState = !bookmarked;
-    setBookmarked(newState);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`mahios_blog_bookmark_${post.id}`, String(newState));
-    }
-  };
-
-  const handleShare = () => {
-    playSound('click');
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://mujahidmahi.me';
-    const url = `${origin}/?app=blog&post=${post.slug}`;
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(url);
+      navigator.clipboard.writeText(articleUrl);
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -220,15 +232,15 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
           ))}
         </div>
 
-        {/* Right: Quick Tools (Share, Print) */}
+        {/* Right: Quick Tools (Copy Link, Print) */}
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={handleShare}
+            onClick={handleCopyLink}
             className="retro-btn px-2 py-0.5 flex items-center gap-1 text-[11px] font-bold text-[#000080] cursor-pointer"
             title="Copy Direct Article URL"
           >
-            {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Share2 className="w-3 h-3" />}
+            {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
             <span>{copied ? 'Link Copied!' : 'Copy Link'}</span>
           </button>
 
@@ -315,6 +327,7 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
                 type="button"
                 onClick={handleLike}
                 className="retro-btn px-3 py-1 font-bold text-red-700 flex items-center gap-1.5 cursor-pointer hover:bg-red-50 active:retro-btn-pressed select-none"
+                title="Applaud this technical article"
               >
                 <Heart className="w-4 h-4 fill-red-600 text-red-600" />
                 <span>Applaud ({likes})</span>
@@ -330,29 +343,33 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
                 </span>
               ))}
             </div>
-
-            <button
-              type="button"
-              onClick={handleToggleBookmark}
-              className="retro-btn px-3 py-1 font-bold text-amber-800 flex items-center gap-1.5 cursor-pointer hover:bg-amber-50 active:retro-btn-pressed select-none"
-            >
-              <Bookmark className={`w-4 h-4 ${bookmarked ? 'fill-amber-600 text-amber-600' : ''}`} />
-              <span>{bookmarked ? 'Bookmarked' : 'Bookmark'}</span>
-            </button>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleShare}
-              className="retro-btn px-3 py-1 font-bold text-[#000080] flex items-center gap-1.5 cursor-pointer"
+              onClick={() => {
+                playSound('click');
+                setIsShareModalOpen(true);
+              }}
+              className="retro-btn px-3 py-1 font-bold text-[#000080] flex items-center gap-1.5 cursor-pointer hover:bg-blue-50 active:retro-btn-pressed"
+              title="Share article on social media or copy link"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
-              <span>{copied ? 'Link Copied!' : 'Share Article'}</span>
+              <Share2 className="w-4 h-4" />
+              <span>Share Article</span>
             </button>
           </div>
         </div>
       </div>
+
+      {/* Retro 90s Share Dialog */}
+      <RetroShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={post.title}
+        summary={post.excerpt}
+        url={articleUrl}
+      />
     </div>
   );
 }

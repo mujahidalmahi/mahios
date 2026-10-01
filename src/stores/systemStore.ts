@@ -67,7 +67,7 @@ export const useSystemStore = create<SystemStore>((set, get) => {
     crtCurvature: false,
     crtFlicker: false,
     desktopBgColor: '#008080', // Classic Windows 95 teal
-    wallpaperPattern: 'none',
+    wallpaperPattern: 'dither',
     themeScheme: 'classic-blue',
     cursorStyle: 'default',
 
@@ -117,7 +117,7 @@ export const useSystemStore = create<SystemStore>((set, get) => {
       crtCurvature: false,
       crtFlicker: false,
       desktopBgColor: '#008080',
-      wallpaperPattern: 'none',
+      wallpaperPattern: 'dither',
       themeScheme: 'classic-blue',
       cursorStyle: 'default',
       soundEnabled: true,

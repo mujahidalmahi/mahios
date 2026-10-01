@@ -10,12 +10,15 @@ interface EntertainmentAppProps {
 }
 
 export default function EntertainmentApp({ entertainment }: EntertainmentAppProps) {
-  const [filter, setFilter] = useState<'all' | 'game' | 'movie' | 'anime' | 'book'>('all');
+  const [filter, setFilter] = useState<'all' | 'game' | 'movie' | 'series' | 'book'>('all');
   const { playSound } = useSystemStore();
 
   const filtered = filter === 'all'
     ? entertainment
-    : entertainment.filter((e) => e.type === filter);
+    : entertainment.filter((e) => {
+        if (filter === 'series') return e.type === 'series' || e.type === 'anime';
+        return e.type === filter;
+      });
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -23,6 +26,7 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
         return <Gamepad2 className="w-4 h-4 text-emerald-700" />;
       case 'movie':
         return <Film className="w-4 h-4 text-rose-700" />;
+      case 'series':
       case 'anime':
         return <Tv className="w-4 h-4 text-purple-700" />;
       case 'book':
@@ -52,7 +56,7 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
               </span>
             </h2>
             <p className="text-[11px] text-gray-600">
-              Curated masterworks in interactive gaming, cinema, literature, and animation.
+              Curated masterworks in interactive gaming, cinema, literature, and serialized entertainment.
             </p>
           </div>
         </div>
@@ -60,7 +64,7 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
         <button
           type="button"
           onClick={handleSound}
-          className="px-2.5 py-1 bg-[#d4d0c8] hover:bg-[#e4e4e4] retro-box-outset rounded-2xs text-[10px] font-bold flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+          className="retro-btn px-2.5 py-1 text-[10px] font-bold flex items-center gap-1 cursor-pointer self-start sm:self-auto"
         >
           <Volume2 className="w-3.5 h-3.5" />
           <span>8-Bit Beep</span>
@@ -69,20 +73,37 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
 
       {/* Type Filters */}
       <div className="flex flex-wrap items-center gap-1.5 pb-1">
-        {(['all', 'game', 'movie', 'anime', 'book'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setFilter(t)}
-            className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-2xs cursor-pointer transition-all ${
-              filter === t
-                ? 'bg-[#000080] text-white retro-box-inset'
-                : 'bg-[#d4d0c8] text-gray-800 retro-box-outset hover:bg-[#e4e4e4]'
-            }`}
-          >
-            {t === 'all' ? 'All Media' : `${t}s`}
-          </button>
-        ))}
+        {(['all', 'game', 'movie', 'series', 'book'] as const).map((t) => {
+          const isSelected = filter === t;
+          const label =
+            t === 'all'
+              ? 'All Media'
+              : t === 'series'
+              ? 'Series'
+              : t === 'game'
+              ? 'Games'
+              : t === 'movie'
+              ? 'Movies'
+              : 'Books';
+
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => {
+                playSound('click');
+                setFilter(t);
+              }}
+              className={`px-3 py-1 text-xs font-bold uppercase tracking-wider cursor-pointer transition-none ${
+                isSelected
+                  ? 'retro-btn-pressed !bg-[#000080] !text-white'
+                  : 'retro-btn hover:bg-gray-100 text-gray-800'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Grid of Entertainment Items */}
@@ -109,7 +130,7 @@ export default function EntertainmentApp({ entertainment }: EntertainmentAppProp
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] uppercase font-mono bg-gray-200 px-1.5 py-0.5 rounded-2xs font-bold text-gray-700">
-                      {item.type}
+                      {item.type === 'anime' ? 'series' : item.type}
                     </span>
                     <div className="flex items-center gap-0.5 text-amber-600 text-xs font-bold font-mono">
                       <Star className="w-3 h-3 fill-amber-500" />

@@ -339,7 +339,7 @@ export default function EntertainmentAdminPage() {
               <CategoryPicker
                 value={editingItem.type}
                 onChange={(t) => setEditingItem({ ...editingItem, type: t })}
-                existingCategories={allDistinctTypes.length > 0 ? allDistinctTypes : ['game', 'movie', 'anime', 'book', 'podcast']}
+                existingCategories={allDistinctTypes.length > 0 ? allDistinctTypes : ['game', 'movie', 'series', 'book', 'podcast']}
                 label="Media Type / Category"
                 helperText="Select an existing type or type any custom type (e.g. Manga, Podcast, VR Experience)."
               />

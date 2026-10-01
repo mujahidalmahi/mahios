@@ -9,6 +9,7 @@ import { BiographyMilestone } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { printDocument } from '@/lib/utils/printDocument';
 import { useWindowStore } from '@/stores/windowStore';
+import RetroShareModal from '@/components/shared/RetroShareModal';
 
 interface BiographyChapterReaderAppProps {
   milestone: BiographyMilestone;
@@ -24,6 +25,7 @@ export default function BiographyChapterReaderApp({
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { playSound } = useSystemStore();
   const { closeWindow, activeWindowId } = useWindowStore();
 
@@ -172,12 +174,15 @@ export default function BiographyChapterReaderApp({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={handleShareLink}
+            onClick={() => {
+              playSound('click');
+              setIsShareModalOpen(true);
+            }}
             className="retro-btn px-2 py-0.5 flex items-center gap-1 text-[11px] font-bold text-[#000080] cursor-pointer"
-            title="Copy direct share link to this chapter"
+            title="Share this chapter on social media or copy link"
           >
-            {copiedLink ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-            <span>{copiedLink ? 'Link Copied!' : 'Share Link'}</span>
+            <Share2 className="w-3 h-3" />
+            <span>Share Chapter</span>
           </button>
 
           <button
@@ -186,7 +191,7 @@ export default function BiographyChapterReaderApp({
             className="retro-btn px-2 py-0.5 flex items-center gap-1 text-[11px] text-gray-700 cursor-pointer"
             title="Copy full chapter text to clipboard"
           >
-            {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Share2 className="w-3 h-3" />}
+            {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
             <span>{copied ? 'Text Copied!' : 'Copy Text'}</span>
           </button>
 
@@ -329,6 +334,19 @@ export default function BiographyChapterReaderApp({
           </button>
         </div>
       </div>
+
+      {/* Retro 90s Share Dialog */}
+      <RetroShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${currentMilestone.chapter}: ${currentMilestone.title}`}
+        summary={currentMilestone.key_learning || currentMilestone.period}
+        url={
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/?app=biography`
+            : 'https://mujahidmahi.me/?app=biography'
+        }
+      />
     </div>
   );
 }
