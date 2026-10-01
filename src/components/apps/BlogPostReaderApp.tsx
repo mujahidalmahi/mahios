@@ -142,13 +142,26 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
   const getThemeClasses = () => {
     switch (readingTheme) {
       case 'sepia':
-        return 'bg-[#fbf0d9] text-[#5f4b32]';
+        return 'bg-[#fbf0d9] text-[#43301f]';
       case 'terminal':
         return 'bg-black text-[#00ff66] font-mono selection:bg-[#00ff66] selection:text-black';
       case 'cyber':
         return 'bg-[#0a0f1d] text-[#38bdf8] font-mono selection:bg-[#38bdf8] selection:text-black';
       default:
         return 'bg-white text-gray-900';
+    }
+  };
+
+  const getProseThemeClasses = () => {
+    switch (readingTheme) {
+      case 'terminal':
+        return 'prose-invert text-[#00ff66] [&_*]:text-[#00ff66] [&_p]:text-[#00ff66] [&_h1]:text-[#00ff66] [&_h2]:text-[#00ff66] [&_h3]:text-[#00ff66] [&_strong]:text-[#7cffaa] [&_strong]:font-bold [&_em]:text-[#9effc3] [&_li]:text-[#00ff66] [&_code]:text-[#00ff66] [&_code]:bg-[#00ff66]/20 [&_a]:text-[#33ff88] [&_a]:underline [&_blockquote]:border-[#00ff66] [&_blockquote]:text-[#9effc3]';
+      case 'cyber':
+        return 'prose-invert text-[#38bdf8] [&_*]:text-[#38bdf8] [&_p]:text-[#38bdf8] [&_h1]:text-[#67e8f9] [&_h2]:text-[#67e8f9] [&_h3]:text-[#67e8f9] [&_strong]:text-[#e0f2fe] [&_strong]:font-bold [&_em]:text-[#bae6fd] [&_li]:text-[#38bdf8] [&_code]:text-[#38bdf8] [&_code]:bg-[#38bdf8]/20 [&_a]:text-[#00f0ff] [&_a]:underline [&_blockquote]:border-[#38bdf8] [&_blockquote]:text-[#bae6fd]';
+      case 'sepia':
+        return 'text-[#43301f] [&_*]:text-[#43301f] [&_p]:text-[#43301f] [&_h1]:text-[#2c1d10] [&_h2]:text-[#2c1d10] [&_strong]:text-[#2c1d10] [&_em]:text-[#5c4028] [&_li]:text-[#43301f] [&_code]:text-[#43301f] [&_code]:bg-[#8c6d48]/15 [&_a]:text-[#8b4513] [&_blockquote]:border-[#8c6d48]';
+      default:
+        return 'text-gray-900 [&_a]:text-blue-600 [&_a]:underline [&_a]:font-bold';
     }
   };
 
@@ -291,7 +304,7 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
         <div
           onClick={handleContentClick}
           dangerouslySetInnerHTML={{ __html: parsed.cleanContentHtml }}
-          className={`prose prose-sm sm:prose max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} [&_a]:text-blue-600 [&_a]:underline [&_a]:font-bold [&_a]:cursor-pointer [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:bg-black/10 [&_code]:px-1 [&_code]:rounded-xs [&_code]:font-mono [&_img]:aspect-video [&_img]:w-full [&_img]:object-cover [&_img]:retro-box-inset [&_img]:my-4 [&_figure]:my-4 [&_figure_img]:aspect-video [&_figure_img]:w-full [&_figure_img]:object-cover`}
+          className={`prose prose-sm sm:prose max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} ${getProseThemeClasses()} [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_img]:aspect-video [&_img]:w-full [&_img]:object-cover [&_img]:retro-box-inset [&_img]:my-4 [&_figure]:my-4 [&_figure_img]:aspect-video [&_figure_img]:w-full [&_figure_img]:object-cover`}
         />
 
         {/* Interactive Bottom Bar */}

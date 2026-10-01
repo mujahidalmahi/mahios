@@ -131,44 +131,44 @@ ${refText}
       : '';
 
     const printContentHtml = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000000; line-height: 1.45; font-size: 9.5pt; max-width: 800px; margin: 0 auto; background: #ffffff; padding: 24px;">
-        {/* Header */}
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000000; line-height: 1.45; font-size: 9pt; max-width: 760px; margin: 0 auto; background: #ffffff; padding: 4px 10px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
           <div>
-            <h1 style="font-size: 20pt; font-weight: 800; margin: 0 0 2px 0; color: #000000; letter-spacing: -0.3px;">${cv.profile.fullName}</h1>
-            <div style="font-size: 10pt; font-weight: 500; color: #4b5563; margin-bottom: 6px;">${cv.profile.title}</div>
-            <div style="font-size: 8.5pt; color: #4b5563; margin-bottom: 2px;">
+            <h1 style="font-size: 22pt; font-weight: 800; margin: 0 0 2px 0; color: #000000; letter-spacing: -0.3px;">${cv.profile.fullName}</h1>
+            <div style="font-size: 10.5pt; font-weight: 600; color: #374151; margin-bottom: 6px;">${cv.profile.title}</div>
+            <div style="font-size: 8.5pt; color: #4b5563; margin-bottom: 3px;">
               <span>${cv.profile.email}</span> &nbsp;|&nbsp; 
               <span>${cv.profile.phone}</span> &nbsp;|&nbsp; 
               <span>${cv.profile.location}</span>
             </div>
             <div style="font-size: 8.5pt; color: #4b5563;">
-              <a href="https://${cv.profile.website.replace(/^https?:\/\//, '')}" style="color: #4b5563; text-decoration: none;">${cv.profile.website}</a>
+              <a href="https://${cv.profile.website.replace(/^https?:\/\//, '')}" style="color: #2563eb; text-decoration: none;">${cv.profile.website}</a>
             </div>
           </div>
           ${photoHtml}
         </div>
 
-        {/* Summary */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Summary</h2>
+        <!-- Summary -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 5px 0;">Summary</h2>
           <div style="font-size: 8.8pt; color: #1f2937; text-align: justify; line-height: 1.5;">${cv.profile.summary}</div>
         </div>
 
-        {/* Experience */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Experience</h2>
+        <!-- Experience -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Experience</h2>
           ${cv.experiences
             .map(
               (exp) => `
-              <div style="margin-bottom: 10px;">
+              <div style="margin-bottom: 8px; page-break-inside: avoid;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <strong style="font-size: 9.5pt; color: #000000;">${exp.role}</strong>
+                  <strong style="font-size: 9pt; color: #000000;">${exp.role}</strong>
                   <span style="font-size: 8.5pt; color: #6b7280;">${exp.start} – ${exp.end}</span>
                 </div>
                 <div style="font-size: 8.5pt; color: #4b5563; margin-top: 1px;">${exp.company} · ${exp.location}</div>
-                <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.45;">
-                  ${exp.bullets.map((b) => `<li style="margin-bottom: 2px;">${b}</li>`).join('')}
+                <ul style="margin: 3px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.4;">
+                  ${exp.bullets.map((b) => `<li style="margin-bottom: 1.5px;">${b}</li>`).join('')}
                 </ul>
               </div>
             `
@@ -176,15 +176,15 @@ ${refText}
             .join('')}
         </div>
 
-        {/* Education */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Education</h2>
+        <!-- Education -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Education</h2>
           ${cv.education
             .map(
               (edu) => `
-              <div style="margin-bottom: 8px;">
+              <div style="margin-bottom: 6px; page-break-inside: avoid;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <strong style="font-size: 9.5pt; color: #000000;">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</strong>
+                  <strong style="font-size: 9pt; color: #000000;">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</strong>
                   <span style="font-size: 8.5pt; color: #6b7280;">${edu.start} – ${edu.end}</span>
                 </div>
                 <div style="font-size: 8.5pt; color: #4b5563;">${edu.school}</div>
@@ -195,79 +195,80 @@ ${refText}
             .join('')}
         </div>
 
-        {/* Achievements */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Achievements</h2>
-          <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.45;">
-            ${cv.achievements.map((ach) => `<li style="margin-bottom: 2px;">${ach}</li>`).join('')}
+        <!-- Achievements -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 5px 0;">Achievements</h2>
+          <ul style="margin: 3px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.4;">
+            ${cv.achievements.map((ach) => `<li style="margin-bottom: 1.5px;">${ach}</li>`).join('')}
           </ul>
         </div>
 
-        {/* Certifications */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Certifications</h2>
-          <ul style="margin: 4px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.45;">
-            ${cv.certifications.map((c) => `<li style="margin-bottom: 2px;">${c.name} — ${c.issuer} (${c.date})</li>`).join('')}
+        <!-- Certifications -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 5px 0;">Certifications</h2>
+          <ul style="margin: 3px 0 0 16px; padding: 0; font-size: 8.5pt; color: #374151; line-height: 1.4;">
+            ${cv.certifications.map((c) => `<li style="margin-bottom: 1.5px;">${c.name} — ${c.issuer} (${c.date})</li>`).join('')}
           </ul>
         </div>
 
-        {/* Languages */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Languages</h2>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px;">
-            ${cv.languages.map((l) => `<span style="background: #f3f4f6; color: #1f2937; border: 1px solid #e5e7eb; border-radius: 3px; padding: 3px 10px; font-size: 8.5pt; font-weight: 500;">${l.name} (${l.level})</span>`).join('')}
-          </div>
-        </div>
-
-        {/* Skills */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">Skills</h2>
+        <!-- Languages -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 5px 0;">Languages</h2>
           <div style="display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px;">
-            ${cv.skills.map((s) => `<span style="background: #0f172a; color: #ffffff; border-radius: 2px; padding: 2.5px 8px; font-size: 8.5pt; font-family: monospace; font-weight: 500;">${s}</span>`).join('')}
+            ${cv.languages.map((l) => `<span style="background: #f3f4f6; color: #1f2937; border: 1px solid #e5e7eb; border-radius: 3px; padding: 2px 8px; font-size: 8.5pt; font-weight: 500;">${l.name} (${l.level})</span>`).join('')}
           </div>
         </div>
 
-        {/* References */}
-        <div style="margin-bottom: 14px;">
-          <h2 style="font-size: 10pt; font-weight: 700; color: #000000; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 8px 0;">References</h2>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Skills -->
+        <div style="margin-bottom: 12px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 5px 0;">Skills</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;">
+            ${cv.skills.map((s) => `<span style="background: #0f172a; color: #ffffff; border-radius: 2px; padding: 2px 7px; font-size: 8.5pt; font-family: monospace; font-weight: 500;">${s}</span>`).join('')}
+          </div>
+        </div>
+
+        <!-- References -->
+        <div style="margin-bottom: 10px; page-break-inside: avoid;">
+          <h2 style="font-size: 9.5pt; font-weight: 800; color: #000000; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1.5px solid #000000; padding-bottom: 2px; margin: 0 0 6px 0;">References</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
             ${cv.references
               .map(
                 (ref, idx) => `
-                <div style="${idx === 1 ? 'border-left: 1px solid #d1d5db; padding-left: 14px;' : ''}">
-                  <strong style="font-size: 9.5pt; color: #000000; display: block;">${ref.name}</strong>
+                <div style="${idx === 1 ? 'border-left: 1px solid #d1d5db; padding-left: 12px;' : ''}">
+                  <strong style="font-size: 9pt; color: #000000; display: block;">${ref.name}</strong>
                   <div style="font-size: 8.5pt; color: #374151;">${ref.title}, ${ref.company}</div>
-                  <div style="font-size: 8.5pt; color: #7c3aed; font-style: italic; margin-bottom: 2px;">${ref.relationship}</div>
-                  <div style="font-size: 8.5pt; color: #6b7280;">${ref.email}</div>
-                  <div style="font-size: 8.5pt; color: #6b7280;">${ref.phone}</div>
+                  <div style="font-size: 8pt; color: #7c3aed; font-style: italic; margin-bottom: 2px;">${ref.relationship}</div>
+                  <div style="font-size: 8pt; color: #6b7280;">${ref.email}</div>
+                  <div style="font-size: 8pt; color: #6b7280;">${ref.phone}</div>
                 </div>
               `
               )
               .join('')}
           </div>
         </div>
-
-        {/* Footer Page 1 */}
-        <div style="text-align: right; font-size: 8pt; color: #9ca3af; padding-top: 10px;">
-          1
-        </div>
       </div>
     `;
 
     printDocument({
-      title: resume?.download_filename ? resume.download_filename.replace('.pdf', '') : 'Mujahid_Al_Mahi_Resume',
-      categoryBadge: 'Curriculum Vitae',
-      periodOrDate: `Verified: ${resume?.last_updated_date || 'September 2026'}`,
+      title: 'Curriculum_Vitae_Mujahid_Al_Mahi',
       author: cv.profile.fullName,
       contentHtml: printContentHtml,
-      footerNote: `Official Curriculum Vitae • ${cv.profile.fullName}`,
+      hideAppHeader: true,
+      hideFooter: true,
+      customPageMargin: '10mm 12mm 10mm 12mm',
     });
   };
 
   const handleDownload = () => {
     playSound('click');
     if (resume?.pdf_url && (resume.pdf_url.startsWith('http://') || resume.pdf_url.startsWith('https://'))) {
-      window.open(resume.pdf_url, '_blank');
+      const link = document.createElement('a');
+      link.href = resume.pdf_url;
+      link.download = 'Mujahid_Al_Mahi_CV.pdf';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
       return;
     }
     handlePrint();
@@ -285,14 +286,14 @@ ${refText}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-xs sm:text-sm font-bold text-[#000080] truncate">
-                {resume?.download_filename || 'Mujahid_Al_Mahi_Resume.pdf'}
+                Curriculum Vitae — {cv.profile.fullName || 'Mujahid Al Mahi'}
               </h2>
               <span className="text-[9px] px-1 py-px bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono rounded-2xs font-semibold shrink-0">
                 ATS
               </span>
             </div>
             <p className="text-[10px] text-gray-500 font-mono">
-              Verified: {resume?.last_updated_date || 'September 2026'}
+              {cv.profile.title || 'Software Systems Engineer'} • Verified: {resume?.last_updated_date || 'September 2026'}
             </p>
           </div>
         </div>

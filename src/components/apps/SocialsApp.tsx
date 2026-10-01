@@ -5,7 +5,10 @@ import {
   Share2, ExternalLink, Copy, Check, ShieldCheck,
   Globe, Mail, MessageSquare, Send, Music
 } from 'lucide-react';
-import { GithubIcon, LinkedinIcon } from '@/components/shared/Icons';
+import {
+  GithubIcon, LinkedinIcon, XIcon,
+  FacebookIcon, InstagramIcon, WhatsAppIcon, TelegramIcon
+} from '@/components/shared/Icons';
 import { SocialLinkItem } from '@/types/database';
 
 interface SocialsAppProps {
@@ -37,13 +40,35 @@ export default function SocialsApp({ socialLinks }: SocialsAppProps) {
   };
 
   const getPlatformIcon = (platform: string, iconName?: string) => {
-    const p = platform.toLowerCase();
-    if (p.includes('github')) return <GithubIcon className="w-5 h-5 text-white" />;
-    if (p.includes('linkedin')) return <LinkedinIcon className="w-5 h-5 text-white" />;
-    if (p.includes('mail') || p.includes('email')) return <Mail className="w-5 h-5 text-white" />;
-    if (p.includes('telegram')) return <Send className="w-5 h-5 text-white" />;
-    if (p.includes('discord')) return <MessageSquare className="w-5 h-5 text-white" />;
-    if (p.includes('spotify')) return <Music className="w-5 h-5 text-white" />;
+    const p = (platform || '').toLowerCase();
+    const i = (iconName || '').toLowerCase();
+
+    if (p.includes('github') || i.includes('github')) return <GithubIcon className="w-5 h-5 text-white" />;
+    if (p.includes('linkedin') || i.includes('linkedin')) return <LinkedinIcon className="w-5 h-5 text-white" />;
+    if (p.includes('twitter') || p === 'x' || p.includes('x (') || p.startsWith('x ') || i.includes('twitter') || i === 'x') {
+      return <XIcon className="w-4.5 h-4.5 text-white" />;
+    }
+    if (p.includes('facebook') || p.includes('fb') || i.includes('facebook')) {
+      return <FacebookIcon className="w-5 h-5 text-white" />;
+    }
+    if (p.includes('instagram') || p.includes('insta') || i.includes('instagram')) {
+      return <InstagramIcon className="w-5 h-5 text-white" />;
+    }
+    if (p.includes('whatsapp') || p.includes('wa') || i.includes('whatsapp')) {
+      return <WhatsAppIcon className="w-5 h-5 text-white" />;
+    }
+    if (p.includes('telegram') || p.includes('tg') || i.includes('telegram')) {
+      return <TelegramIcon className="w-5 h-5 text-white" />;
+    }
+    if (p.includes('mail') || p.includes('email') || i.includes('mail')) {
+      return <Mail className="w-5 h-5 text-white" />;
+    }
+    if (p.includes('discord') || i.includes('discord')) {
+      return <MessageSquare className="w-5 h-5 text-white" />;
+    }
+    if (p.includes('spotify') || i.includes('spotify')) {
+      return <Music className="w-5 h-5 text-white" />;
+    }
     return <Globe className="w-5 h-5 text-white" />;
   };
 

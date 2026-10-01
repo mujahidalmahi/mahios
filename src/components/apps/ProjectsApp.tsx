@@ -9,16 +9,20 @@ import {
 import { GithubIcon } from '@/components/shared/Icons';
 import { Project } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import RetroPagination from '@/components/shared/RetroPagination';
 
 interface ProjectsAppProps {
   projects: Project[];
   initialProjectId?: string;
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'featured' | 'name'>('featured');
   const [copiedLink, setCopiedLink] = useState(false);
@@ -130,6 +134,12 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
       return a.title.localeCompare(b.title);
     });
 
+  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE) || 1;
+  const paginatedProjects = React.useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProjects.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProjects, currentPage]);
+
   const handleCopyLink = (project: Project) => {
     playSound('click');
     const url = `${window.location.origin}/?app=projects&id=${project.slug}`;
@@ -197,13 +207,19 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
             type="text"
             placeholder="Search projects by name, keywords, or architecture stack..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="flex-1 px-2 py-1 bg-white retro-box-inset text-xs focus:outline-none"
           />
           {searchQuery && (
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('');
+                setCurrentPage(1);
+              }}
               className="retro-btn px-2 py-0.5 text-[10px]"
             >
               Clear
@@ -220,6 +236,7 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
               onClick={() => {
                 playSound('click');
                 setFilterCategory(cat);
+                setCurrentPage(1);
               }}
               className={`px-2.5 py-0.5 rounded-2xs font-medium cursor-pointer shrink-0 ${
                 filterCategory === cat
@@ -236,7 +253,7 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
       {/* GRID VIEW */}
       {viewMode === 'grid' && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {filteredProjects.map((p) => (
+          {paginatedProjects.map((p) => (
             <div
               key={p.id}
               onClick={() => {
@@ -317,7 +334,7 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
               </tr>
             </thead>
             <tbody>
-              {filteredProjects.map((p) => (
+              {paginatedProjects.map((p) => (
                 <tr
                   key={p.id}
                   onClick={() => {
@@ -355,6 +372,16 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
           No projects found matching the specified filters.
         </div>
       )}
+
+      {/* Retro Win95 Pagination Bar (6 Projects Per Page) */}
+      <RetroPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredProjects.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemName="Projects"
+      />
 
       {/* Project Inspector Detail Modal */}
       {selectedProject && (

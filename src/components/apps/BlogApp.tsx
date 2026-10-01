@@ -9,43 +9,46 @@ import {
 import { BlogPost } from '@/types/database';
 import { useWindowStore } from '@/stores/windowStore';
 import { useSystemStore } from '@/stores/systemStore';
+import RetroPagination from '@/components/shared/RetroPagination';
 
 interface BlogAppProps {
   posts: BlogPost[];
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function BlogApp({ posts }: BlogAppProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string>('All');
+  const [currentPage, setCurrentPage] = useState(1);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { openWindow } = useWindowStore();
   const { playSound } = useSystemStore();
 
-  // Extract all unique tags
-  const allTags = useMemo(() => {
-    const set = new Set<string>();
-    posts.forEach((p) => {
-      (p.tags || []).forEach((t) => set.add(t));
-    });
-    return ['All', ...Array.from(set)];
-  }, [posts]);
-
-  // Filter posts by search query and selected tag
+  // Filter posts strictly by search query (tags filter removed per user request)
   const filteredPosts = useMemo(() => {
     return posts.filter((p) => {
-      const matchesSearch =
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.tags && p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
-
-      const matchesTag =
-        selectedTag === 'All' ||
-        (p.tags && p.tags.includes(selectedTag));
-
-      return matchesSearch && matchesTag;
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        p.title.toLowerCase().includes(q) ||
+        p.excerpt.toLowerCase().includes(q) ||
+        (p.tags && p.tags.some((t) => t.toLowerCase().includes(q)))
+      );
     });
-  }, [posts, searchQuery, selectedTag]);
+  }, [posts, searchQuery]);
+
+  // Reset to page 1 whenever search query changes
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE) || 1;
+  const paginatedPosts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredPosts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredPosts, currentPage]);
 
   // Open blog article in its own separate window in front
   const handleOpenPost = (e: React.MouseEvent, post: BlogPost, index: number) => {
@@ -81,9 +84,9 @@ export default function BlogApp({ posts }: BlogAppProps) {
   };
 
   return (
-    <div className="h-full flex flex-col justify-between text-black font-sans text-xs select-none space-y-3 overflow-hidden">
-      {/* Top Search & Filter Bar */}
-      <div className="bg-[#c0c0c0] retro-box-outset p-2 space-y-2 shrink-0">
+    <div className="h-full flex flex-col justify-between text-black font-sans text-xs select-none space-y-2 overflow-hidden">
+      {/* Top Search Bar */}
+      <div className="bg-[#c0c0c0] retro-box-outset p-2 shrink-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           {/* Search Box */}
           <div className="relative flex-1 flex items-center bg-white border-2 border-[#808080] retro-box-inset px-2.5 py-1">
@@ -91,7 +94,7 @@ export default function BlogApp({ posts }: BlogAppProps) {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               placeholder="Search dev notes by title, topic, or keyword..."
               className="w-full bg-transparent text-xs text-black placeholder-gray-500 focus:outline-none font-sans"
             />
@@ -100,33 +103,9 @@ export default function BlogApp({ posts }: BlogAppProps) {
           {/* Telemetry Counter */}
           <div className="flex items-center gap-1 font-mono text-[11px] text-gray-700 shrink-0 px-1">
             <Layers className="w-3.5 h-3.5 text-[#000080]" />
-            <span>Showing <strong>{filteredPosts.length}</strong> of {posts.length} Notes</span>
+            <span>Showing <strong>{filteredPosts.length}</strong> Notes</span>
           </div>
         </div>
-
-        {/* Tag Filters */}
-        {allTags.length > 1 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-            <span className="text-[10px] font-bold text-gray-600 uppercase mr-1 shrink-0">Filter:</span>
-            {allTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => {
-                  playSound('click');
-                  setSelectedTag(tag);
-                }}
-                className={`px-2 py-0.5 text-[10px] font-medium rounded-2xs cursor-pointer truncate transition-none ${
-                  selectedTag === tag
-                    ? 'retro-btn-pressed bg-[#dfdfdf] font-bold text-[#000080]'
-                    : 'retro-btn hover:bg-gray-100'
-                }`}
-              >
-                {tag === 'All' ? 'All Topics' : `#${tag}`}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Main Blog Cards Grid */}
@@ -135,19 +114,19 @@ export default function BlogApp({ posts }: BlogAppProps) {
           <div className="h-full flex flex-col items-center justify-center p-8 text-center text-gray-400 font-mono space-y-2">
             <FileText className="w-8 h-8 opacity-40" />
             <p>No dev notes found matching &ldquo;{searchQuery}&rdquo;</p>
-            {selectedTag !== 'All' && (
+            {searchQuery && (
               <button
                 type="button"
-                onClick={() => setSelectedTag('All')}
+                onClick={() => handleSearchChange('')}
                 className="retro-btn px-2.5 py-1 text-xs text-[#000080] font-bold cursor-pointer"
               >
-                Reset Tag Filter
+                Clear Search
               </button>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
-            {filteredPosts.map((post, idx) => (
+            {paginatedPosts.map((post, idx) => (
               <div
                 key={post.id}
                 onClick={(e) => handleOpenPost(e, post, idx)}
@@ -250,6 +229,16 @@ export default function BlogApp({ posts }: BlogAppProps) {
           </div>
         )}
       </div>
+
+      {/* Retro Win95 Pagination Bar (6 Articles Per Page) */}
+      <RetroPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredPosts.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemName="Articles"
+      />
 
       {/* Footer Info */}
       <div className="px-1 flex items-center justify-between text-[11px] text-gray-600 font-mono shrink-0">

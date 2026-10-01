@@ -8,15 +8,19 @@ import {
 } from 'lucide-react';
 import { GalleryImage, GalleryCategory } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import RetroPagination from '@/components/shared/RetroPagination';
 
 interface GalleryAppProps {
   categories: GalleryCategory[];
   images: GalleryImage[];
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function GalleryApp({ categories, images }: GalleryAppProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [selectedCat, setSelectedCat] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isSlideshow, setIsSlideshow] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const { playSound } = useSystemStore();
@@ -24,6 +28,12 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
   const filteredImages = selectedCat === 'all'
     ? images
     : images.filter((img) => img.category_id === selectedCat);
+
+  const totalPages = Math.ceil(filteredImages.length / ITEMS_PER_PAGE) || 1;
+  const paginatedImages = React.useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredImages.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredImages, currentPage]);
 
   const activeImage = selectedImageIndex !== null ? filteredImages[selectedImageIndex] : null;
 
@@ -105,7 +115,11 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
         <div className="flex items-center gap-1 overflow-x-auto text-[11px]">
           <button
             type="button"
-            onClick={() => { playSound('click'); setSelectedCat('all'); }}
+            onClick={() => {
+              playSound('click');
+              setSelectedCat('all');
+              setCurrentPage(1);
+            }}
             className={`px-2.5 py-0.5 rounded-2xs font-medium cursor-pointer shrink-0 ${
               selectedCat === 'all'
                 ? 'bg-[#000080] text-white font-bold'
@@ -118,7 +132,11 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
             <button
               key={c.id}
               type="button"
-              onClick={() => { playSound('click'); setSelectedCat(c.id); }}
+              onClick={() => {
+                playSound('click');
+                setSelectedCat(c.id);
+                setCurrentPage(1);
+              }}
               className={`px-2.5 py-0.5 rounded-2xs font-medium cursor-pointer shrink-0 ${
                 selectedCat === c.id
                   ? 'bg-[#000080] text-white font-bold'
@@ -131,39 +149,52 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
         </div>
       </div>
 
-      {/* Images Grid */}
+      {/* Images Grid (6 Photos Per Page) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-        {filteredImages.map((img, idx) => (
-          <div
-            key={img.id}
-            onClick={() => handleOpenLightbox(idx)}
-            className="p-2 bg-[#f9fafb] retro-box-outset hover:bg-[#edf2f7] cursor-pointer group space-y-2 transition-all flex flex-col justify-between"
-          >
-            <div className="h-40 bg-gray-200 retro-box-inset overflow-hidden relative">
-              {img.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={img.image_url}
-                  alt={img.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <ImageIcon className="w-8 h-8" />
+        {paginatedImages.map((img, idx) => {
+          const globalIdx = (currentPage - 1) * ITEMS_PER_PAGE + idx;
+          return (
+            <div
+              key={img.id}
+              onClick={() => handleOpenLightbox(globalIdx)}
+              className="p-2 bg-[#f9fafb] retro-box-outset hover:bg-[#edf2f7] cursor-pointer group space-y-2 transition-all flex flex-col justify-between"
+            >
+              <div className="h-40 bg-gray-200 retro-box-inset overflow-hidden relative">
+                {img.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={img.image_url}
+                    alt={img.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                  <ZoomIn className="w-7 h-7" />
                 </div>
-              )}
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                <ZoomIn className="w-7 h-7" />
+              </div>
+
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-xs text-[#000080] truncate">{img.title}</h3>
+                {img.caption && <p className="text-[11px] text-gray-600 line-clamp-1">{img.caption}</p>}
               </div>
             </div>
-
-            <div className="space-y-0.5">
-              <h3 className="font-bold text-xs text-[#000080] truncate">{img.title}</h3>
-              {img.caption && <p className="text-[11px] text-gray-600 line-clamp-1">{img.caption}</p>}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Retro Win95 Pagination Bar (6 Photos Per Page) */}
+      <RetroPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        totalItems={filteredImages.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemName="Photos"
+      />
 
       {/* Lightbox Modal */}
       {activeImage && selectedImageIndex !== null && (

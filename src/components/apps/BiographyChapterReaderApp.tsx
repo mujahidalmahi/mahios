@@ -87,13 +87,26 @@ export default function BiographyChapterReaderApp({
   const getThemeClasses = () => {
     switch (readingTheme) {
       case 'sepia':
-        return 'bg-[#fbf0d9] text-[#5f4b32]';
+        return 'bg-[#fbf0d9] text-[#43301f]';
       case 'terminal':
         return 'bg-black text-[#00ff66] font-mono selection:bg-[#00ff66] selection:text-black';
       case 'cyber':
         return 'bg-[#0a0f1d] text-[#38bdf8] font-mono selection:bg-[#38bdf8] selection:text-black';
       default:
         return 'bg-white text-gray-900';
+    }
+  };
+
+  const getProseThemeClasses = () => {
+    switch (readingTheme) {
+      case 'terminal':
+        return 'prose-invert text-[#00ff66] [&_*]:text-[#00ff66] [&_p]:text-[#00ff66] [&_h1]:text-[#00ff66] [&_h2]:text-[#00ff66] [&_h3]:text-[#00ff66] [&_strong]:text-[#7cffaa] [&_strong]:font-bold [&_em]:text-[#9effc3] [&_li]:text-[#00ff66] [&_code]:text-[#00ff66] [&_code]:bg-[#00ff66]/20 [&_a]:text-[#33ff88] [&_a]:underline [&_blockquote]:border-[#00ff66] [&_blockquote]:text-[#9effc3]';
+      case 'cyber':
+        return 'prose-invert text-[#38bdf8] [&_*]:text-[#38bdf8] [&_p]:text-[#38bdf8] [&_h1]:text-[#67e8f9] [&_h2]:text-[#67e8f9] [&_h3]:text-[#67e8f9] [&_strong]:text-[#e0f2fe] [&_strong]:font-bold [&_em]:text-[#bae6fd] [&_li]:text-[#38bdf8] [&_code]:text-[#38bdf8] [&_code]:bg-[#38bdf8]/20 [&_a]:text-[#00f0ff] [&_a]:underline [&_blockquote]:border-[#38bdf8] [&_blockquote]:text-[#bae6fd]';
+      case 'sepia':
+        return 'text-[#43301f] [&_*]:text-[#43301f] [&_p]:text-[#43301f] [&_h1]:text-[#2c1d10] [&_h2]:text-[#2c1d10] [&_strong]:text-[#2c1d10] [&_em]:text-[#5c4028] [&_li]:text-[#43301f] [&_code]:text-[#43301f] [&_code]:bg-[#8c6d48]/15 [&_a]:text-[#8b4513] [&_blockquote]:border-[#8c6d48]';
+      default:
+        return 'text-gray-900 [&_a]:text-blue-600';
     }
   };
 
@@ -193,7 +206,17 @@ export default function BiographyChapterReaderApp({
         {/* Document Header Banner */}
         <div className="space-y-2 border-b border-current/20 pb-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-2xs border border-current/30 bg-current/5 tracking-wider text-[#000080] dark:text-blue-400">
+            <span
+              className={`text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-2xs border tracking-wider ${
+                readingTheme === 'terminal'
+                  ? 'border-[#00ff66]/50 text-[#00ff66] bg-[#00ff66]/10'
+                  : readingTheme === 'cyber'
+                  ? 'border-[#38bdf8]/50 text-[#38bdf8] bg-[#38bdf8]/10'
+                  : readingTheme === 'sepia'
+                  ? 'border-[#8c6d48]/40 text-[#43301f] bg-[#8c6d48]/10'
+                  : 'border-blue-300 text-[#000080] bg-blue-50'
+              }`}
+            >
               {currentMilestone.chapter}
             </span>
             <span className="text-[10px] font-mono text-current/70 flex items-center gap-1">
@@ -220,16 +243,36 @@ export default function BiographyChapterReaderApp({
           </div>
         </div>
 
-        {/* Story HTML Narrative */}
+        {/* Story HTML Narrative with High-Contrast Theme Styling */}
         <div
           dangerouslySetInnerHTML={{ __html: currentMilestone.story_html }}
-          className={`prose prose-sm max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()}`}
+          className={`prose prose-sm max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} ${getProseThemeClasses()}`}
         />
 
         {/* Key Realization Highlight Box */}
         {currentMilestone.key_learning && (
-          <div className="p-4 rounded-xs border-2 border-current/30 bg-current/5 space-y-1.5">
-            <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+          <div
+            className={`p-4 rounded-xs border-2 space-y-1.5 ${
+              readingTheme === 'terminal'
+                ? 'border-[#00ff66]/40 bg-[#00ff66]/5 text-[#00ff66]'
+                : readingTheme === 'cyber'
+                ? 'border-[#38bdf8]/40 bg-[#38bdf8]/5 text-[#38bdf8]'
+                : readingTheme === 'sepia'
+                ? 'border-[#8c6d48]/40 bg-[#8c6d48]/10 text-[#43301f]'
+                : 'border-emerald-600/30 bg-emerald-50/50 text-gray-900'
+            }`}
+          >
+            <div
+              className={`flex items-center gap-2 font-bold text-xs uppercase tracking-wider ${
+                readingTheme === 'terminal'
+                  ? 'text-[#55ff88]'
+                  : readingTheme === 'cyber'
+                  ? 'text-[#67e8f9]'
+                  : readingTheme === 'sepia'
+                  ? 'text-[#6b4c2a]'
+                  : 'text-emerald-700'
+              }`}
+            >
               <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
               <span>Key Realization & Craft Insight</span>
             </div>

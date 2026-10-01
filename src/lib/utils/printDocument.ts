@@ -13,6 +13,9 @@ export interface PrintDocumentOptions {
   calloutText?: string;
   tags?: string[];
   footerNote?: string;
+  hideAppHeader?: boolean;
+  hideFooter?: boolean;
+  customPageMargin?: string;
 }
 
 /**
@@ -71,7 +74,7 @@ export function printDocument(options: PrintDocumentOptions): void {
   <style>
     @page {
       size: A4 portrait;
-      margin: 18mm 16mm 18mm 16mm;
+      margin: ${options.customPageMargin || '18mm 16mm 18mm 16mm'};
     }
     *, *:before, *:after {
       box-sizing: border-box;
@@ -217,6 +220,7 @@ export function printDocument(options: PrintDocumentOptions): void {
   </style>
 </head>
 <body>
+  ${!options.hideAppHeader ? `
   <div class="print-header">
     ${options.categoryBadge ? `<div class="badge">${options.categoryBadge}</div>` : ''}
     <h1>${options.title}</h1>
@@ -230,8 +234,9 @@ export function printDocument(options: PrintDocumentOptions): void {
       </div>
     ` : ''}
   </div>
+  ` : ''}
 
-  <div class="content">
+  <div class="content" ${options.hideAppHeader ? 'style="font-size: 10pt; line-height: 1.45;"' : ''}>
     ${contentBody}
   </div>
 
@@ -242,10 +247,12 @@ export function printDocument(options: PrintDocumentOptions): void {
     </div>
   ` : ''}
 
+  ${!options.hideFooter ? `
   <div class="print-footer">
     <span>${options.footerNote || 'Mujahid Al Mahi • Digital Biography & Engineering Portfolio'}</span>
     <span>Generated via MahiOS 05</span>
   </div>
+  ` : ''}
 </body>
 </html>`;
 
