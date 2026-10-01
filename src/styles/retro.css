@@ -215,3 +215,91 @@
   outline-offset: -3px;
 }
 
+/* =========================================================
+   Retro OS Boot Splash & Authentic Segmented Loading Bar
+   ========================================================= */
+
+.retro-boot-backdrop {
+  background: radial-gradient(circle at 50% 42%, #0d1624 0%, #060a12 60%, #000206 100%);
+  position: relative;
+}
+
+.retro-boot-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.35) 50%
+  );
+  background-size: 100% 4px;
+}
+
+.retro-progress-track {
+  background-color: #000000;
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: inset 1px 1px 0px #000000, inset -1px -1px 0px #dfdfdf;
+}
+
+.retro-progress-bar-fill {
+  background: linear-gradient(
+    180deg,
+    #93c5fd 0%,
+    #3b82f6 18%,
+    #1d4ed8 50%,
+    #1e3a8a 82%,
+    #172554 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+/* Classic Windows 95/98 / 2000 Segmented Block Mask (3px black divider every 9px) */
+.retro-progress-segment-grid {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 8px,
+    #000000 8px,
+    #000000 11px
+  );
+}
+
+/* Subtle moving sheen highlight across progress bar */
+.retro-progress-sheen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.retro-progress-sheen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: retro-sheen-sweep 1.8s infinite linear;
+}
+
+@keyframes retro-sheen-sweep {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(350%); }
+}
+
+/* Retro OS Gold/Bronze Badge */
+.retro-badge-gold {
+  background: linear-gradient(180deg, #ffe082 0%, #ffb300 50%, #ff8f00 100%);
+  color: #3e2723;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+

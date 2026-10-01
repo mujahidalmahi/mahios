@@ -48,8 +48,11 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
 
   if (!mounted) {
     return (
-      <div className="fixed inset-0 h-[100dvh] w-full bg-black flex items-center justify-center text-[#00ff66] font-mono text-sm select-none overflow-hidden">
-        [INITIALIZING MAHIOS...]
+      <div className="fixed inset-0 h-[100dvh] w-full retro-boot-backdrop flex items-center justify-center text-slate-300 font-sans text-sm select-none overflow-hidden">
+        <div className="flex items-center gap-3">
+          <img src="/images/mahios-logo.png" alt="MahiOS" className="w-8 h-8 object-contain animate-pulse" />
+          <span className="font-semibold tracking-wider text-white">Starting MahiOS...</span>
+        </div>
       </div>
     );
   }

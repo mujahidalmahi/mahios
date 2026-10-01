@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBootStore } from '@/stores/bootStore';
 import { useSystemStore } from '@/stores/systemStore';
 import { BootLog, SiteSettings } from '@/types/database';
-import MatrixRain from './MatrixRain';
 
 interface BootScreenProps {
   bootLogs: BootLog[];
@@ -15,163 +14,231 @@ interface BootScreenProps {
 export default function BootScreen({ bootLogs, settings, onBootComplete }: BootScreenProps) {
   const { isBooting, finishBoot } = useBootStore();
   const { playSound } = useSystemStore();
-  const [displayedLogs, setDisplayedLogs] = useState<BootLog[]>([]);
   const [progress, setProgress] = useState(0);
-  const logsContainerRef = useRef<HTMLDivElement | null>(null);
+  const [statusMessage, setStatusMessage] = useState('Starting MahiOS 05...');
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const hasTriggeredComplete = useRef(false);
+
+  // Derive milestones from bootLogs or defaults
+  const milestones = React.useMemo(() => {
+    if (bootLogs && bootLogs.length > 0) {
+      const activeLogs = bootLogs.filter((l) => l.is_active !== false);
+      if (activeLogs.length > 0) {
+        return activeLogs.map((l) =>
+          l.message
+            .replace(/\[OK\]|\[INIT\]|\[COMPLETE\]/g, '')
+            .trim()
+        );
+      }
+    }
+    return [
+      'Starting MahiOS 05...',
+      'Detecting storage devices & memory allocation...',
+      'Mounting Next.js 16 App Router Kernel & Turbopack...',
+      'Initializing graphical shell & audio synthesizers...',
+      'Loading user preferences & desktop environment...',
+      'Welcome to MahiOS',
+    ];
+  }, [bootLogs]);
 
   useEffect(() => {
     if (!isBooting) return;
 
-    let timeoutId: NodeJS.Timeout;
-    let isCancelled = false;
+    let animFrameId: number;
+    let startTime: number | null = null;
+    const TOTAL_DURATION_MS = 2100; // 2.1s optimal nostalgic OS boot duration
 
-    const runBootStep = (index: number) => {
-      if (isCancelled) return;
+    const completeBoot = () => {
+      if (hasTriggeredComplete.current) return;
+      hasTriggeredComplete.current = true;
 
-      if (index < bootLogs.length) {
-        const nextLog = bootLogs[index];
-        setDisplayedLogs((prev) => [...prev, nextLog]);
-        
-        // Progress percentage calculation
-        const percent = Math.min(98, Math.round(((index + 1) / bootLogs.length) * 100));
-        setProgress(percent);
-        
-        // Optional subtle terminal click audio
-        if (index % 2 === 0) {
-          playSound('click');
-        }
+      setIsFadingOut(true);
+      playSound('boot');
 
-        // Auto-scroll terminal down
-        if (logsContainerRef.current) {
-          logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
-        }
+      setTimeout(() => {
+        finishBoot();
+        onBootComplete();
+      }, 260);
+    };
 
-        // Fast, authentic BIOS hardware check streaming (~70-140ms per log)
-        const baseDelay = nextLog.delay_ms
-          ? Math.max(60, Math.min(160, Math.round(nextLog.delay_ms * 0.75)))
-          : 85;
-        
-        timeoutId = setTimeout(() => {
-          runBootStep(index + 1);
-        }, baseDelay);
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const t = Math.min(1, elapsed / TOTAL_DURATION_MS);
+
+      // Smooth, natural operating system boot progression curve:
+      // Starts gracefully, accelerates through hardware/kernel checks,
+      // brief realistic stabilization at ~86%, then finishes smoothly to 100%.
+      let calcProgress: number;
+      if (t < 0.25) {
+        // 0% -> 30% in first 25% of time
+        calcProgress = (t / 0.25) * 30;
+      } else if (t < 0.6) {
+        // 30% -> 70% in next 35% of time
+        calcProgress = 30 + ((t - 0.25) / 0.35) * 40;
+      } else if (t < 0.82) {
+        // 70% -> 86%
+        calcProgress = 70 + ((t - 0.6) / 0.22) * 16;
+      } else if (t < 0.9) {
+        // Gentle micro-hold around 86-90% (mounting desktop shell)
+        calcProgress = 86 + ((t - 0.82) / 0.08) * 4;
       } else {
-        // Final completion pause before launching desktop
+        // Final smooth finish 90% -> 100%
+        calcProgress = 90 + ((t - 0.9) / 0.1) * 10;
+      }
+
+      const clamped = Math.min(100, Math.max(0, calcProgress));
+      setProgress(clamped);
+
+      // Dynamically select status message based on progress
+      const milestoneIndex = Math.min(
+        milestones.length - 1,
+        Math.floor((clamped / 100) * milestones.length)
+      );
+      setStatusMessage(milestones[milestoneIndex] || 'Starting MahiOS...');
+
+      if (t < 1) {
+        animFrameId = requestAnimationFrame(step);
+      } else {
         setProgress(100);
-        timeoutId = setTimeout(() => {
-          if (!isCancelled) {
-            playSound('boot');
-            finishBoot();
-            onBootComplete();
-          }
-        }, 400);
+        setStatusMessage(milestones[milestones.length - 1] || 'Welcome to MahiOS');
+        setTimeout(() => {
+          completeBoot();
+        }, 160);
       }
     };
 
-    // Initial brief pause before logs begin
-    timeoutId = setTimeout(() => {
-      runBootStep(0);
-    }, 180);
+    animFrameId = requestAnimationFrame(step);
+
+    const handleSkip = () => {
+      cancelAnimationFrame(animFrameId);
+      setProgress(100);
+      completeBoot();
+    };
 
     const handleKeyDown = () => {
-      isCancelled = true;
-      clearTimeout(timeoutId);
-      playSound('boot');
-      finishBoot();
-      onBootComplete();
+      handleSkip();
     };
 
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      isCancelled = true;
-      clearTimeout(timeoutId);
+      cancelAnimationFrame(animFrameId);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isBooting, bootLogs, finishBoot, onBootComplete, playSound]);
+  }, [isBooting, milestones, finishBoot, onBootComplete, playSound]);
 
   if (!isBooting) return null;
 
-  const cleanBootTitle = (settings.boot_title || 'MAHI QUANTUM BIOS v4.08 (C) 2005-2026')
-    .replace(/1995/g, '2005')
-    .replace(/MahiOS 95/g, 'MahiOS 05');
-
-  const cleanBootSubtitle = (settings.boot_subtitle || 'MahiOS Modular Kernel Initialization Engine')
+  const cleanSubtitle = (settings.boot_subtitle || 'Professional Edition — Personal Computing System')
     .replace(/1995/g, '2005')
     .replace(/MahiOS 95/g, 'MahiOS 05');
 
   return (
     <div
       onClick={() => {
-        playSound('boot');
-        finishBoot();
-        onBootComplete();
+        if (!hasTriggeredComplete.current) {
+          hasTriggeredComplete.current = true;
+          setIsFadingOut(true);
+          playSound('boot');
+          setTimeout(() => {
+            finishBoot();
+            onBootComplete();
+          }, 200);
+        }
       }}
-      className="fixed inset-0 z-[9999] bg-black text-[#00ff66] font-mono p-4 sm:p-8 flex flex-col justify-between select-none cursor-pointer overflow-hidden"
+      className={`fixed inset-0 z-[9999] retro-boot-backdrop text-white font-sans flex flex-col justify-between items-center select-none overflow-hidden p-6 sm:p-10 cursor-pointer transition-opacity duration-300 ease-out ${
+        isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
     >
-      {/* Background Matrix Rain */}
-      {settings.matrix_rain_enabled && <MatrixRain opacity={0.35} />}
+      {/* Subtle CRT scanline texture */}
+      <div className="retro-boot-scanlines absolute inset-0 pointer-events-none opacity-35 z-0" />
 
-      <div className="relative z-10 space-y-4 max-w-4xl w-full mx-auto">
-        {/* BIOS Header */}
-        <div className="border-b border-[#008833] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div className="text-sm sm:text-base font-bold tracking-wider matrix-green-glow flex items-center gap-2">
-              <span>{cleanBootTitle}</span>
-              <span className="w-2 h-2 rounded-full bg-[#00ff66] animate-pulse" />
-            </div>
-            <div className="text-xs text-[#00cc55] opacity-80">
-              {cleanBootSubtitle}
-            </div>
-          </div>
-          <div className="text-left sm:text-right">
-            <div className="text-[11px] text-amber-400 font-bold tracking-widest">[ENERGY STAR ALLIANCE]</div>
-            <div className="text-[10px] text-[#00aa44]">MODULAR KERNEL 2026.09</div>
-          </div>
+      {/* Top subtle OS header */}
+      <div className="relative z-10 w-full max-w-4xl flex items-center justify-between text-xs text-slate-400 font-mono tracking-wider pt-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
+          <span className="text-slate-300 font-semibold">MAHIOS WORKSTATION</span>
+        </div>
+        <div className="text-[11px] text-slate-400 hidden sm:block">
+          BUILD 2026.09 • 32-BIT PROTECTED MODE
+        </div>
+      </div>
+
+      {/* Center Stage: Authentic Retro OS Splash & Smooth Loading Bar */}
+      <div className="relative z-10 w-full max-w-xl mx-auto flex flex-col items-center justify-center text-center my-auto px-4">
+        {/* Retro OS Emblem */}
+        <div className="relative mb-3 flex items-center justify-center">
+          <div className="absolute -inset-6 bg-blue-500/15 rounded-full blur-2xl pointer-events-none" />
+          <img
+            src="/images/mahios-logo.png"
+            alt="MahiOS"
+            className="w-20 h-20 sm:w-24 sm:h-24 object-contain relative z-10 drop-shadow-[0_8px_24px_rgba(0,0,0,0.9)]"
+          />
         </div>
 
-        {/* Terminal Boot Sequence Logs */}
-        <div
-          ref={logsContainerRef}
-          className="space-y-1.5 text-xs sm:text-sm font-mono max-h-[55vh] overflow-y-auto pr-2"
-        >
-          {displayedLogs.map((log, idx) => (
-            <div key={log.id || idx} className="flex items-start gap-2 animate-fadeIn">
-              <span className={`font-bold shrink-0 ${
-                log.status_type === 'OK' ? 'text-[#00ff66]' :
-                log.status_type === 'COMPLETE' ? 'text-cyan-300 matrix-cyan-glow' :
-                log.status_type === 'WARN' ? 'text-amber-400' : 'text-[#88ffaa]'
-              }`}>
-                [{log.status_type}]
-              </span>
-              <span className="text-[#d0ffd0] leading-relaxed">{log.message}</span>
-            </div>
-          ))}
+        {/* Brand Wordmark & Edition */}
+        <div className="flex items-center justify-center gap-3">
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)]">
+            MahiOS
+          </h1>
+          <span className="retro-badge-gold px-2.5 py-0.5 rounded-xs text-xs sm:text-sm font-black tracking-wider uppercase font-mono shadow-md">
+            05
+          </span>
+        </div>
 
-          <div className="flex items-center gap-1 text-[#00ff66] pt-1">
-            <span>&gt;</span>
-            <span className="term-cursor" />
+        {/* Tagline */}
+        <div className="text-xs sm:text-sm font-medium text-slate-300 tracking-wide mt-2">
+          {cleanSubtitle}
+        </div>
+        <div className="text-[11px] text-blue-300/80 font-mono tracking-widest mt-1 uppercase">
+          Mujahid Al Mahi • Systems & Full-Stack Engineer
+        </div>
+
+        {/* The Retro OS Loading Bar */}
+        <div className="w-full max-w-md space-y-2 mt-8">
+          {/* Status Header above track */}
+          <div className="flex items-center justify-between text-xs text-slate-300 px-1">
+            <span className="truncate max-w-[280px] sm:max-w-[340px] text-left font-medium text-blue-200">
+              {statusMessage}
+            </span>
+            <span className="font-mono text-cyan-300 font-bold tabular-nums ml-2">
+              {Math.round(progress)}%
+            </span>
+          </div>
+
+          {/* The Iconic Sunken Segmented Progress Track */}
+          <div className="retro-progress-track h-6 sm:h-7 p-1 rounded-xs relative overflow-hidden flex items-center">
+            {/* Progress Fill Bar */}
+            <div
+              className="retro-progress-bar-fill h-full rounded-xs transition-[width] duration-75 ease-out relative"
+              style={{ width: `${progress}%` }}
+            >
+              {/* Animated Specular Sheen */}
+              <div className="retro-progress-sheen absolute inset-0" />
+            </div>
+
+            {/* Classic 90s Segmented Block Grid */}
+            <div className="retro-progress-segment-grid absolute inset-1 pointer-events-none" />
+          </div>
+
+          {/* Hardware Telemetry */}
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-400 font-mono pt-1 px-1">
+            <span>MEM: 65,536 KB OK</span>
+            <span>VGA 1024x768 @ 75Hz</span>
+            <span className="hidden sm:inline">TURBOPACK 16 OK</span>
           </div>
         </div>
       </div>
 
-      {/* Progress & Skip Notice */}
-      <div className="relative z-10 space-y-3 pt-4 border-t border-[#008833] max-w-4xl w-full mx-auto">
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-[#00ee55] font-semibold tracking-wider">
-            <span>INITIALIZING MAHIOS USERSPACE ENVIRONMENT</span>
-            <span className="font-bold text-cyan-300 matrix-cyan-glow">{progress}%</span>
-          </div>
-          <div className="ascii-progress-container rounded-xs">
-            <div
-              className="ascii-progress-bar rounded-xs"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+      {/* Footer Instructions & Copyright */}
+      <div className="relative z-10 w-full max-w-4xl text-center space-y-1.5 pb-2">
+        <div className="text-[11px] sm:text-xs text-slate-400 animate-pulse tracking-wide font-sans">
+          Press <span className="text-slate-200 font-semibold">ANY KEY</span> or{' '}
+          <span className="text-slate-200 font-semibold">CLICK</span> anywhere to bypass
         </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-[#00aa44]">
-          <span className="animate-pulse">&gt; Press ANY KEY or CLICK anywhere to bypass boot sequence...</span>
-          <span className="font-mono text-[10px] opacity-75">SYS_RAM: 65536KB OK | CACHE: MOUNTED</span>
+        <div className="text-[10px] text-slate-500 font-mono">
+          Copyright © 2005-2026 Mujahid Al Mahi. All rights reserved.
         </div>
       </div>
     </div>
