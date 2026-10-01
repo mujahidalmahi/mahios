@@ -210,7 +210,7 @@ export default function Desktop({ data }: DesktopProps) {
 
     switch (componentKey) {
       case 'AboutApp':
-        return <DynamicAboutApp about={data.about} philosophies={data.philosophies} />;
+        return <DynamicAboutApp about={data.about} philosophies={data.philosophies} phone={data.settings?.phone} />;
       case 'ExperienceApp':
         return <DynamicExperienceApp experiences={data.experiences} />;
       case 'ProjectsApp':
@@ -267,7 +267,7 @@ export default function Desktop({ data }: DesktopProps) {
       case 'TaskManagerApp':
         return <DynamicTaskManagerApp />;
       default:
-        return <DynamicAboutApp about={data.about} />;
+        return <DynamicAboutApp about={data.about} phone={data.settings?.phone} />;
     }
   };
 

@@ -184,7 +184,7 @@ export default function TabletShell({ data }: TabletShellProps) {
 
   const renderAppContent = (componentKey: string) => {
     switch (componentKey) {
-      case 'AboutApp': return <DynamicAboutApp about={data.about} philosophies={data.philosophies} />;
+      case 'AboutApp': return <DynamicAboutApp about={data.about} philosophies={data.philosophies} phone={data.settings?.phone} />;
       case 'ExperienceApp': return <DynamicExperienceApp experiences={data.experiences} />;
       case 'ProjectsApp': return <DynamicProjectsApp projects={data.projects} initialProjectId={deepLinkedProjectId} />;
       case 'SkillsApp': return <DynamicSkillsApp categories={data.categories} skills={data.skills} />;
@@ -222,7 +222,7 @@ export default function TabletShell({ data }: TabletShellProps) {
         const milestone = data.biographyTimeline.find((m) => m.id === milestoneId) || data.biographyTimeline[0];
         return milestone ? <DynamicBiographyChapterReaderApp milestone={milestone} allMilestones={data.biographyTimeline} /> : null;
       }
-      default: return <DynamicAboutApp about={data.about} />;
+      default: return <DynamicAboutApp about={data.about} phone={data.settings?.phone} />;
     }
   };
 

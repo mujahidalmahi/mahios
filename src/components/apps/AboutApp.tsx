@@ -15,9 +15,11 @@ import { downloadVCard } from '@/lib/utils/vcardGenerator';
 interface AboutAppProps {
   about: AboutContent;
   philosophies?: PhilosophyItem[];
+  phone?: string;
 }
 
-export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
+export default function AboutApp({ about, philosophies = [], phone }: AboutAppProps) {
+  const displayPhone = phone || '+880 1805128634';
   const [activeTab, setActiveTab] = useState<'story' | 'interests' | 'principles' | 'radar' | 'trivia'>('story');
   const [copied, setCopied] = useState(false);
   const [dhakaTime, setDhakaTime] = useState('');
@@ -81,7 +83,7 @@ export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
       fullName: about.full_name || 'Mujahid Al Mahi',
       title: 'Software Systems Engineer',
       email: 'mujahidmahi.official@gmail.com',
-      phone: '+880 1805128634',
+      phone: displayPhone,
       location: about.location || 'Narayanganj, Bangladesh',
       website: 'https://mujahidmahi.me',
       note: about.status_text || 'Software Systems Engineer & Creative Technologist. Portfolio: https://mujahidmahi.me',
@@ -469,18 +471,20 @@ export default function AboutApp({ about, philosophies = [] }: AboutAppProps) {
 
                 {/* Contact Details List */}
                 <div className="space-y-1.5 text-xs text-gray-700 font-sans pt-1">
-                  <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
-                    <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
-                      <Phone className="w-3.5 h-3.5 text-blue-700" />
-                      <span>Phone:</span>
-                    </span>
-                    <a
-                      href="tel:+8801805128634"
-                      className="font-mono text-blue-700 font-bold hover:underline"
-                    >
-                      +880 1805128634
-                    </a>
-                  </div>
+                  {displayPhone && (
+                    <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
+                      <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
+                        <Phone className="w-3.5 h-3.5 text-blue-700" />
+                        <span>Phone:</span>
+                      </span>
+                      <a
+                        href={`tel:${displayPhone.replace(/[\s-]/g, '')}`}
+                        className="font-mono text-blue-700 font-bold hover:underline"
+                      >
+                        {displayPhone}
+                      </a>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between gap-2 p-1 hover:bg-gray-50 rounded-xs">
                     <span className="text-gray-500 flex items-center gap-1.5 shrink-0 text-[11px]">
