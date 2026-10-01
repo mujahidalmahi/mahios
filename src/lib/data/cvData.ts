@@ -65,7 +65,7 @@ export const officialCVData: CVData = {
     fullName: "Mujahid Al Mahi",
     title: "Software Systems Engineer",
     email: "mujahidmahi.official@gmail.com",
-    phone: "+880 1805128634",
+    phone: process.env.NEXT_PUBLIC_PHONE_NUMBER || "",
     location: "Narayanganj, Bangladesh",
     linkedin: "",
     website: "mujahidmahi.me",

@@ -18,7 +18,7 @@ interface ResumeAppProps {
   data?: BiographyDatabaseData;
 }
 
-export default function ResumeApp({ resume }: ResumeAppProps) {
+export default function ResumeApp({ resume, data }: ResumeAppProps) {
   const [viewMode, setViewMode] = useState<'document' | 'plaintext'>('document');
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -27,8 +27,12 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
 
   // Resolve CV data strictly using user's JSON with support for dynamic overrides
   const cv: CVData = useMemo(() => {
-    return resolveCVData(resume?.summary_markdown);
-  }, [resume?.summary_markdown]);
+    const parsed = resolveCVData(resume?.summary_markdown);
+    if (!parsed.profile.phone && (data?.settings?.phone || process.env.NEXT_PUBLIC_PHONE_NUMBER)) {
+      parsed.profile.phone = data?.settings?.phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '';
+    }
+    return parsed;
+  }, [resume?.summary_markdown, data?.settings?.phone]);
 
   // Generate complete ATS-optimized plaintext resume
   const fullPlainTextResume = useMemo(() => {
@@ -68,7 +72,7 @@ export default function ResumeApp({ resume }: ResumeAppProps) {
 
     return `${cv.profile.fullName}
 ${cv.profile.title}
-${cv.profile.email} | ${cv.profile.phone} | ${cv.profile.location}
+${[cv.profile.email, cv.profile.phone, cv.profile.location].filter(Boolean).join(' | ')}
 ${cv.profile.website}
 
 Summary
@@ -134,9 +138,9 @@ ${refText}
             <h1 style="font-size: 22pt; font-weight: 800; margin: 0 0 2px 0; color: #000000; letter-spacing: -0.3px;">${cv.profile.fullName}</h1>
             <div style="font-size: 10.5pt; font-weight: 600; color: #374151; margin-bottom: 6px;">${cv.profile.title}</div>
             <div style="font-size: 8.5pt; color: #4b5563; margin-bottom: 3px;">
-              <span>${cv.profile.email}</span> &nbsp;|&nbsp; 
-              <span>${cv.profile.phone}</span> &nbsp;|&nbsp; 
-              <span>${cv.profile.location}</span>
+              <span>${cv.profile.email}</span>
+              ${cv.profile.phone ? ` &nbsp;|&nbsp; <span>${cv.profile.phone}</span>` : ''}
+              ${cv.profile.location ? ` &nbsp;|&nbsp; <span>${cv.profile.location}</span>` : ''}
             </div>
             <div style="font-size: 8.5pt; color: #4b5563;">
               <a href="https://${cv.profile.website.replace(/^https?:\/\//, '')}" style="color: #2563eb; text-decoration: none;">${cv.profile.website}</a>
@@ -368,7 +372,7 @@ ${refText}
                   fullName: cv.profile.fullName || 'Mujahid Al Mahi',
                   title: cv.profile.title || 'Software Systems Engineer',
                   email: cv.profile.email || 'mujahidmahi.official@gmail.com',
-                  phone: cv.profile.phone || '+880 1805128634',
+                  phone: cv.profile.phone || data?.settings?.phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '',
                   location: cv.profile.location || 'Narayanganj, Bangladesh',
                   website: cv.profile.website?.startsWith('http') ? cv.profile.website : `https://${cv.profile.website || 'mujahidmahi.me'}`,
                   note: cv.profile.summary,
@@ -410,10 +414,18 @@ ${refText}
                 </p>
                 <div className="text-[11px] text-gray-500 pt-1 flex flex-wrap items-center gap-1.5 leading-tight">
                   <span>{cv.profile.email}</span>
-                  <span className="text-gray-400">|</span>
-                  <span>{cv.profile.phone}</span>
-                  <span className="text-gray-400">|</span>
-                  <span>{cv.profile.location}</span>
+                  {cv.profile.phone && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span>{cv.profile.phone}</span>
+                    </>
+                  )}
+                  {cv.profile.location && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span>{cv.profile.location}</span>
+                    </>
+                  )}
                 </div>
                 <div>
                   <a

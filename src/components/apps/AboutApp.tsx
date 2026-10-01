@@ -19,7 +19,7 @@ interface AboutAppProps {
 }
 
 export default function AboutApp({ about, philosophies = [], phone }: AboutAppProps) {
-  const displayPhone = phone || '+880 1805128634';
+  const displayPhone = phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '';
   const [activeTab, setActiveTab] = useState<'story' | 'interests' | 'principles' | 'radar' | 'trivia'>('story');
   const [copied, setCopied] = useState(false);
   const [dhakaTime, setDhakaTime] = useState('');

@@ -20,7 +20,7 @@ export function generateVCardString(options: VCardOptions): string {
   const fullName = options.fullName || 'Mujahid Al Mahi';
   const title = options.title || 'Software Systems Engineer';
   const email = options.email || 'mujahidmahi.official@gmail.com';
-  const phone = options.phone || '+880 1805128634';
+  const phone = options.phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '';
   const location = options.location || 'Narayanganj, Bangladesh';
   const website = options.website || 'https://mujahidmahi.me';
   const note = options.note || 'Software Systems Engineer. Portfolio: https://mujahidmahi.me';
@@ -35,7 +35,7 @@ export function generateVCardString(options: VCardOptions): string {
     'ORG:MahiOS;Akruno',
     `TITLE:${title}`,
     'ROLE:Software Systems Engineer',
-    `TEL;TYPE=CELL,VOICE,pref:${phone}`,
+    ...(phone ? [`TEL;TYPE=CELL,VOICE,pref:${phone}`] : []),
     `EMAIL;TYPE=INTERNET,pref:${email}`,
     `URL;TYPE=WORK:${website}`,
     'URL;TYPE=GitHub:https://github.com/mujahidalmahi',

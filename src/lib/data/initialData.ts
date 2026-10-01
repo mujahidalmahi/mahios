@@ -29,7 +29,7 @@ export const fallbackBiographyData: BiographyDatabaseData = {
     linkedin_url: 'https://linkedin.com/in/mujahidmahi',
     twitter_url: 'https://twitter.com/mujahidmahi',
     email: 'mujahidmahi.official@gmail.com',
-    phone: '+880 1805128634',
+    phone: process.env.NEXT_PUBLIC_PHONE_NUMBER || '',
     location: 'Narayanganj, Bangladesh',
     status_message: 'MahiOS 05 — System Ready & Operational',
     copyright_text: '© 2005-2026 Mujahid Al Mahi. All systems operational.',
