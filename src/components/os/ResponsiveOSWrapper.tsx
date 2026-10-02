@@ -16,6 +16,7 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
   const [scale, setScale] = useState(1);
   const [virtualDim, setVirtualDim] = useState({ w: 1024, h: 520 });
   const [screenDim, setScreenDim] = useState({ w: 0, h: 0 });
+  const [showKeyboardHint, setShowKeyboardHint] = useState(false);
   const { isBooting, finishBoot } = useBootStore();
 
   useEffect(() => {
@@ -25,7 +26,6 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       if (typeof window === 'undefined') return;
       const w = window.innerWidth;
       const h = window.innerHeight;
-      setScreenDim({ w, h });
 
       // Identify mobile or tablet device - strictly excluding desktop PCs
       const isMobileDevice =
@@ -38,6 +38,7 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         setIsRotated(false);
         setScale(1);
         setVirtualDim({ w, h });
+        setScreenDim({ w, h });
         return;
       }
 
@@ -45,9 +46,16 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       const shouldRotate = h > w;
       setIsRotated(shouldRotate);
 
-      // Available landscape width and height
-      const landW = shouldRotate ? h : w;
-      const landH = shouldRotate ? w : h;
+      // Use stable physical screen dimensions so virtual keyboard opening does not squash the desktop
+      const screenMax = Math.max(window.screen?.width || w, window.screen?.height || h);
+      const screenMin = Math.min(window.screen?.width || w, window.screen?.height || h);
+      setScreenDim({
+        w: shouldRotate ? screenMin : screenMax,
+        h: shouldRotate ? screenMax : screenMin,
+      });
+
+      const landW = screenMax;
+      const landH = screenMin;
 
       // Reference canvas height (520px) matching the reference desktop layout
       // Ensures all 7 rows of icons, taskbar, and floating windows fit with zero collision
@@ -70,6 +78,17 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       }
     };
 
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        setShowKeyboardHint(true);
+      }
+    };
+
+    const handleFocusOut = () => {
+      setShowKeyboardHint(false);
+    };
+
     // If deep-link or hash route is requested, bypass boot screen for instant visitor access
     if (typeof window !== 'undefined') {
       const search = window.location.search;
@@ -82,9 +101,13 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
     updateOrientationAndScale();
     window.addEventListener('resize', updateOrientationAndScale);
     window.addEventListener('orientationchange', updateOrientationAndScale);
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focusout', handleFocusOut);
     return () => {
       window.removeEventListener('resize', updateOrientationAndScale);
       window.removeEventListener('orientationchange', updateOrientationAndScale);
+      window.removeEventListener('focusin', handleFocusIn);
+      window.removeEventListener('focusout', handleFocusOut);
     };
   }, [finishBoot]);
 
@@ -139,6 +162,13 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       data-virtual-w={virtualDim.w}
       data-virtual-h={virtualDim.h}
     >
+      {/* Typing helper toast when input is active in rotated mode */}
+      {isRotated && showKeyboardHint && (
+        <div className="fixed top-2 z-[9999] bg-[#ffffcc] text-black border border-[#808080] shadow-md px-3 py-1 rounded-xs text-[11px] font-sans flex items-center gap-1.5 pointer-events-none animate-pulse">
+          <span>⌨️ Turn phone sideways for horizontal keyboard</span>
+        </div>
+      )}
+
       {/* Boot Loading Screen Overlay */}
       {isBooting && (
         <BootScreen

@@ -160,7 +160,7 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
               onClick={() => handleOpenLightbox(globalIdx)}
               className="p-2 bg-[#f9fafb] retro-box-outset hover:bg-[#edf2f7] cursor-pointer group space-y-2 transition-all flex flex-col justify-between"
             >
-              <div className="h-40 bg-gray-200 retro-box-inset overflow-hidden relative">
+              <div className="h-28 sm:h-32 bg-gray-200 retro-box-inset overflow-hidden relative">
                 {img.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -202,8 +202,8 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
 
       {/* Lightbox Modal */}
       {activeImage && selectedImageIndex !== null && (
-        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-          <div className="retro-box-outset bg-[#c0c0c0] max-w-3xl w-full p-1 shadow-2xl flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-2 sm:p-4">
+          <div className="retro-box-outset bg-[#c0c0c0] max-w-xl w-full p-1 shadow-2xl flex flex-col max-h-[85vh]">
             {/* Titlebar */}
             <div className="retro-titlebar px-2 py-1 flex items-center justify-between font-bold text-xs">
               <span className="truncate">
@@ -237,7 +237,7 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
             </div>
 
             {/* Photo Viewing Area */}
-            <div className="retro-box-inset bg-black p-2 m-1 flex items-center justify-center relative min-h-[360px] max-h-[65vh] overflow-hidden">
+            <div className="retro-box-inset bg-black p-2 m-1 flex items-center justify-center relative min-h-[160px] max-h-[45vh] overflow-hidden">
               {/* Prev / Next Buttons */}
               <button
                 type="button"
@@ -253,7 +253,7 @@ export default function GalleryApp({ categories, images }: GalleryAppProps) {
                 src={activeImage.image_url}
                 alt={activeImage.title}
                 style={{ transform: `scale(${zoomLevel})`, transition: 'transform 0.2s ease' }}
-                className="max-h-[60vh] max-w-full object-contain select-none"
+                className="max-h-[42vh] max-w-full object-contain select-none"
               />
 
               <button

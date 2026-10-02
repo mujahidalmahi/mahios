@@ -259,7 +259,7 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
       <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5">
         {/* Article Cover Image (Strict 16:9 Aspect Ratio) */}
         {post.cover_image_url && (
-          <div className="w-full aspect-video retro-box-inset bg-black/10 overflow-hidden">
+          <div className="w-full max-h-48 sm:max-h-60 aspect-video retro-box-inset bg-black/10 overflow-hidden">
             <img
               src={post.cover_image_url}
               alt={post.title}
