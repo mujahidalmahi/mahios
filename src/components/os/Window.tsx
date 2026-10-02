@@ -273,6 +273,7 @@ function WindowComponent({ window: win, children }: WindowProps) {
 
       <div
         role="dialog"
+        data-window="true"
         aria-label={win.title}
         aria-modal={false}
         onMouseDown={() => {
@@ -364,7 +365,10 @@ function WindowComponent({ window: win, children }: WindowProps) {
         </div>
 
         {/* Sunken Content Area with Retro Scrollbars */}
-        <div className="flex-1 min-h-0 bg-[#ffffff] m-1 retro-box-inset retro-scroll retro-window overflow-y-auto overflow-x-hidden text-[#000000] p-3 sm:p-4 text-xs font-sans leading-normal break-words">
+        <div
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+          className="flex-1 min-h-0 bg-[#ffffff] m-1 retro-box-inset retro-scroll retro-window overflow-y-auto overflow-x-hidden text-[#000000] p-3 sm:p-4 text-xs font-sans leading-normal break-words select-text"
+        >
           {children}
         </div>
 

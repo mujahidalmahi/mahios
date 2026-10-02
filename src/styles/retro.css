@@ -117,6 +117,9 @@
 .retro-box-inset {
   scrollbar-color: #c0c0c0 #dfdfdf;
   scrollbar-width: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .retro-os ::-webkit-scrollbar,

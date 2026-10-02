@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { BiographyDatabaseData } from '@/types/database';
 import { useBootStore } from '@/stores/bootStore';
+import { useMobileTouchScroll } from '@/hooks/useMobileTouchScroll';
 import Desktop from './Desktop';
 import BootScreen from './BootScreen';
 
@@ -12,12 +13,20 @@ interface ResponsiveOSWrapperProps {
 
 export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
   const [scale, setScale] = useState(1);
   const [virtualDim] = useState({ w: 1024, h: 540 });
   const [viewportDim, setViewportDim] = useState({ w: 0, h: 0 });
   const [showKeyboardHint, setShowKeyboardHint] = useState(false);
   const { isBooting, finishBoot } = useBootStore();
+
+  // High performance touch scrolling engine for rotated and scaled mobile layouts
+  useMobileTouchScroll({
+    isRotated,
+    scale,
+    enabled: isMobile || scale < 1 || isRotated,
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +42,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
         (window.matchMedia('(max-width: 1024px) and (pointer: coarse)').matches) ||
         (w <= 1024 && h <= 600 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+
+      setIsMobile(isMobileDevice);
 
       if (!isMobileDevice) {
         // Desktop PC: 100% untouched native resolution
@@ -118,6 +129,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         transform: `rotate(90deg) scale(${scale})`,
         transformOrigin: 'center center',
         overflow: 'hidden',
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
       }
     : scale < 1
     ? {
@@ -129,6 +142,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         transform: `scale(${scale})`,
         transformOrigin: 'center center',
         overflow: 'hidden',
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
       }
     : {
         // Desktop PC view: completely unchanged, 100% native
