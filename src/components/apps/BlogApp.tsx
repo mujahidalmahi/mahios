@@ -114,99 +114,102 @@ export default function BlogApp({ posts }: BlogAppProps) {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {paginatedPosts.map((post, idx) => (
               <div
                 key={post.id}
                 onClick={(e) => handleOpenPost(e, post, idx)}
-                className="retro-box-outset bg-[#d4d0c8] p-3 flex flex-col justify-between hover:bg-white transition-all cursor-pointer group shadow-sm hover:shadow-md"
+                className="retro-box-outset bg-[#d4d0c8] p-2 sm:p-2.5 flex flex-col justify-between hover:bg-white transition-all cursor-pointer group shadow-xs min-w-0"
               >
-                <div className="space-y-2.5">
-                  {/* Thumbnail Cover (Strict 16:9 Aspect Ratio) */}
-                  {post.cover_image_url ? (
-                    <div className="w-full aspect-video retro-box-inset bg-black/5 overflow-hidden">
+                <div className="flex gap-2.5 sm:gap-3 items-start min-w-0">
+                  {/* Left Side: 1:1 Square Photo */}
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 aspect-square shrink-0 bg-black/5 retro-box-inset overflow-hidden relative rounded-2xs">
+                    {post.cover_image_url ? (
                       <img
                         src={post.cover_image_url}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       />
-                    </div>
-                  ) : (
-                    <div className="w-full aspect-video retro-box-inset bg-[#000080]/10 flex items-center justify-center text-[#000080]">
-                      <FileText className="w-8 h-8 opacity-60" />
-                    </div>
-                  )}
-
-                  {/* Metadata Row */}
-                  <div className="flex items-center justify-between text-[10px] text-gray-600 font-mono border-b border-gray-300 pb-1">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-blue-800" />
-                      <span>{post.read_time_minutes} min read</span>
-                    </div>
-                    {post.published_at && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#000080]">
+                        <FileText className="w-6 h-6 opacity-60" />
                       </div>
                     )}
                   </div>
 
-                  {/* Title & Excerpt */}
-                  <div>
-                    <h3 className="font-bold text-sm text-black group-hover:text-[#000080] leading-snug line-clamp-2">
+                  {/* Right Side: Details */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    {/* Metadata Row */}
+                    <div className="flex items-center justify-between text-[10px] text-gray-600 font-mono">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-blue-800" />
+                        <span>{post.read_time_minutes} min read</span>
+                      </div>
+                      {post.published_at && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>{new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-bold text-xs text-black group-hover:text-[#000080] line-clamp-1 leading-snug">
                       {post.title}
                     </h3>
-                    <p className="text-[11px] text-gray-700 mt-1 line-clamp-3 leading-relaxed">
+
+                    {/* Excerpt */}
+                    <p className="text-[11px] text-gray-700 line-clamp-2 leading-tight">
                       {post.excerpt}
                     </p>
                   </div>
+                </div>
 
-                  {/* Tags */}
-                  {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {post.tags.slice(0, 3).map((t, i) => (
+                {/* Bottom Bar: Tags & Actions */}
+                <div className="pt-1.5 mt-2 border-t border-gray-300 flex items-center justify-between gap-1 text-[10px] font-mono">
+                  {post.tags && post.tags.length > 0 ? (
+                    <div className="flex items-center gap-1 overflow-hidden">
+                      {post.tags.slice(0, 2).map((t, i) => (
                         <span
                           key={i}
-                          className="px-1.5 py-0.5 bg-black/5 border border-gray-400 rounded-2xs text-[9px] font-mono text-gray-700"
+                          className="px-1.5 py-0.2 bg-black/5 border border-gray-400 rounded-2xs text-[9px] text-gray-700 truncate"
                         >
                           #{t}
                         </span>
                       ))}
-                      {post.tags.length > 3 && (
-                        <span className="text-[9px] text-gray-500 font-mono">
-                          +{post.tags.length - 3}
+                      {post.tags.length > 2 && (
+                        <span className="text-[9px] text-gray-500 shrink-0">
+                          +{post.tags.length - 2}
                         </span>
                       )}
                     </div>
+                  ) : (
+                    <div />
                   )}
-                </div>
 
-                {/* Card Action Footer */}
-                <div className="pt-3 mt-3 border-t border-gray-300 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      handleOpenPost(e, post, idx);
-                    }}
-                    className="retro-btn px-2.5 py-1 font-bold text-[#000080] flex items-center gap-1.5 text-xs cursor-pointer hover:bg-blue-50"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>Read Note</span>
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => handleOpenPost(e, post, idx)}
+                      className="retro-btn px-2 py-0.5 font-bold text-[#000080] flex items-center gap-1 text-[10px] cursor-pointer hover:bg-blue-50"
+                    >
+                      <BookOpen className="w-3 h-3" />
+                      <span>Read</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playSound('click');
-                      setActiveSharePost(post);
-                    }}
-                    className="retro-btn px-2.5 py-1 text-[#000080] font-bold flex items-center gap-1.5 text-[11px] cursor-pointer hover:bg-blue-50 active:retro-btn-pressed"
-                    title="Share note on social media or copy link"
-                  >
-                    <Share2 className="w-3 h-3" />
-                    <span>Share</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playSound('click');
+                        setActiveSharePost(post);
+                      }}
+                      className="retro-btn px-1.5 py-0.5 text-gray-700 flex items-center gap-1 text-[10px] cursor-pointer hover:bg-blue-50 active:retro-btn-pressed"
+                      title="Share Note"
+                    >
+                      <Share2 className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

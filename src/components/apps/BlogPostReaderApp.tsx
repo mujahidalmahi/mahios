@@ -257,66 +257,69 @@ export default function BlogPostReaderApp({ post }: BlogPostReaderAppProps) {
 
       {/* Main Reading Area */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5">
-        {/* Article Cover Image (Strict 16:9 Aspect Ratio) */}
-        {post.cover_image_url && (
-          <div className="w-full max-h-48 sm:max-h-60 aspect-video retro-box-inset bg-black/10 overflow-hidden">
-            <img
-              src={post.cover_image_url}
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
-        {/* Article Header & Metadata */}
-        <div className="border-b border-gray-400/50 pb-4 space-y-3">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight drop-shadow-2xs">
-            {post.title}
-          </h1>
-
-          {/* Telemetry Bar */}
-          <div className="flex flex-wrap items-center gap-4 text-xs font-mono opacity-85">
-            <div className="flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-blue-600" />
-              <span className="font-bold">Mujahid Al Mahi</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{post.read_time_minutes} min read</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5" />
-              <span>{views} views</span>
-            </div>
-            {post.published_at && (
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        {/* Article Header with 1:1 Square Photo on Left, Details on Right */}
+        <div className="border-b border-gray-400/50 pb-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start">
+            {post.cover_image_url && (
+              <div className="w-24 h-24 sm:w-32 sm:h-32 aspect-square shrink-0 bg-black/10 rounded-2xs overflow-hidden border border-gray-300 retro-box-inset">
+                <img
+                  src={post.cover_image_url}
+                  alt={post.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
-          </div>
 
-          {/* Tag Pills */}
-          {post.tags && post.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <Tag className="w-3 h-3 opacity-60 mr-0.5" />
-              {post.tags.map((t, i) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 retro-box-outset bg-[#d4d0c8] text-black text-[10px] font-mono font-medium"
-                >
-                  #{t}
-                </span>
-              ))}
+            <div className="flex-1 min-w-0 space-y-2.5 w-full">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight drop-shadow-2xs">
+                {post.title}
+              </h1>
+
+              {/* Telemetry Bar */}
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-mono opacity-85">
+                <div className="flex items-center gap-1">
+                  <User className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="font-bold">Mujahid Al Mahi</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{post.read_time_minutes} min read</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>{views} views</span>
+                </div>
+                {post.published_at && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{new Date(post.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Tag Pills */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <Tag className="w-3 h-3 opacity-60 mr-0.5" />
+                  {post.tags.map((t, i) => (
+                    <span
+                      key={i}
+                      className="px-2 py-0.5 retro-box-outset bg-[#d4d0c8] text-black text-[10px] font-mono font-medium"
+                    >
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Formatted HTML Article Content with Safe Hyperlinks & 16:9 Image Enforcement */}
+        {/* Formatted HTML Article Content with Safe Hyperlinks */}
         <div
           onClick={handleContentClick}
           dangerouslySetInnerHTML={{ __html: parsed.cleanContentHtml }}
-          className={`prose prose-sm sm:prose max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} ${getProseThemeClasses()} [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_img]:aspect-video [&_img]:w-full [&_img]:object-cover [&_img]:retro-box-inset [&_img]:my-4 [&_figure]:my-4 [&_figure_img]:aspect-video [&_figure_img]:w-full [&_figure_img]:object-cover`}
+          className={`prose prose-sm sm:prose max-w-none leading-relaxed space-y-3 ${getFontSizeClasses()} ${getProseThemeClasses()} [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_img]:max-w-full [&_img]:h-auto [&_img]:object-contain [&_img]:retro-box-inset [&_img]:my-4 [&_figure]:my-4 [&_figure_img]:max-w-full [&_figure_img]:h-auto [&_figure_img]:object-contain`}
         />
 
         {/* Interactive Bottom Bar */}

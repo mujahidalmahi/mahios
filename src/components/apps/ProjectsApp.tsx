@@ -253,7 +253,7 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
 
       {/* GRID VIEW */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {paginatedProjects.map((p) => (
             <div
               key={p.id}
@@ -261,11 +261,11 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
                 playSound('open');
                 setSelectedProject(p);
               }}
-              className="p-2.5 sm:p-3 bg-[#f9fafb] retro-box-outset hover:bg-[#edf2f7] cursor-pointer group flex flex-col justify-between transition-all min-w-0"
+              className="p-2 sm:p-2.5 bg-[#f9fafb] retro-box-outset hover:bg-[#edf2f7] cursor-pointer group flex flex-col justify-between transition-all min-w-0"
             >
-              <div className="space-y-2 min-w-0">
-                {/* Thumbnail (16:9 Landscape Ratio) */}
-                <div className="w-full aspect-video max-h-36 bg-gray-200 retro-box-inset overflow-hidden relative">
+              <div className="flex gap-2.5 sm:gap-3 items-start min-w-0">
+                {/* Left Side: 1:1 Square Photo */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 aspect-square shrink-0 bg-gray-200 retro-box-inset overflow-hidden relative rounded-2xs">
                   {p.thumbnail_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -275,29 +275,36 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <FileCode className="w-8 h-8" />
+                      <FileCode className="w-6 h-6" />
                     </div>
                   )}
 
                   {p.featured && (
-                    <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-amber-400 text-black text-[9px] font-bold rounded-2xs flex items-center gap-0.5 shadow-xs">
-                      <Star className="w-2.5 h-2.5 fill-black" /> Featured
+                    <span className="absolute top-1 right-1 px-1 py-0.2 bg-amber-400 text-black text-[8px] font-bold rounded-2xs flex items-center gap-0.5 shadow-xs">
+                      <Star className="w-2 h-2 fill-black" />
                     </span>
                   )}
                 </div>
 
-                <div>
-                  <span className="text-[10px] font-mono text-blue-700 font-bold uppercase">{p.category}</span>
+                {/* Right Side: Details */}
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-mono text-blue-700 font-bold uppercase truncate">{p.category}</span>
+                    {p.featured && (
+                      <span className="text-[9px] font-bold text-amber-700 font-mono shrink-0">★ Featured</span>
+                    )}
+                  </div>
                   <h3 className="font-bold text-xs text-[#000080] line-clamp-1 group-hover:underline">
                     {p.title}
                   </h3>
-                  <p className="text-[11px] text-gray-600 line-clamp-2 mt-1">
+                  <p className="text-[11px] text-gray-600 line-clamp-2 leading-tight">
                     {p.summary}
                   </p>
                 </div>
               </div>
 
-              <div className="pt-2 mt-2 border-t border-gray-300 flex items-center justify-between text-[10px] text-gray-500 font-mono">
+              {/* Card Bottom Bar */}
+              <div className="pt-1.5 mt-2 border-t border-gray-300 flex items-center justify-between text-[10px] text-gray-500 font-mono">
                 <button
                   type="button"
                   onClick={(e) => handleToggleStar(p.id, e)}
@@ -406,29 +413,30 @@ export default function ProjectsApp({ projects, initialProjectId }: ProjectsAppP
 
             {/* Modal Sunken Content */}
             <div className="retro-box-inset bg-white p-3 sm:p-5 m-1 overflow-y-auto space-y-3 sm:space-y-4 flex-1 text-xs break-words">
-              {selectedProject.thumbnail_url && (
-                <div className="flex justify-center">
-                  <div className="w-full max-w-sm aspect-video max-h-44 bg-gray-100 rounded-2xs overflow-hidden border border-gray-300 retro-box-inset">
+              {/* Header with 1:1 Square Photo on Left, Details on Right */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start border-b border-gray-200 pb-3">
+                {selectedProject.thumbnail_url && (
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 aspect-square shrink-0 bg-gray-100 rounded-2xs overflow-hidden border border-gray-300 retro-box-inset">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={selectedProject.thumbnail_url} alt={selectedProject.title} className="w-full h-full object-cover" />
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase text-blue-700 font-bold">{selectedProject.category}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyLink(selectedProject)}
-                    className="retro-btn px-2 py-0.5 text-[10px] flex items-center gap-1 text-gray-700 cursor-pointer"
-                  >
-                    {copiedLink ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedLink ? 'Link Copied' : 'Share Link'}</span>
-                  </button>
+                <div className="flex-1 min-w-0 space-y-1.5 w-full">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase text-blue-700 font-bold">{selectedProject.category}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(selectedProject)}
+                      className="retro-btn px-2 py-0.5 text-[10px] flex items-center gap-1 text-gray-700 cursor-pointer"
+                    >
+                      {copiedLink ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedLink ? 'Link Copied' : 'Share Link'}</span>
+                    </button>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-[#000080] break-words">{selectedProject.title}</h2>
+                  <p className="text-gray-700 text-xs break-words leading-relaxed">{selectedProject.summary}</p>
                 </div>
-                <h2 className="text-base sm:text-lg font-bold text-[#000080] break-words">{selectedProject.title}</h2>
-                <p className="text-gray-700 text-xs break-words">{selectedProject.summary}</p>
               </div>
 
               {/* Action Buttons */}
