@@ -144,9 +144,9 @@ interface WallpaperPreset {
   bgStyle: React.CSSProperties;
 }
 
-const WALLPAPER_PRESETS: WallpaperPreset[] = [
+const OPTIONAL_WALLPAPER_PRESETS: WallpaperPreset[] = [
   {
-    id: 'default',
+    id: 'cosmic-obsidian',
     name: 'Cosmic Obsidian',
     preview: 'bg-[#0f172a]',
     bgStyle: {
@@ -261,7 +261,7 @@ export default function MobileShell({ data }: MobileShellProps) {
   const [isOnline, setIsOnline] = useState(true);
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
-  const [selectedWallpaperId, setSelectedWallpaperId] = useState<string>('default');
+  const [selectedWallpaperId, setSelectedWallpaperId] = useState<string>('system');
 
   // Search & Notifications
   const [searchQuery, setSearchQuery] = useState('');
@@ -288,11 +288,15 @@ export default function MobileShell({ data }: MobileShellProps) {
     }, 2800);
   };
 
-  // Restore saved wallpaper preference
+  // Restore saved wallpaper preference (defaults to system desktop wallpaper)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedWp = localStorage.getItem('mahios_mobile_wallpaper');
-      if (savedWp) setSelectedWallpaperId(savedWp);
+      if (savedWp && savedWp !== 'default') {
+        setSelectedWallpaperId(savedWp);
+      } else {
+        setSelectedWallpaperId('system');
+      }
       setIsOnline(navigator.onLine);
     }
   }, []);
@@ -571,10 +575,25 @@ export default function MobileShell({ data }: MobileShellProps) {
     showToast('Wallpaper Updated', 'New home screen theme applied');
   };
 
+  const wallpaperPresets = useMemo<WallpaperPreset[]>(() => {
+    return [
+      {
+        id: 'system',
+        name: 'System Desktop Wallpaper',
+        preview: 'bg-slate-900',
+        bgStyle: getWallpaperStyle(data.settings?.desktop_background_color),
+      },
+      ...OPTIONAL_WALLPAPER_PRESETS,
+    ];
+  }, [data.settings?.desktop_background_color]);
+
   const activeWallpaper = useMemo(() => {
-    const found = WALLPAPER_PRESETS.find((w) => w.id === selectedWallpaperId);
+    if (!selectedWallpaperId || selectedWallpaperId === 'system' || selectedWallpaperId === 'default') {
+      return getWallpaperStyle(data.settings?.desktop_background_color);
+    }
+    const found = wallpaperPresets.find((w) => w.id === selectedWallpaperId);
     return found ? found.bgStyle : getWallpaperStyle(data.settings?.desktop_background_color);
-  }, [selectedWallpaperId, data.settings?.desktop_background_color]);
+  }, [selectedWallpaperId, wallpaperPresets, data.settings?.desktop_background_color]);
 
   const handleShareApp = () => {
     playSound('click');
@@ -818,36 +837,17 @@ export default function MobileShell({ data }: MobileShellProps) {
         ) : (
           /* ===================================================== */
           /* 4. HOME SCREEN: PURE WALLPAPER ONLY                   */
-          /* Clean wallpaper with gesture triggers & quick search  */
+          /* Clean wallpaper without any top or center clutter     */
           /* ===================================================== */
           <div
             onContextMenu={(e) => {
               e.preventDefault();
               setIsWallpaperPickerOpen(true);
             }}
-            className="relative z-10 flex-1 flex flex-col justify-between p-4 cursor-default select-none"
+            onDoubleClick={() => setIsWallpaperPickerOpen(true)}
+            className="relative z-10 flex-1 flex flex-col justify-end p-4 cursor-default select-none"
           >
-            {/* Quick Spotlight Pull-down Indicator */}
-            <div className="pt-2 flex justify-center">
-              <button
-                type="button"
-                onClick={() => {
-                  playSound('open');
-                  setIsAppDrawerOpen(true);
-                }}
-                className="px-3.5 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/15 text-white/80 hover:text-white text-xs font-bold flex items-center gap-2 shadow-lg cursor-pointer active:scale-95 transition-all"
-              >
-                <Search className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Quick Search / Spotlight</span>
-              </button>
-            </div>
-
-            {/* Bottom Wallpaper Long-Press Hint */}
-            <div className="pb-2 text-center">
-              <span className="text-[10px] font-mono font-medium text-white/50 tracking-wider">
-                MahiOS Pocket 2.0 • Touch OS
-              </span>
-            </div>
+            {/* Pure desktop wallpaper displayed unobstructed */}
           </div>
         )}
       </div>
@@ -1387,8 +1387,10 @@ export default function MobileShell({ data }: MobileShellProps) {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {WALLPAPER_PRESETS.map((wp) => {
-                const isSelected = selectedWallpaperId === wp.id;
+              {wallpaperPresets.map((wp) => {
+                const isSelected =
+                  selectedWallpaperId === wp.id ||
+                  (wp.id === 'system' && (selectedWallpaperId === 'system' || selectedWallpaperId === 'default' || !selectedWallpaperId));
                 return (
                   <div
                     key={wp.id}
@@ -1399,7 +1401,7 @@ export default function MobileShell({ data }: MobileShellProps) {
                   >
                     <div
                       style={wp.bgStyle}
-                      className="w-full h-24 rounded-xl shadow-xs border border-white/20 flex items-center justify-center text-white"
+                      className="w-full h-24 rounded-xl shadow-xs border border-white/20 flex items-center justify-center text-white bg-cover bg-center"
                     >
                       {isSelected && <Check className="w-5 h-5 bg-blue-600 rounded-full p-0.5 text-white" />}
                     </div>

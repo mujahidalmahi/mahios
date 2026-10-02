@@ -30,6 +30,12 @@ export function getWallpaperStyle(bgValue?: string): React.CSSProperties {
     };
   }
 
+  if (clean.includes('gradient(')) {
+    return {
+      background: clean,
+    };
+  }
+
   return {
     backgroundColor: clean,
   };

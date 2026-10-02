@@ -144,9 +144,9 @@ interface WallpaperPreset {
   bgStyle: React.CSSProperties;
 }
 
-const WALLPAPER_PRESETS: WallpaperPreset[] = [
+const OPTIONAL_WALLPAPER_PRESETS: WallpaperPreset[] = [
   {
-    id: 'default',
+    id: 'cosmic-obsidian',
     name: 'Cosmic Obsidian',
     preview: 'bg-[#0f172a]',
     bgStyle: {
@@ -260,7 +260,7 @@ export default function TabletShell({ data }: TabletShellProps) {
   const [isOnline, setIsOnline] = useState(true);
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
-  const [selectedWallpaperId, setSelectedWallpaperId] = useState<string>('default');
+  const [selectedWallpaperId, setSelectedWallpaperId] = useState<string>('system');
 
   // Search & Notifications
   const [searchQuery, setSearchQuery] = useState('');
@@ -285,11 +285,15 @@ export default function TabletShell({ data }: TabletShellProps) {
     }, 2800);
   };
 
-  // Restore saved wallpaper preference
+  // Restore saved wallpaper preference (defaults to system desktop wallpaper)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedWp = localStorage.getItem('mahios_tablet_wallpaper');
-      if (savedWp) setSelectedWallpaperId(savedWp);
+      if (savedWp && savedWp !== 'default') {
+        setSelectedWallpaperId(savedWp);
+      } else {
+        setSelectedWallpaperId('system');
+      }
       setIsOnline(navigator.onLine);
     }
   }, []);
@@ -573,10 +577,25 @@ export default function TabletShell({ data }: TabletShellProps) {
     showToast('Wallpaper Updated', 'New tablet theme applied');
   };
 
+  const wallpaperPresets = useMemo<WallpaperPreset[]>(() => {
+    return [
+      {
+        id: 'system',
+        name: 'System Desktop Wallpaper',
+        preview: 'bg-slate-900',
+        bgStyle: getWallpaperStyle(data.settings?.desktop_background_color),
+      },
+      ...OPTIONAL_WALLPAPER_PRESETS,
+    ];
+  }, [data.settings?.desktop_background_color]);
+
   const activeWallpaper = useMemo(() => {
-    const found = WALLPAPER_PRESETS.find((w) => w.id === selectedWallpaperId);
+    if (!selectedWallpaperId || selectedWallpaperId === 'system' || selectedWallpaperId === 'default') {
+      return getWallpaperStyle(data.settings?.desktop_background_color);
+    }
+    const found = wallpaperPresets.find((w) => w.id === selectedWallpaperId);
     return found ? found.bgStyle : getWallpaperStyle(data.settings?.desktop_background_color);
-  }, [selectedWallpaperId, data.settings?.desktop_background_color]);
+  }, [selectedWallpaperId, wallpaperPresets, data.settings?.desktop_background_color]);
 
   const handleShareApp = () => {
     playSound('click');
@@ -1199,8 +1218,10 @@ export default function TabletShell({ data }: TabletShellProps) {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
-              {WALLPAPER_PRESETS.map((wp) => {
-                const isSelected = selectedWallpaperId === wp.id;
+              {wallpaperPresets.map((wp) => {
+                const isSelected =
+                  selectedWallpaperId === wp.id ||
+                  (wp.id === 'system' && (selectedWallpaperId === 'system' || selectedWallpaperId === 'default' || !selectedWallpaperId));
                 return (
                   <button
                     key={wp.id}
@@ -1212,7 +1233,7 @@ export default function TabletShell({ data }: TabletShellProps) {
                   >
                     <div
                       style={wp.bgStyle}
-                      className="w-full h-20 rounded-xl shadow-inner border border-white/20 flex items-center justify-center"
+                      className="w-full h-20 rounded-xl shadow-inner border border-white/20 flex items-center justify-center bg-cover bg-center"
                     >
                       {isSelected && <Check className="w-6 h-6 text-white drop-shadow-md" />}
                     </div>
