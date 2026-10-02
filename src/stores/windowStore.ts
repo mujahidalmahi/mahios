@@ -65,12 +65,15 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       }
     }
 
-    const desiredWidth = app.default_width || 760;
-    const desiredHeight = app.default_height || 460;
+    const isDesktopRes = vw >= 1200;
+    const desiredWidth = app.default_width || (isDesktopRes ? 780 : 700);
+    const desiredHeight = app.default_height || (isDesktopRes ? 520 : 440);
 
-    // Constrain width and height to fit screen gracefully
-    const computedWidth = Math.min(desiredWidth, Math.max(320, vw - 40));
-    const computedHeight = Math.min(desiredHeight, Math.max(280, vh - 60));
+    // Constrain width and height so floating window sits comfortably between icon columns without covering them
+    const maxWindowWidth = vw >= 1024 ? (isDesktopRes ? Math.min(desiredWidth, vw - 360) : 700) : vw - 40;
+    const maxWindowHeight = vh >= 540 ? (isDesktopRes ? Math.min(desiredHeight, vh - 100) : 440) : vh - 60;
+    const computedWidth = Math.min(desiredWidth, Math.max(320, maxWindowWidth));
+    const computedHeight = Math.min(desiredHeight, Math.max(260, maxWindowHeight));
 
     // Centered spawn coordinates
     const centeredX = Math.max(10, Math.round((vw - computedWidth) / 2) + cascadeOffset);

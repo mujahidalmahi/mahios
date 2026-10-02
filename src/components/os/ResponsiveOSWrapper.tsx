@@ -14,8 +14,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
   const [mounted, setMounted] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
   const [scale, setScale] = useState(1);
-  const [virtualDim, setVirtualDim] = useState({ w: 1024, h: 520 });
-  const [screenDim, setScreenDim] = useState({ w: 0, h: 0 });
+  const [virtualDim] = useState({ w: 1024, h: 540 });
+  const [viewportDim, setViewportDim] = useState({ w: 0, h: 0 });
   const [showKeyboardHint, setShowKeyboardHint] = useState(false);
   const { isBooting, finishBoot } = useBootStore();
 
@@ -26,6 +26,7 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       if (typeof window === 'undefined') return;
       const w = window.innerWidth;
       const h = window.innerHeight;
+      setViewportDim({ w, h });
 
       // Identify mobile or tablet device - strictly excluding desktop PCs
       const isMobileDevice =
@@ -37,8 +38,6 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         // Desktop PC: 100% untouched native resolution
         setIsRotated(false);
         setScale(1);
-        setVirtualDim({ w, h });
-        setScreenDim({ w, h });
         return;
       }
 
@@ -46,31 +45,17 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       const shouldRotate = h > w;
       setIsRotated(shouldRotate);
 
-      // Use stable physical screen dimensions so virtual keyboard opening does not squash the desktop
-      const screenMax = Math.max(window.screen?.width || w, window.screen?.height || h);
-      const screenMin = Math.min(window.screen?.width || w, window.screen?.height || h);
-      setScreenDim({
-        w: shouldRotate ? screenMin : screenMax,
-        h: shouldRotate ? screenMax : screenMin,
-      });
+      // Available landscape width and height from the actual visible viewport
+      const availW = shouldRotate ? h : w;
+      const availH = shouldRotate ? w : h;
 
-      const landW = screenMax;
-      const landH = screenMin;
+      // Fixed 1024x540 reference desktop canvas:
+      // Scale uniformly so that 100% of the desktop fits within the screen on ANY device
+      const scaleX = availW / 1024;
+      const scaleY = availH / 540;
+      const computedScale = Math.min(scaleX, scaleY);
 
-      // Reference canvas height (520px) matching the reference desktop layout
-      // Ensures all 7 rows of icons, taskbar, and floating windows fit with zero collision
-      const BASE_HEIGHT = 520;
-
-      if (landH < BASE_HEIGHT) {
-        const computedScale = Math.min(1, landH / BASE_HEIGHT);
-        const computedVirtualW = Math.max(1024, Math.round(landW / computedScale));
-        const computedVirtualH = BASE_HEIGHT;
-        setScale(computedScale);
-        setVirtualDim({ w: computedVirtualW, h: computedVirtualH });
-      } else {
-        setScale(1);
-        setVirtualDim({ w: landW, h: landH });
-      }
+      setScale(computedScale);
 
       // Attempt native orientation lock if supported
       if (screen.orientation && 'lock' in screen.orientation) {
@@ -128,8 +113,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         position: 'fixed',
         width: `${virtualDim.w}px`,
         height: `${virtualDim.h}px`,
-        left: `${(screenDim.w - virtualDim.w) / 2}px`,
-        top: `${(screenDim.h - virtualDim.h) / 2}px`,
+        left: `${(viewportDim.w - virtualDim.w) / 2}px`,
+        top: `${(viewportDim.h - virtualDim.h) / 2}px`,
         transform: `rotate(90deg) scale(${scale})`,
         transformOrigin: 'center center',
         overflow: 'hidden',
@@ -139,8 +124,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         position: 'fixed',
         width: `${virtualDim.w}px`,
         height: `${virtualDim.h}px`,
-        left: `${(screenDim.w - virtualDim.w) / 2}px`,
-        top: `${(screenDim.h - virtualDim.h) / 2}px`,
+        left: `${(viewportDim.w - virtualDim.w) / 2}px`,
+        top: `${(viewportDim.h - virtualDim.h) / 2}px`,
         transform: `scale(${scale})`,
         transformOrigin: 'center center',
         overflow: 'hidden',
