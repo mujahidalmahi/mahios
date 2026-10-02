@@ -29,7 +29,7 @@ export default async function HomePage() {
 
   return (
     <main className="w-full h-[100dvh] max-h-[100dvh] overflow-hidden fixed inset-0">
-      {/* 1. Interactive MahiOS Graphical Operating System (Desktop, Mobile, Tablet) */}
+      {/* 1. Interactive MahiOS Graphical Operating System (Desktop Web OS) */}
       <ResponsiveOSWrapper data={data} />
 
       {/* 2. Exhaustive Semantic SSR Crawling Layer (Indexed by Google, Bing, and Search Engine Spiders) */}

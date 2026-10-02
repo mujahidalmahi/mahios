@@ -16,7 +16,7 @@ export interface WindowState {
   prevSize?: { width: number; height: number };
 }
 
-export type ViewportMode = 'crt-desktop' | 'tablet' | 'mobile';
+export type ViewportMode = 'crt-desktop';
 
 export interface SystemTimeState {
   hours: string;

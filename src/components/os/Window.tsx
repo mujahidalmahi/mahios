@@ -61,6 +61,20 @@ function WindowComponent({ window: win, children }: WindowProps) {
     };
   };
 
+  // Handle Touch Drag Start for Touch Devices
+  const handleTouchStartTitle = (e: React.TouchEvent) => {
+    if (win.isMaximized || e.touches.length === 0) return;
+    focusWindow(win.appId);
+    setIsDragging(true);
+    const touch = e.touches[0];
+    dragRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startPosX: win.position.x,
+      startPosY: win.position.y,
+    };
+  };
+
   // Handle Resize Start (8-way)
   const handleMouseDownResize = (e: React.MouseEvent, direction: ResizeDirection) => {
     e.stopPropagation();
@@ -165,14 +179,40 @@ function WindowComponent({ window: win, children }: WindowProps) {
       resizeRef.current = null;
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDragging && dragRef.current && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const maxW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+        const maxH = typeof window !== 'undefined' ? window.innerHeight - 34 : 800;
+        const dx = touch.clientX - dragRef.current.startX;
+        const dy = touch.clientY - dragRef.current.startY;
+        const clampedX = Math.max(0, Math.min(maxW - 80, dragRef.current.startPosX + dx));
+        const clampedY = Math.max(0, Math.min(maxH - 30, dragRef.current.startPosY + dy));
+
+        updateWindowPosition(win.appId, {
+          x: clampedX,
+          y: clampedY,
+        });
+      }
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      dragRef.current = null;
+    };
+
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: true });
+      document.addEventListener('touchend', handleTouchEnd);
     }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isDragging, isResizing, snapPreview, win.appId, win.position.x, win.position.y, win.size.width, win.size.height, updateWindowPosition, updateWindowSize, snapWindow]);
 
@@ -221,6 +261,7 @@ function WindowComponent({ window: win, children }: WindowProps) {
         {/* Title Bar */}
         <div
           onMouseDown={handleMouseDownTitle}
+          onTouchStart={handleTouchStartTitle}
           onDoubleClick={() => {
             playSound('click');
             maximizeWindow(win.appId);

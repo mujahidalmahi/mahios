@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { BiographyDatabaseData } from '@/types/database';
-import { ViewportMode } from '@/types/os';
 import { useBootStore } from '@/stores/bootStore';
 import Desktop from './Desktop';
-import MobileShell from '@/components/mobile/MobileShell';
-import TabletShell from '@/components/tablet/TabletShell';
 import BootScreen from './BootScreen';
 
 interface ResponsiveOSWrapperProps {
@@ -14,23 +11,11 @@ interface ResponsiveOSWrapperProps {
 }
 
 export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) {
-  const [viewportMode, setViewportMode] = useState<ViewportMode>('crt-desktop');
   const [mounted, setMounted] = useState(false);
   const { isBooting, finishBoot } = useBootStore();
 
   useEffect(() => {
     setMounted(true);
-
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 768) {
-        setViewportMode('mobile');
-      } else if (width < 1024) {
-        setViewportMode('tablet');
-      } else {
-        setViewportMode('crt-desktop');
-      }
-    };
 
     // If deep-link or hash route is requested, bypass boot screen for instant visitor access
     if (typeof window !== 'undefined') {
@@ -40,10 +25,6 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         finishBoot();
       }
     }
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [finishBoot]);
 
   if (!mounted) {
@@ -68,17 +49,10 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         />
       )}
 
-      {/* Responsive Viewport Rendering */}
-      {viewportMode === 'mobile' ? (
-        <MobileShell data={data} />
-      ) : viewportMode === 'tablet' ? (
-        <TabletShell data={data} />
-      ) : (
-        /* Native Full-Screen Web OS Desktop */
-        <div className="w-full h-full relative overflow-hidden">
-          <Desktop data={data} />
-        </div>
-      )}
+      {/* Native Full-Screen Web OS Desktop (Universal across all devices) */}
+      <div className="w-full h-full relative overflow-hidden">
+        <Desktop data={data} />
+      </div>
     </div>
   );
 }

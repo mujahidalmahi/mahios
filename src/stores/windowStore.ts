@@ -55,17 +55,19 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     const desiredWidth = app.default_width || 780;
     const desiredHeight = app.default_height || 540;
 
+    const isSmallScreen = vw < 768;
+
     // Constrain width and height to fit screen gracefully
-    const computedWidth = Math.min(desiredWidth, Math.max(320, vw - 40));
-    const computedHeight = Math.min(desiredHeight, Math.max(280, vh - 100));
+    const computedWidth = isSmallScreen ? vw : Math.min(desiredWidth, Math.max(320, vw - 40));
+    const computedHeight = isSmallScreen ? vh - 34 : Math.min(desiredHeight, Math.max(280, vh - 100));
 
     // Centered spawn coordinates
-    const centeredX = Math.max(10, Math.round((vw - computedWidth) / 2) + cascadeOffset);
-    const centeredY = Math.max(10, Math.round((vh - 34 - computedHeight) / 2) + cascadeOffset);
+    const centeredX = isSmallScreen ? 0 : Math.max(10, Math.round((vw - computedWidth) / 2) + cascadeOffset);
+    const centeredY = isSmallScreen ? 0 : Math.max(10, Math.round((vh - 34 - computedHeight) / 2) + cascadeOffset);
 
     // Final safety clamps within visible area
-    const clampedX = Math.max(10, Math.min(vw - computedWidth - 10, centeredX));
-    const clampedY = Math.max(10, Math.min(vh - computedHeight - 44, centeredY));
+    const clampedX = isSmallScreen ? 0 : Math.max(10, Math.min(vw - computedWidth - 10, centeredX));
+    const clampedY = isSmallScreen ? 0 : Math.max(10, Math.min(vh - computedHeight - 44, centeredY));
 
     const newWindow: WindowState = {
       id: `win-${app.app_id}-${Date.now()}`,
@@ -75,7 +77,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       componentKey: app.component_key,
       isOpen: true,
       isMinimized: false,
-      isMaximized: false,
+      isMaximized: isSmallScreen,
       zIndex: newZ,
       position: {
         x: clampedX,
