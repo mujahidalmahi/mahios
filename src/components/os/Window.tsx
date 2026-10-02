@@ -93,15 +93,20 @@ function WindowComponent({ window: win, children }: WindowProps) {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const isRotated = typeof document !== 'undefined' && document.querySelector('[data-auto-rotated="true"]') !== null;
+      const container = typeof document !== 'undefined' ? document.querySelector('[data-desktop-wrapper="true"]') : null;
+      const isRotated = container?.getAttribute('data-auto-rotated') === 'true';
+      const scale = parseFloat(container?.getAttribute('data-scale') || '1') || 1;
+      const virtualW = parseFloat(container?.getAttribute('data-virtual-w') || '');
+      const virtualH = parseFloat(container?.getAttribute('data-virtual-h') || '');
+
       const rawW = typeof window !== 'undefined' ? window.innerWidth : 1200;
       const rawH = typeof window !== 'undefined' ? window.innerHeight : 800;
-      const maxW = isRotated ? Math.max(rawW, rawH) : rawW;
-      const maxH = (isRotated ? Math.min(rawW, rawH) : rawH) - 34;
+      const maxW = virtualW || (isRotated ? Math.max(rawW, rawH) : rawW);
+      const maxH = (virtualH || (isRotated ? Math.min(rawW, rawH) : rawH)) - 34;
 
       if (isDragging && dragRef.current) {
-        let dx = e.clientX - dragRef.current.startX;
-        let dy = e.clientY - dragRef.current.startY;
+        let dx = (e.clientX - dragRef.current.startX) / scale;
+        let dy = (e.clientY - dragRef.current.startY) / scale;
         if (isRotated) {
           const screenDx = dx;
           const screenDy = dy;
@@ -130,8 +135,8 @@ function WindowComponent({ window: win, children }: WindowProps) {
       }
 
       if (isResizing && resizeRef.current) {
-        let dx = e.clientX - resizeRef.current.startX;
-        let dy = e.clientY - resizeRef.current.startY;
+        let dx = (e.clientX - resizeRef.current.startX) / scale;
+        let dy = (e.clientY - resizeRef.current.startY) / scale;
         if (isRotated) {
           const screenDx = dx;
           const screenDy = dy;
@@ -199,14 +204,19 @@ function WindowComponent({ window: win, children }: WindowProps) {
       if (isDragging && dragRef.current && e.touches.length > 0) {
         if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
-        const isRotated = typeof document !== 'undefined' && document.querySelector('[data-auto-rotated="true"]') !== null;
+        const container = typeof document !== 'undefined' ? document.querySelector('[data-desktop-wrapper="true"]') : null;
+        const isRotated = container?.getAttribute('data-auto-rotated') === 'true';
+        const scale = parseFloat(container?.getAttribute('data-scale') || '1') || 1;
+        const virtualW = parseFloat(container?.getAttribute('data-virtual-w') || '');
+        const virtualH = parseFloat(container?.getAttribute('data-virtual-h') || '');
+
         const rawW = typeof window !== 'undefined' ? window.innerWidth : 1200;
         const rawH = typeof window !== 'undefined' ? window.innerHeight : 800;
-        const maxW = isRotated ? Math.max(rawW, rawH) : rawW;
-        const maxH = (isRotated ? Math.min(rawW, rawH) : rawH) - 34;
+        const maxW = virtualW || (isRotated ? Math.max(rawW, rawH) : rawW);
+        const maxH = (virtualH || (isRotated ? Math.min(rawW, rawH) : rawH)) - 34;
 
-        let dx = touch.clientX - dragRef.current.startX;
-        let dy = touch.clientY - dragRef.current.startY;
+        let dx = (touch.clientX - dragRef.current.startX) / scale;
+        let dy = (touch.clientY - dragRef.current.startY) / scale;
         if (isRotated) {
           const screenDx = dx;
           const screenDy = dy;

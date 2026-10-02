@@ -13,35 +13,59 @@ interface ResponsiveOSWrapperProps {
 export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) {
   const [mounted, setMounted] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [virtualDim, setVirtualDim] = useState({ w: 1024, h: 520 });
   const [screenDim, setScreenDim] = useState({ w: 0, h: 0 });
   const { isBooting, finishBoot } = useBootStore();
 
   useEffect(() => {
     setMounted(true);
 
-    const updateOrientation = () => {
+    const updateOrientationAndScale = () => {
       if (typeof window === 'undefined') return;
       const w = window.innerWidth;
       const h = window.innerHeight;
       setScreenDim({ w, h });
 
-      // Identify mobile or tablet device (touch enabled or dimension < 1024)
-      const isMobileOrTablet =
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-        Math.min(w, h) < 1024;
+      // Identify mobile or tablet device - strictly excluding desktop PCs
+      const isMobileDevice =
+        /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.matchMedia('(max-width: 1024px) and (pointer: coarse)').matches) ||
+        (w <= 1024 && h <= 600 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
 
-      // Always landscape for mobiles and tablets:
-      // If held in portrait (h > w), auto-rotate 90 degrees into landscape
-      if (isMobileOrTablet && h > w) {
-        setIsRotated(true);
-      } else {
+      if (!isMobileDevice) {
+        // Desktop PC: 100% untouched native resolution
         setIsRotated(false);
+        setScale(1);
+        setVirtualDim({ w, h });
+        return;
+      }
+
+      // Check if mobile device is held in portrait
+      const shouldRotate = h > w;
+      setIsRotated(shouldRotate);
+
+      // Available landscape width and height
+      const landW = shouldRotate ? h : w;
+      const landH = shouldRotate ? w : h;
+
+      // Reference canvas height (520px) matching the reference desktop layout
+      // Ensures all 7 rows of icons, taskbar, and floating windows fit with zero collision
+      const BASE_HEIGHT = 520;
+
+      if (landH < BASE_HEIGHT) {
+        const computedScale = Math.min(1, landH / BASE_HEIGHT);
+        const computedVirtualW = Math.max(1024, Math.round(landW / computedScale));
+        const computedVirtualH = BASE_HEIGHT;
+        setScale(computedScale);
+        setVirtualDim({ w: computedVirtualW, h: computedVirtualH });
+      } else {
+        setScale(1);
+        setVirtualDim({ w: landW, h: landH });
       }
 
       // Attempt native orientation lock if supported
-      if (isMobileOrTablet && screen.orientation && 'lock' in screen.orientation) {
+      if (screen.orientation && 'lock' in screen.orientation) {
         (screen.orientation as any).lock('landscape').catch(() => {});
       }
     };
@@ -55,12 +79,12 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
       }
     }
 
-    updateOrientation();
-    window.addEventListener('resize', updateOrientation);
-    window.addEventListener('orientationchange', updateOrientation);
+    updateOrientationAndScale();
+    window.addEventListener('resize', updateOrientationAndScale);
+    window.addEventListener('orientationchange', updateOrientationAndScale);
     return () => {
-      window.removeEventListener('resize', updateOrientation);
-      window.removeEventListener('orientationchange', updateOrientation);
+      window.removeEventListener('resize', updateOrientationAndScale);
+      window.removeEventListener('orientationchange', updateOrientationAndScale);
     };
   }, [finishBoot]);
 
@@ -75,19 +99,31 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
     );
   }
 
-  // When rotated 90deg, the container width becomes height and height becomes width
+  // Exact desktop canvas transform
   const desktopContainerStyle: React.CSSProperties = isRotated
     ? {
         position: 'fixed',
-        width: `${screenDim.h}px`,
-        height: `${screenDim.w}px`,
-        left: `${(screenDim.w - screenDim.h) / 2}px`,
-        top: `${(screenDim.h - screenDim.w) / 2}px`,
-        transform: 'rotate(90deg)',
+        width: `${virtualDim.w}px`,
+        height: `${virtualDim.h}px`,
+        left: `${(screenDim.w - virtualDim.w) / 2}px`,
+        top: `${(screenDim.h - virtualDim.h) / 2}px`,
+        transform: `rotate(90deg) scale(${scale})`,
+        transformOrigin: 'center center',
+        overflow: 'hidden',
+      }
+    : scale < 1
+    ? {
+        position: 'fixed',
+        width: `${virtualDim.w}px`,
+        height: `${virtualDim.h}px`,
+        left: `${(screenDim.w - virtualDim.w) / 2}px`,
+        top: `${(screenDim.h - virtualDim.h) / 2}px`,
+        transform: `scale(${scale})`,
         transformOrigin: 'center center',
         overflow: 'hidden',
       }
     : {
+        // Desktop PC view: completely unchanged, 100% native
         position: 'relative',
         width: '100%',
         height: '100%',
@@ -97,7 +133,11 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
   return (
     <div
       className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] max-w-[100vw] bg-[#18191c] flex items-center justify-center overflow-hidden select-none p-0 m-0"
+      data-desktop-wrapper="true"
       data-auto-rotated={isRotated ? 'true' : 'false'}
+      data-scale={scale}
+      data-virtual-w={virtualDim.w}
+      data-virtual-h={virtualDim.h}
     >
       {/* Boot Loading Screen Overlay */}
       {isBooting && (

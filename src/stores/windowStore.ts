@@ -52,31 +52,33 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     const rawVw = typeof window !== 'undefined' ? window.innerWidth : 1200;
     const rawVh = typeof window !== 'undefined' ? window.innerHeight : 800;
 
-    const isTouchOrMobile =
-      typeof window !== 'undefined' &&
-      ('ontouchstart' in window || navigator.maxTouchPoints > 0 || Math.min(rawVw, rawVh) < 1024);
+    let vw = rawVw;
+    let vh = rawVh;
 
-    // On mobile and tablet, the desktop is always horizontal landscape
-    const vw = isTouchOrMobile ? Math.max(rawVw, rawVh) : rawVw;
-    const vh = isTouchOrMobile ? Math.min(rawVw, rawVh) : rawVh;
+    if (typeof document !== 'undefined') {
+      const container = document.querySelector('[data-desktop-wrapper="true"]');
+      const vW = parseFloat(container?.getAttribute('data-virtual-w') || '');
+      const vH = parseFloat(container?.getAttribute('data-virtual-h') || '');
+      if (vW && vH) {
+        vw = vW;
+        vh = vH;
+      }
+    }
 
-    const desiredWidth = app.default_width || 780;
-    const desiredHeight = app.default_height || 540;
-
-    // In horizontal landscape on mobile (height < 500px), auto-maximize to fit screen
-    const isSmallLandscape = vh < 500;
+    const desiredWidth = app.default_width || 760;
+    const desiredHeight = app.default_height || 460;
 
     // Constrain width and height to fit screen gracefully
-    const computedWidth = isSmallLandscape ? vw : Math.min(desiredWidth, Math.max(320, vw - 40));
-    const computedHeight = isSmallLandscape ? vh - 34 : Math.min(desiredHeight, Math.max(280, vh - 80));
+    const computedWidth = Math.min(desiredWidth, Math.max(320, vw - 40));
+    const computedHeight = Math.min(desiredHeight, Math.max(280, vh - 60));
 
     // Centered spawn coordinates
-    const centeredX = isSmallLandscape ? 0 : Math.max(10, Math.round((vw - computedWidth) / 2) + cascadeOffset);
-    const centeredY = isSmallLandscape ? 0 : Math.max(10, Math.round((vh - 34 - computedHeight) / 2) + cascadeOffset);
+    const centeredX = Math.max(10, Math.round((vw - computedWidth) / 2) + cascadeOffset);
+    const centeredY = Math.max(10, Math.round((vh - 34 - computedHeight) / 2) + cascadeOffset);
 
     // Final safety clamps within visible area
-    const clampedX = isSmallLandscape ? 0 : Math.max(10, Math.min(vw - computedWidth - 10, centeredX));
-    const clampedY = isSmallLandscape ? 0 : Math.max(10, Math.min(vh - computedHeight - 44, centeredY));
+    const clampedX = Math.max(10, Math.min(vw - computedWidth - 10, centeredX));
+    const clampedY = Math.max(10, Math.min(vh - computedHeight - 44, centeredY));
 
     const newWindow: WindowState = {
       id: `win-${app.app_id}-${Date.now()}`,
@@ -86,7 +88,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       componentKey: app.component_key,
       isOpen: true,
       isMinimized: false,
-      isMaximized: isSmallLandscape,
+      isMaximized: false, // Authentic unmaximized desktop window, matching reference screenshot
       zIndex: newZ,
       position: {
         x: clampedX,

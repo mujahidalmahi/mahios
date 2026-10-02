@@ -65,13 +65,12 @@ const DesktopIcon = React.memo(function DesktopIcon({ app, onContextMenu }: Desk
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onContextMenu={handleContextMenu}
-      className="group w-[76px] h-[72px] p-1 flex flex-col items-center justify-start text-center select-none cursor-pointer focus:outline-none transition-none overflow-hidden"
+      className="group w-[74px] h-[66px] p-0.5 flex flex-col items-center justify-start text-center select-none cursor-pointer focus:outline-none transition-none overflow-hidden"
     >
       {/* Authentic Windows 95 Vintage OS Icon Sprite */}
-      <div className="relative w-8 h-8 flex items-center justify-center shrink-0 mb-0.5">
+      <div className="relative w-8 h-8 flex items-center justify-center shrink-0 mb-0">
         <VintageOsIcon appId={app.app_id} isSelected={isSelected} className="w-8 h-8" />
       </div>
-
 
       {/* Fixed-height Icon Label Container ensures horizontal and vertical alignment for 1 or 2 lines */}
       <div className="h-[28px] w-full flex items-center justify-center px-0.5">
