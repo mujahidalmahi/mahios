@@ -16,9 +16,19 @@ interface MobileAboutViewProps {
   about: AboutContent;
   philosophies?: PhilosophyItem[];
   phone?: string;
+  email?: string;
+  location?: string;
+  website?: string;
 }
 
-export default function MobileAboutView({ about, philosophies = [], phone }: MobileAboutViewProps) {
+export default function MobileAboutView({
+  about,
+  philosophies = [],
+  phone,
+  email,
+  location,
+  website,
+}: MobileAboutViewProps) {
   const displayPhone = phone || process.env.NEXT_PUBLIC_PHONE_NUMBER || '';
   const [activeTab, setActiveTab] = useState<'story' | 'interests' | 'principles' | 'radar' | 'trivia'>('story');
   const [dhakaTime, setDhakaTime] = useState('');
@@ -28,7 +38,7 @@ export default function MobileAboutView({ about, philosophies = [], phone }: Mob
   const [showVCardModal, setShowVCardModal] = useState(false);
   const { playSound } = useSystemStore();
 
-  const officialEmail = 'mujahidmahi.official@gmail.com';
+  const officialEmail = email || 'mujahidmahi.official@gmail.com';
 
   // Normalize interests from database
   const interestsList = useMemo(() => {
@@ -498,7 +508,7 @@ export default function MobileAboutView({ about, philosophies = [], phone }: Mob
                   <span>Location:</span>
                 </span>
                 <span className="text-slate-800 font-medium">
-                  {about.location || 'Narayanganj, Bangladesh'}
+                  {about.location || location || 'Narayanganj, Bangladesh'}
                 </span>
               </div>
 
@@ -508,12 +518,12 @@ export default function MobileAboutView({ about, philosophies = [], phone }: Mob
                   <span>Website:</span>
                 </span>
                 <a
-                  href="https://mujahidmahi.me"
+                  href={website?.startsWith('http') ? website : `https://${website || 'mujahidmahi.me'}`}
                   target="_blank"
                   rel="noreferrer"
                   className="font-mono text-blue-700 font-bold hover:underline"
                 >
-                  mujahidmahi.me
+                  {website?.replace(/^https?:\/\//, '') || 'mujahidmahi.me'}
                 </a>
               </div>
             </div>

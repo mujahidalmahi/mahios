@@ -7,11 +7,12 @@ import { useSystemStore } from '@/stores/systemStore';
 
 interface MobileFeedViewProps {
   feedPosts: FeedPost[];
+  authorAvatar?: string;
 }
 
 const ITEMS_PER_PAGE = 6;
 
-export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) {
+export default function MobileFeedView({ feedPosts = [], authorAvatar }: MobileFeedViewProps) {
   const { playSound } = useSystemStore();
   const [currentPage, setCurrentPage] = useState(1);
   const [likes, setLikes] = useState<Record<string, number>>(() =>
@@ -131,7 +132,7 @@ export default function MobileFeedView({ feedPosts = [] }: MobileFeedViewProps) 
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-2xs">
                       <img
-                        src="/images/formal.png"
+                        src={authorAvatar || '/images/formal.png'}
                         alt={post.author_name || 'Mujahid Al Mahi'}
                         className="w-full h-full object-cover"
                         onError={(e) => {

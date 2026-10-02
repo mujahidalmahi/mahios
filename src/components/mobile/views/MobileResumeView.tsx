@@ -54,9 +54,15 @@ export default function MobileResumeView({ resume, data }: MobileResumeViewProps
     const langText = cv.languages.map((l) => `* ${l.name} (${l.level})`).join('\n');
     const skillsText = `* ${cv.skills.join(', ')}`;
 
+    const refText = cv.references?.length
+      ? cv.references
+          .map((r) => `* ${r.name} - ${r.title}, ${r.company}\n  Relationship: ${r.relationship}\n  Email: ${r.email} | Phone: ${r.phone}`)
+          .join('\n\n')
+      : '';
+
     return `${cv.profile.fullName}
 ${cv.profile.title}
-${[cv.profile.email, cv.profile.location, cv.profile.website].filter(Boolean).join(' | ')}
+${[cv.profile.email, cv.profile.phone, cv.profile.location, cv.profile.website].filter(Boolean).join(' | ')}
 
 SUMMARY
 ----------------------------------------
@@ -84,7 +90,7 @@ ${certText}
 
 LANGUAGES
 ----------------------------------------
-${langText}`;
+${langText}${refText ? `\n\nREFERENCES\n----------------------------------------\n${refText}` : ''}`;
   }, [cv]);
 
   const handleCopy = async () => {

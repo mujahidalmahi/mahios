@@ -161,7 +161,10 @@ export default function MobileSocialsView({ socialLinks = [] }: MobileSocialsVie
                   onClick={() => playSound('open')}
                   className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
                 >
-                  <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center shrink-0 shadow-xs`}>
+                  <div
+                    className={`w-10 h-10 rounded-xl ${!link.accent_color ? bg : ''} flex items-center justify-center shrink-0 shadow-xs`}
+                    style={link.accent_color ? { backgroundColor: link.accent_color } : undefined}
+                  >
                     <Icon className={`w-5 h-5 ${text}`} />
                   </div>
                   <div className="min-w-0 flex-1">

@@ -239,6 +239,8 @@ export default function MobileShell({ data }: MobileShellProps) {
     return data.apps.filter((a) => !DESKTOP_ONLY_APPS.has(a.app_id)).slice(0, 4);
   });
   const [deepLinkedProjectId, setDeepLinkedProjectId] = useState<string | undefined>();
+  const [deepLinkedPostId, setDeepLinkedPostId] = useState<string | undefined>();
+  const [deepLinkedMilestoneId, setDeepLinkedMilestoneId] = useState<string | undefined>();
 
   // OS Overlays
   const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
@@ -366,6 +368,12 @@ export default function MobileShell({ data }: MobileShellProps) {
       if (result) {
         if (result.targetType === 'project' && result.project) {
           setDeepLinkedProjectId(result.project.slug || result.project.id);
+        }
+        if (result.targetType === 'blog_post' && result.blogPost) {
+          setDeepLinkedPostId(result.blogPost.slug || result.blogPost.id);
+        }
+        if (result.targetType === 'biography_chapter' && result.biographyChapter) {
+          setDeepLinkedMilestoneId(result.biographyChapter.id);
         }
         if (!DESKTOP_ONLY_APPS.has(result.targetApp.app_id)) {
           setActiveApp(result.targetApp);
@@ -616,7 +624,16 @@ export default function MobileShell({ data }: MobileShellProps) {
   const renderAppContent = (appId: string) => {
     switch (appId) {
       case 'about':
-        return <MobileAboutView about={data.about} philosophies={data.philosophies} phone={data.settings?.phone} />;
+        return (
+          <MobileAboutView
+            about={data.about}
+            philosophies={data.philosophies}
+            phone={data.settings?.phone}
+            email={data.settings?.email}
+            location={data.settings?.location}
+            website={data.settings?.site_title}
+          />
+        );
       case 'projects':
         return <MobileProjectsView projects={data.projects} initialProjectId={deepLinkedProjectId} />;
       case 'experience':
@@ -630,17 +647,26 @@ export default function MobileShell({ data }: MobileShellProps) {
       case 'resume':
         return <MobileResumeView resume={data.resumeConfig} data={data} />;
       case 'blog':
-        return <MobileBlogView posts={data.blogPosts} />;
+        return <MobileBlogView posts={data.blogPosts} initialPostId={deepLinkedPostId} />;
       case 'biography':
-        return <MobileBiographyView biographyTimeline={data.biographyTimeline} />;
+        return <MobileBiographyView biographyTimeline={data.biographyTimeline} initialMilestoneId={deepLinkedMilestoneId} />;
       case 'feed':
-        return <MobileFeedView feedPosts={data.feedPosts} />;
+        return <MobileFeedView feedPosts={data.feedPosts} authorAvatar={data.settings?.avatar_url || data.about?.avatar_url} />;
       case 'socials':
         return <MobileSocialsView socialLinks={data.socialLinks} />;
       case 'gallery':
         return <MobileGalleryView categories={data.galleryCategories} images={data.galleryImages} />;
       case 'contact':
-        return <MobileContactView />;
+        return (
+          <MobileContactView
+            contactEmail={data.settings?.email}
+            phone={data.settings?.phone}
+            location={data.settings?.location || data.about?.location}
+            githubUrl={data.settings?.github_url}
+            linkedinUrl={data.settings?.linkedin_url}
+            socialLinks={data.socialLinks}
+          />
+        );
       case 'entertainment':
         return <MobileEntertainmentView entertainment={data.entertainment} />;
       case 'philosophy':
@@ -660,7 +686,15 @@ export default function MobileShell({ data }: MobileShellProps) {
       case 'notepad':
         return <MobileNotepadView />;
       default:
-        return <MobileAboutView about={data.about} philosophies={data.philosophies} />;
+        return (
+          <MobileAboutView
+            about={data.about}
+            philosophies={data.philosophies}
+            phone={data.settings?.phone}
+            email={data.settings?.email}
+            location={data.settings?.location}
+          />
+        );
     }
   };
 
