@@ -9,6 +9,7 @@ import {
 import { GithubIcon } from '@/components/shared/Icons';
 import { Project } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import MobilePagination from '../MobilePagination';
 
 interface MobileProjectsViewProps {
   projects: Project[];
@@ -221,24 +222,6 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
               {activeProject.summary}
             </p>
           </div>
-
-          {/* Operational Metrics (Parity with Desktop Stats) */}
-          {(activeProject.stats?.users || activeProject.stats?.uptime) && (
-            <div className="grid grid-cols-2 gap-2 pt-0.5">
-              {activeProject.stats.users && (
-                <div className="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-center">
-                  <div className="text-sm font-black font-mono text-blue-700">{activeProject.stats.users}</div>
-                  <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Active Users</div>
-                </div>
-              )}
-              {activeProject.stats.uptime && (
-                <div className="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-center">
-                  <div className="text-sm font-black font-mono text-emerald-700">{activeProject.stats.uptime}</div>
-                  <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Uptime SLA</div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Action Links (Live Demo & Source Code) */}
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 pt-1">
@@ -539,22 +522,6 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
                   {project.summary}
                 </p>
 
-                {/* Stats Metrics (Users, Uptime) */}
-                {(project.stats?.users || project.stats?.uptime) && (
-                  <div className="flex items-center gap-2 text-[10px] font-mono pt-0.5">
-                    {project.stats.users && (
-                      <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 font-bold border border-blue-200">
-                        👥 {project.stats.users}
-                      </span>
-                    )}
-                    {project.stats.uptime && (
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
-                        ⚡ {project.stats.uptime}
-                      </span>
-                    )}
-                  </div>
-                )}
-
                 {project.tags && project.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-1 border-t border-slate-100">
                     {project.tags.slice(0, 4).map((tag, i) => (
@@ -579,33 +546,14 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
       </div>
 
       {/* Bottom Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-200 shrink-0">
-          <button
-            type="button"
-            disabled={currentPage <= 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Prev</span>
-          </button>
-
-          <span className="text-xs font-mono font-bold text-slate-600">
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            type="button"
-            disabled={currentPage >= totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
-          >
-            <span>Next</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <MobilePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={filteredProjects.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemName="Projects"
+      />
     </div>
   );
 }

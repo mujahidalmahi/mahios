@@ -42,11 +42,11 @@ html, body {
   background: transparent;
 }
 
-/* Modern TipTap Dark Editor Styles */
+/* TipTap Editor & Rich Text Content Styles (Universal Light/Dark Aware) */
 .tiptap-editor-content {
   outline: none;
-  min-height: 220px;
-  color: #f1f5f9;
+  min-height: 120px;
+  color: inherit;
 }
 
 .tiptap-editor-content h1 {
@@ -54,7 +54,7 @@ html, body {
   font-weight: 800;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  color: #ffffff;
+  color: inherit;
 }
 
 .tiptap-editor-content h2 {
@@ -62,7 +62,7 @@ html, body {
   font-weight: 700;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  color: #f8fafc;
+  color: inherit;
 }
 
 .tiptap-editor-content h3 {
@@ -70,26 +70,60 @@ html, body {
   font-weight: 600;
   margin-top: 0.75rem;
   margin-bottom: 0.35rem;
-  color: #93c5fd;
+  color: inherit;
 }
 
 .tiptap-editor-content p {
   margin-bottom: 0.75rem;
   line-height: 1.7;
-  color: #cbd5e1;
+  color: inherit;
 }
 
 .tiptap-editor-content ul {
   list-style-type: disc;
   padding-left: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #cbd5e1;
+  color: inherit;
 }
 
 .tiptap-editor-content ol {
   list-style-type: decimal;
   padding-left: 1.5rem;
   margin-bottom: 0.75rem;
+  color: inherit;
+}
+
+/* TipTap Dark Editor override for Admin Dashboard */
+.dark .tiptap-editor-content,
+[data-theme="dark"] .tiptap-editor-content,
+.admin-dark-editor .tiptap-editor-content {
+  color: #f1f5f9;
+}
+
+.dark .tiptap-editor-content h1,
+[data-theme="dark"] .tiptap-editor-content h1,
+.admin-dark-editor .tiptap-editor-content h1 {
+  color: #ffffff;
+}
+
+.dark .tiptap-editor-content h2,
+[data-theme="dark"] .tiptap-editor-content h2,
+.admin-dark-editor .tiptap-editor-content h2 {
+  color: #f8fafc;
+}
+
+.dark .tiptap-editor-content h3,
+[data-theme="dark"] .tiptap-editor-content h3,
+.admin-dark-editor .tiptap-editor-content h3 {
+  color: #93c5fd;
+}
+
+.dark .tiptap-editor-content p,
+.dark .tiptap-editor-content ul,
+.dark .tiptap-editor-content ol,
+[data-theme="dark"] .tiptap-editor-content p,
+[data-theme="dark"] .tiptap-editor-content ul,
+[data-theme="dark"] .tiptap-editor-content ol {
   color: #cbd5e1;
 }
 

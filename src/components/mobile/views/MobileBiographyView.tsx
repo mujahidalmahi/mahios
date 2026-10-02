@@ -86,6 +86,12 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
       terminal: 'bg-[#0f172a] text-[#34d399] border-[#1e293b]',
     }[readingTheme];
 
+    const themeProseStyles = {
+      normal: 'text-slate-800 [&_*]:text-slate-800 [&_p]:text-slate-700 [&_h1]:text-slate-950 [&_h2]:text-slate-900 [&_h3]:text-slate-900 [&_strong]:text-slate-950 [&_a]:text-blue-600 [&_a]:underline',
+      sepia: 'text-[#433422] [&_*]:text-[#433422] [&_p]:text-[#5c4028] [&_h1]:text-[#2c1d10] [&_h2]:text-[#2c1d10] [&_h3]:text-[#2c1d10] [&_strong]:text-[#2c1d10] [&_a]:text-[#8b4513] [&_a]:underline',
+      terminal: 'text-[#34d399] [&_*]:text-[#34d399] [&_p]:text-[#34d399] [&_h1]:text-[#34d399] [&_h2]:text-[#34d399] [&_h3]:text-[#34d399] [&_strong]:text-[#6ee7b7] [&_a]:text-[#10b981] [&_a]:underline',
+    }[readingTheme];
+
     const fontSizeClass = {
       sm: 'text-xs',
       base: 'text-sm',
@@ -202,7 +208,7 @@ export default function MobileBiographyView({ biographyTimeline = [], initialMil
           )}
 
           <div
-            className={`leading-relaxed space-y-3 break-words overflow-x-auto max-w-full ${fontSizeClass}`}
+            className={`leading-relaxed space-y-3 break-words overflow-x-auto max-w-full ${themeProseStyles} ${fontSizeClass}`}
             dangerouslySetInnerHTML={{ __html: activeMilestone.story_html || '' }}
           />
 

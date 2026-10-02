@@ -1340,7 +1340,11 @@ export default function TabletShell({ data }: TabletShellProps) {
             </div>
 
             {/* Content Body */}
-            <div className="flex-1 min-h-0 bg-slate-50 overflow-y-auto p-4 md:p-8 flex flex-col overscroll-contain">
+            <div
+              id="mobile-app-scroll-body"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="flex-1 min-h-0 bg-slate-50 overflow-y-auto p-4 md:p-8 flex flex-col overscroll-contain touch-pan-y select-text"
+            >
               <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col min-h-full">
                 {renderAppContent(activeApp.app_id)}
               </div>

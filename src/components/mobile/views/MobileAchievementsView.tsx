@@ -5,6 +5,7 @@ import { Award, Calendar, ExternalLink, ChevronLeft, ChevronRight, CheckCircle2,
 import confetti from 'canvas-confetti';
 import { Achievement } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
+import MobilePagination from '../MobilePagination';
 
 interface MobileAchievementsViewProps {
   achievements: Achievement[];
@@ -188,33 +189,14 @@ export default function MobileAchievementsView({ achievements = [] }: MobileAchi
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-200 shrink-0">
-          <button
-            type="button"
-            disabled={currentPage <= 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Prev</span>
-          </button>
-
-          <span className="text-xs font-mono font-bold text-slate-600">
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            type="button"
-            disabled={currentPage >= totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
-          >
-            <span>Next</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      <MobilePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={filteredAchievements.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemName="Honors"
+      />
 
       {/* Detail Modal / Sheet */}
       {selectedAchievement && (

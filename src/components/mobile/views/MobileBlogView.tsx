@@ -9,6 +9,7 @@ import { BlogPost } from '@/types/database';
 import { useSystemStore } from '@/stores/systemStore';
 import { parseBlogReactions } from '@/lib/data/blogReactions';
 import { printDocument } from '@/lib/utils/printDocument';
+import MobilePagination from '../MobilePagination';
 
 interface MobileBlogViewProps {
   posts: BlogPost[];
@@ -176,6 +177,13 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
       cyber: 'bg-[#090d16] text-[#38bdf8] border-[#1e293b]',
     }[readingTheme];
 
+    const themeProseStyles = {
+      normal: 'text-slate-800 [&_*]:text-slate-800 [&_p]:text-slate-700 [&_h1]:text-slate-950 [&_h2]:text-slate-900 [&_h3]:text-slate-900 [&_strong]:text-slate-950 [&_a]:text-blue-600 [&_a]:underline [&_code]:text-indigo-700 [&_code]:bg-slate-100',
+      sepia: 'text-[#433422] [&_*]:text-[#433422] [&_p]:text-[#5c4028] [&_h1]:text-[#2c1d10] [&_h2]:text-[#2c1d10] [&_h3]:text-[#2c1d10] [&_strong]:text-[#2c1d10] [&_a]:text-[#8b4513] [&_a]:underline [&_code]:text-[#433422] [&_code]:bg-[#8c6d48]/15',
+      terminal: 'text-[#34d399] [&_*]:text-[#34d399] [&_p]:text-[#34d399] [&_h1]:text-[#34d399] [&_h2]:text-[#34d399] [&_h3]:text-[#34d399] [&_strong]:text-[#6ee7b7] [&_a]:text-[#10b981] [&_a]:underline [&_code]:text-[#34d399] [&_code]:bg-[#064e3b]/40',
+      cyber: 'text-[#38bdf8] [&_*]:text-[#38bdf8] [&_p]:text-[#38bdf8] [&_h1]:text-[#67e8f9] [&_h2]:text-[#67e8f9] [&_h3]:text-[#67e8f9] [&_strong]:text-[#e0f2fe] [&_a]:text-[#00f0ff] [&_a]:underline [&_code]:text-[#38bdf8] [&_code]:bg-[#0369a1]/30',
+    }[readingTheme];
+
     const fontSizeClass = {
       sm: 'text-xs',
       base: 'text-sm',
@@ -295,7 +303,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
 
           {/* Rendered HTML */}
           <div
-            className={`leading-relaxed space-y-3 tiptap-editor-content break-words overflow-x-auto max-w-full ${fontSizeClass}`}
+            className={`leading-relaxed space-y-3 rich-text-content break-words overflow-x-auto max-w-full ${themeProseStyles} ${fontSizeClass}`}
             dangerouslySetInnerHTML={{ __html: parseBlogReactions(activePost.content_html).cleanContentHtml }}
           />
 
@@ -432,33 +440,14 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-200 shrink-0">
-          <button
-            type="button"
-            disabled={currentPage <= 1}
-            onClick={() => handlePageChange(currentPage - 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Prev</span>
-          </button>
-
-          <span className="text-xs font-mono font-bold text-slate-600">
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            type="button"
-            disabled={currentPage >= totalPages}
-            onClick={() => handlePageChange(currentPage + 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
-          >
-            <span>Next</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      <MobilePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={filteredPosts.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        itemName="Articles"
+      />
     </div>
   );
 }

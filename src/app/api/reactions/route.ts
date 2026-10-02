@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (!fetchErr && proj) {
-        const currentStats = proj.stats || { stars: 0, users: '1k+', uptime: '99.9%' };
+        const currentStats = proj.stats || { stars: 0 };
         const currentStars = typeof currentStats.stars === 'number' ? currentStats.stars : 0;
         const newStars = action === 'unstar' ? Math.max(0, currentStars - 1) : currentStars + 1;
         const updatedStats = { ...currentStats, stars: newStars };

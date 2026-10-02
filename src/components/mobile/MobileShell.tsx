@@ -273,6 +273,14 @@ export default function MobileShell({ data }: MobileShellProps) {
 
   const { playSound, soundEnabled, toggleSound } = useSystemStore();
   const touchStartYRef = useRef<number | null>(null);
+  const appScrollBodyRef = useRef<HTMLDivElement>(null);
+
+  // Automatically reset mobile app scroll container when switching apps
+  useEffect(() => {
+    if (appScrollBodyRef.current) {
+      appScrollBodyRef.current.scrollTop = 0;
+    }
+  }, [activeApp?.app_id]);
 
   // Trigger tactile haptics if supported on mobile
   const triggerHaptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
@@ -386,7 +394,14 @@ export default function MobileShell({ data }: MobileShellProps) {
     processDeepLink();
 
     const handleRouteChange = () => {
-      processDeepLink();
+      const handled = processDeepLink();
+      if (!handled && typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('app') && !params.get('project') && !params.get('post') && !params.get('chapter')) {
+          setActiveApp(null);
+          setAppHistory([]);
+        }
+      }
     };
 
     window.addEventListener('popstate', handleRouteChange);
@@ -527,11 +542,17 @@ export default function MobileShell({ data }: MobileShellProps) {
       const prevApp = data.apps.find((a) => a.app_id === prevAppId);
       if (prevApp) {
         setActiveApp(prevApp);
+        if (typeof window !== 'undefined') {
+          window.history.pushState({ appId: prevApp.app_id }, '', `?app=${prevApp.app_id}`);
+        }
         return;
       }
     }
 
     setActiveApp(null);
+    if (typeof window !== 'undefined' && window.location.search) {
+      window.history.pushState({}, '', window.location.pathname);
+    }
   };
 
   // Mobile OS Navigation: Home Key
@@ -865,7 +886,12 @@ export default function MobileShell({ data }: MobileShellProps) {
             </div>
 
             {/* Mobile App Scrollable Body */}
-            <div className="flex-1 min-h-0 bg-slate-50 overflow-y-auto px-2.5 py-3 xs:px-3 sm:px-4 sm:py-4 flex flex-col overscroll-contain">
+            <div
+              id="mobile-app-scroll-body"
+              ref={appScrollBodyRef}
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="flex-1 min-h-0 bg-slate-50 overflow-y-auto px-2.5 py-3 xs:px-3 sm:px-4 sm:py-4 flex flex-col overscroll-contain touch-pan-y select-text"
+            >
               <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col min-h-full">
                 {renderAppContent(activeApp.app_id)}
               </div>
@@ -873,8 +899,8 @@ export default function MobileShell({ data }: MobileShellProps) {
           </div>
         ) : (
           /* ===================================================== */
-          /* 4. HOME SCREEN: PURE WALLPAPER ONLY                   */
-          /* Clean wallpaper without any top or center clutter     */
+          /* 4. HOME SCREEN: LIVING MOBILE SPRINGBOARD             */
+          /* Authentic, smooth, full launcher with widgets & apps  */
           /* ===================================================== */
           <div
             onContextMenu={(e) => {
@@ -882,9 +908,208 @@ export default function MobileShell({ data }: MobileShellProps) {
               setIsWallpaperPickerOpen(true);
             }}
             onDoubleClick={() => setIsWallpaperPickerOpen(true)}
-            className="relative z-10 flex-1 flex flex-col justify-end p-4 cursor-default select-none"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            className="relative z-10 flex-1 flex flex-col min-h-0 overflow-y-auto px-3.5 pt-3 pb-4 select-none touch-pan-y overscroll-contain"
           >
-            {/* Pure desktop wallpaper displayed unobstructed */}
+            {/* Top Widget Header: Digital Clock, Date & Status Pill */}
+            <div className="text-center py-2 shrink-0 space-y-1">
+              <h1 className="text-4xl xs:text-5xl font-mono font-black text-white tracking-tight drop-shadow-md">
+                {timeString || '12:00 PM'}
+              </h1>
+              <p className="text-xs font-semibold text-white/90 drop-shadow-xs">
+                {dateString}
+              </p>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-[10px] font-mono text-emerald-300 font-semibold shadow-xs mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>MahiOS Active • {mobileApps.length} Apps Loaded</span>
+              </div>
+            </div>
+
+            {/* Spotlight Quick Search Bar */}
+            <div className="my-2.5 shrink-0">
+              <div className="relative flex items-center bg-black/40 hover:bg-black/50 focus-within:bg-black/60 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/20 shadow-md transition-all">
+                <Search className="w-4 h-4 text-white/70 mr-2 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search apps, projects, blog, notes..."
+                  className="w-full bg-transparent text-xs text-white placeholder-white/60 focus:outline-none font-medium"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-white/70 hover:text-white p-0.5 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 shrink-0 scrollbar-none">
+              {CATEGORY_TABS.map((tab) => {
+                const isSelected = selectedCategory === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      playSound('click');
+                      triggerHaptic('light');
+                      setSelectedCategory(tab.id);
+                    }}
+                    className={`px-3 py-1 rounded-full text-[11px] font-bold shrink-0 transition-all cursor-pointer backdrop-blur-md border ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-400 shadow-md scale-102'
+                        : 'bg-black/35 text-white/85 border-white/15 hover:bg-black/50'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* SpringBoard Grid or Spotlight Search Results */}
+            <div className="flex-1 pt-1 pb-4">
+              {searchQuery.trim() && searchResults ? (
+                <div className="space-y-3 bg-slate-900/80 backdrop-blur-xl rounded-2xl p-3 border border-white/20 shadow-xl text-white">
+                  {/* Apps Match */}
+                  {searchResults.apps.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Applications</div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {searchResults.apps.map((app) => (
+                          <div
+                            key={app.id}
+                            onClick={() => handleOpenApp(app)}
+                            className="p-2 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
+                          >
+                            <span className="text-xs font-bold text-white truncate">{app.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Projects Match */}
+                  {searchResults.projects.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Projects</div>
+                      <div className="space-y-1">
+                        {searchResults.projects.map((p) => (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              const projApp = data.apps.find((a) => a.app_id === 'projects');
+                              if (projApp) {
+                                setDeepLinkedProjectId(p.slug || p.id);
+                                handleOpenApp(projApp);
+                              }
+                            }}
+                            className="p-2 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
+                          >
+                            <div className="min-w-0 pr-2">
+                              <div className="text-xs font-bold text-cyan-300 truncate">{p.title}</div>
+                              <div className="text-[10px] text-slate-300 line-clamp-1">{p.summary}</div>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-white/50 shrink-0" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Blog Match */}
+                  {searchResults.blog.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Articles & Notes</div>
+                      <div className="space-y-1">
+                        {searchResults.blog.map((b) => (
+                          <div
+                            key={b.id}
+                            onClick={() => {
+                              const blogApp = data.apps.find((a) => a.app_id === 'blog');
+                              if (blogApp) handleOpenApp(blogApp);
+                            }}
+                            className="p-2 bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
+                          >
+                            <div className="min-w-0 pr-2">
+                              <div className="text-xs font-bold text-white truncate">{b.title}</div>
+                              <div className="text-[10px] text-slate-300 line-clamp-1">{b.excerpt}</div>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-white/50 shrink-0" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Skills Match */}
+                  {searchResults.skills.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">Skills</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {searchResults.skills.map((s) => (
+                          <div
+                            key={s.id}
+                            onClick={() => {
+                              const skillsApp = data.apps.find((a) => a.app_id === 'skills');
+                              if (skillsApp) handleOpenApp(skillsApp);
+                            }}
+                            className="px-2 py-0.5 bg-blue-500/20 text-cyan-300 border border-cyan-400/30 rounded-lg text-xs font-bold cursor-pointer"
+                          >
+                            {s.name} ({s.proficiency}%)
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : filteredApps.length === 0 ? (
+                <div className="py-12 text-center text-white/70 font-mono text-xs bg-black/30 backdrop-blur-md rounded-2xl border border-white/15">
+                  No applications found matching &ldquo;{searchQuery}&rdquo;
+                </div>
+              ) : (
+                /* 4-Column SpringBoard App Grid */
+                <div className="grid grid-cols-4 gap-y-4 gap-x-2">
+                  {filteredApps.map((app) => {
+                    const Icon = iconMap[app.icon_name] || FileText;
+                    const gradient = getAppGradient(app.app_id);
+
+                    return (
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => handleOpenApp(app)}
+                        className="flex flex-col items-center text-center group cursor-pointer active:scale-90 transition-transform"
+                      >
+                        <div className="relative">
+                          <div
+                            className={`w-13 h-13 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center p-2.5 shadow-lg border border-white/25 group-hover:scale-105 transition-transform`}
+                          >
+                            <Icon className="w-6 h-6 text-white drop-shadow-md" />
+                          </div>
+
+                          {app.badge_text && (
+                            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-red-600 text-white font-mono text-[8px] font-black rounded-full border border-white shadow-xs">
+                              {app.badge_text}
+                            </span>
+                          )}
+                        </div>
+
+                        <span className="text-[11px] font-semibold text-white drop-shadow-md leading-tight line-clamp-2 w-full mt-1.5 px-0.5">
+                          {app.title}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
