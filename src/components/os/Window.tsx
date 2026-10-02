@@ -93,12 +93,22 @@ function WindowComponent({ window: win, children }: WindowProps) {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const maxW = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const maxH = typeof window !== 'undefined' ? window.innerHeight - 34 : 800;
+      const isRotated = typeof document !== 'undefined' && document.querySelector('[data-auto-rotated="true"]') !== null;
+      const rawW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+      const rawH = typeof window !== 'undefined' ? window.innerHeight : 800;
+      const maxW = isRotated ? Math.max(rawW, rawH) : rawW;
+      const maxH = (isRotated ? Math.min(rawW, rawH) : rawH) - 34;
 
       if (isDragging && dragRef.current) {
-        const dx = e.clientX - dragRef.current.startX;
-        const dy = e.clientY - dragRef.current.startY;
+        let dx = e.clientX - dragRef.current.startX;
+        let dy = e.clientY - dragRef.current.startY;
+        if (isRotated) {
+          const screenDx = dx;
+          const screenDy = dy;
+          dx = screenDy;
+          dy = -screenDx;
+        }
+
         const clampedX = Math.max(0, Math.min(maxW - 80, dragRef.current.startPosX + dx));
         const clampedY = Math.max(0, Math.min(maxH - 30, dragRef.current.startPosY + dy));
 
@@ -107,12 +117,12 @@ function WindowComponent({ window: win, children }: WindowProps) {
           y: clampedY,
         });
 
-        // Edge snap detection during drag
-        if (e.clientY <= 10) {
+        // Edge snap detection during drag (using desktop coordinates)
+        if (clampedY <= 10) {
           setSnapPreview('top');
-        } else if (e.clientX <= 12) {
+        } else if (clampedX <= 12) {
           setSnapPreview('left');
-        } else if (e.clientX >= maxW - 12) {
+        } else if (clampedX >= maxW - win.size.width - 12) {
           setSnapPreview('right');
         } else {
           setSnapPreview(null);
@@ -120,8 +130,14 @@ function WindowComponent({ window: win, children }: WindowProps) {
       }
 
       if (isResizing && resizeRef.current) {
-        const dx = e.clientX - resizeRef.current.startX;
-        const dy = e.clientY - resizeRef.current.startY;
+        let dx = e.clientX - resizeRef.current.startX;
+        let dy = e.clientY - resizeRef.current.startY;
+        if (isRotated) {
+          const screenDx = dx;
+          const screenDy = dy;
+          dx = screenDy;
+          dy = -screenDx;
+        }
         const { startW, startH, startPosX, startPosY, direction } = resizeRef.current;
 
         let newWidth = startW;
@@ -181,11 +197,23 @@ function WindowComponent({ window: win, children }: WindowProps) {
 
     const handleTouchMove = (e: TouchEvent) => {
       if (isDragging && dragRef.current && e.touches.length > 0) {
+        if (e.cancelable) e.preventDefault();
         const touch = e.touches[0];
-        const maxW = typeof window !== 'undefined' ? window.innerWidth : 1200;
-        const maxH = typeof window !== 'undefined' ? window.innerHeight - 34 : 800;
-        const dx = touch.clientX - dragRef.current.startX;
-        const dy = touch.clientY - dragRef.current.startY;
+        const isRotated = typeof document !== 'undefined' && document.querySelector('[data-auto-rotated="true"]') !== null;
+        const rawW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+        const rawH = typeof window !== 'undefined' ? window.innerHeight : 800;
+        const maxW = isRotated ? Math.max(rawW, rawH) : rawW;
+        const maxH = (isRotated ? Math.min(rawW, rawH) : rawH) - 34;
+
+        let dx = touch.clientX - dragRef.current.startX;
+        let dy = touch.clientY - dragRef.current.startY;
+        if (isRotated) {
+          const screenDx = dx;
+          const screenDy = dy;
+          dx = screenDy;
+          dy = -screenDx;
+        }
+
         const clampedX = Math.max(0, Math.min(maxW - 80, dragRef.current.startPosX + dx));
         const clampedY = Math.max(0, Math.min(maxH - 30, dragRef.current.startPosY + dy));
 
@@ -204,7 +232,7 @@ function WindowComponent({ window: win, children }: WindowProps) {
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove, { passive: true });
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleTouchEnd);
     }
 
@@ -223,12 +251,12 @@ function WindowComponent({ window: win, children }: WindowProps) {
       {/* Edge Snap Phantom Guide */}
       {snapPreview && (
         <div
-          className={`fixed pointer-events-none z-[9999] border-2 border-dashed border-sky-400 bg-sky-500/20 shadow-2xl transition-all duration-75 ${
+          className={`absolute pointer-events-none z-[9999] border-2 border-dashed border-sky-400 bg-sky-500/20 shadow-2xl transition-all duration-75 ${
             snapPreview === 'top'
-              ? 'top-0 left-0 right-0 h-[calc(100vh-34px)]'
+              ? 'top-0 left-0 right-0 h-[calc(100%-34px)]'
               : snapPreview === 'left'
-              ? 'top-0 left-0 w-1/2 h-[calc(100vh-34px)]'
-              : 'top-0 right-0 w-1/2 h-[calc(100vh-34px)]'
+              ? 'top-0 left-0 w-1/2 h-[calc(100%-34px)]'
+              : 'top-0 right-0 w-1/2 h-[calc(100%-34px)]'
           }`}
         />
       )}

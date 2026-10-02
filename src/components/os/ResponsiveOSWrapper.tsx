@@ -12,10 +12,39 @@ interface ResponsiveOSWrapperProps {
 
 export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) {
   const [mounted, setMounted] = useState(false);
+  const [isRotated, setIsRotated] = useState(false);
+  const [screenDim, setScreenDim] = useState({ w: 0, h: 0 });
   const { isBooting, finishBoot } = useBootStore();
 
   useEffect(() => {
     setMounted(true);
+
+    const updateOrientation = () => {
+      if (typeof window === 'undefined') return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setScreenDim({ w, h });
+
+      // Identify mobile or tablet device (touch enabled or dimension < 1024)
+      const isMobileOrTablet =
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        Math.min(w, h) < 1024;
+
+      // Always landscape for mobiles and tablets:
+      // If held in portrait (h > w), auto-rotate 90 degrees into landscape
+      if (isMobileOrTablet && h > w) {
+        setIsRotated(true);
+      } else {
+        setIsRotated(false);
+      }
+
+      // Attempt native orientation lock if supported
+      if (isMobileOrTablet && screen.orientation && 'lock' in screen.orientation) {
+        (screen.orientation as any).lock('landscape').catch(() => {});
+      }
+    };
 
     // If deep-link or hash route is requested, bypass boot screen for instant visitor access
     if (typeof window !== 'undefined') {
@@ -25,6 +54,14 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         finishBoot();
       }
     }
+
+    updateOrientation();
+    window.addEventListener('resize', updateOrientation);
+    window.addEventListener('orientationchange', updateOrientation);
+    return () => {
+      window.removeEventListener('resize', updateOrientation);
+      window.removeEventListener('orientationchange', updateOrientation);
+    };
   }, [finishBoot]);
 
   if (!mounted) {
@@ -38,8 +75,30 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
     );
   }
 
+  // When rotated 90deg, the container width becomes height and height becomes width
+  const desktopContainerStyle: React.CSSProperties = isRotated
+    ? {
+        position: 'fixed',
+        width: `${screenDim.h}px`,
+        height: `${screenDim.w}px`,
+        left: `${(screenDim.w - screenDim.h) / 2}px`,
+        top: `${(screenDim.h - screenDim.w) / 2}px`,
+        transform: 'rotate(90deg)',
+        transformOrigin: 'center center',
+        overflow: 'hidden',
+      }
+    : {
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+      };
+
   return (
-    <div className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] max-w-[100vw] bg-[#18191c] flex items-center justify-center overflow-hidden select-none p-0 m-0">
+    <div
+      className="fixed inset-0 w-full h-[100dvh] max-h-[100dvh] max-w-[100vw] bg-[#18191c] flex items-center justify-center overflow-hidden select-none p-0 m-0"
+      data-auto-rotated={isRotated ? 'true' : 'false'}
+    >
       {/* Boot Loading Screen Overlay */}
       {isBooting && (
         <BootScreen
@@ -49,8 +108,8 @@ export default function ResponsiveOSWrapper({ data }: ResponsiveOSWrapperProps) 
         />
       )}
 
-      {/* Native Full-Screen Web OS Desktop (Universal across all devices) */}
-      <div className="w-full h-full relative overflow-hidden">
+      {/* Always-Horizontal Web OS Desktop */}
+      <div style={desktopContainerStyle} className="transition-transform duration-200">
         <Desktop data={data} />
       </div>
     </div>
