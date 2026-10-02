@@ -285,7 +285,7 @@ function WindowComponent({ window: win, children }: WindowProps) {
         </div>
 
         {/* Sunken Content Area with Retro Scrollbars */}
-        <div className="flex-1 min-h-0 bg-[#ffffff] m-1 retro-box-inset retro-scroll retro-window overflow-y-auto overflow-x-hidden text-[#000000] p-3 sm:p-4 text-xs font-sans leading-normal break-words flex flex-col">
+        <div className="flex-1 min-h-0 bg-[#ffffff] m-1 retro-box-inset retro-scroll retro-window overflow-y-auto overflow-x-hidden text-[#000000] p-3 sm:p-4 text-xs font-sans leading-normal break-words">
           {children}
         </div>
 

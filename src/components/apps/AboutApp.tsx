@@ -95,7 +95,7 @@ export default function AboutApp({ about, philosophies = [], phone }: AboutAppPr
     : '/images/formal.png';
 
   return (
-    <div className="space-y-4 text-[#111827] max-w-full overflow-hidden break-words">
+    <div className="space-y-4 text-[#111827] max-w-full break-words">
       {/* Profile Header */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-[#f3f4f6] retro-box-inset rounded-xs">
         {/* Profile Avatar */}
