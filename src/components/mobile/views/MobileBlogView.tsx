@@ -185,20 +185,20 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
     return (
       <div className="space-y-3 pb-6 flex flex-col min-h-full">
         {/* Reader Top Controls */}
-        <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
           <button
             type="button"
             onClick={() => {
               playSound('click');
               setActivePost(null);
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2.5 xs:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-200 active:scale-95 transition-all cursor-pointer min-h-[36px]"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
             <span>Articles</span>
           </button>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {/* Theme switcher */}
             <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold">
               {(['normal', 'sepia', 'terminal'] as const).map((t) => (
@@ -206,7 +206,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
                   key={t}
                   type="button"
                   onClick={() => setReadingTheme(t)}
-                  className={`px-2 py-1 rounded capitalize ${
+                  className={`px-1.5 xs:px-2 py-1 rounded capitalize ${
                     readingTheme === t ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
                   }`}
                 >
@@ -222,7 +222,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
                   key={s}
                   type="button"
                   onClick={() => setFontSize(s)}
-                  className={`px-2 py-1 rounded uppercase ${
+                  className={`px-1.5 xs:px-2 py-1 rounded uppercase ${
                     fontSize === s ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
                   }`}
                 >
@@ -235,7 +235,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
             <button
               type="button"
               onClick={handlePrint}
-              className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs"
+              className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer active:scale-95"
               title="Print Article"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
             <button
               type="button"
               onClick={handleShare}
-              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs flex items-center gap-1"
+              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer active:scale-95"
               title="Share Article"
             >
               {copiedShare ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -252,7 +252,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
         </div>
 
         {/* Article Body Container */}
-        <article className={`rounded-2xl p-5 border shadow-2xs space-y-4 transition-colors ${themeStyles}`}>
+        <article className={`rounded-2xl p-3.5 xs:p-5 border shadow-2xs space-y-4 transition-colors break-words overflow-hidden ${themeStyles}`}>
           {/* Metadata */}
           <div className="space-y-1.5 border-b pb-3 border-current/10">
             <div className="flex items-center gap-2 text-[11px] font-mono opacity-70">
@@ -295,7 +295,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
 
           {/* Rendered HTML */}
           <div
-            className={`leading-relaxed space-y-3 tiptap-editor-content ${fontSizeClass}`}
+            className={`leading-relaxed space-y-3 tiptap-editor-content break-words overflow-x-auto max-w-full ${fontSizeClass}`}
             dangerouslySetInnerHTML={{ __html: parseBlogReactions(activePost.content_html).cleanContentHtml }}
           />
 
@@ -438,7 +438,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
             type="button"
             disabled={currentPage <= 1}
             onClick={() => handlePageChange(currentPage - 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Prev</span>
@@ -452,7 +452,7 @@ export default function MobileBlogView({ posts = [], initialPostId }: MobileBlog
             type="button"
             disabled={currentPage >= totalPages}
             onClick={() => handlePageChange(currentPage + 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
           >
             <span>Next</span>
             <ChevronRight className="w-3.5 h-3.5" />

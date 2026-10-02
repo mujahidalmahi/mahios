@@ -180,21 +180,21 @@ export default function MobileAboutView({
         </div>
 
         {/* Quick Actions (Email, Copy, vCard) */}
-        <div className="grid grid-cols-3 gap-2 pt-0.5">
+        <div className="grid grid-cols-3 gap-1.5 xs:gap-2 pt-0.5">
           <a
             href={`mailto:${officialEmail}`}
             onClick={() => playSound('open')}
-            className="py-2 px-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-95 transition-transform"
+            className="py-2 px-1 xs:px-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl flex items-center justify-center gap-1 xs:gap-1.5 text-[11px] xs:text-xs font-bold shadow-xs active:scale-95 transition-transform min-h-[38px]"
           >
-            <Mail className="w-3.5 h-3.5" />
+            <Mail className="w-3.5 h-3.5 shrink-0" />
             <span>Email</span>
           </a>
           <button
             type="button"
             onClick={handleCopyEmail}
-            className="py-2 px-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold border border-slate-200 active:scale-95 transition-transform cursor-pointer"
+            className="py-2 px-1 xs:px-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 rounded-xl flex items-center justify-center gap-1 xs:gap-1.5 text-[11px] xs:text-xs font-bold border border-slate-200 active:scale-95 transition-transform cursor-pointer min-h-[38px]"
           >
-            {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+            {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />}
             <span className="truncate">{copiedEmail ? 'Copied' : 'Copy'}</span>
           </button>
           <button
@@ -203,40 +203,40 @@ export default function MobileAboutView({
               playSound('click');
               setShowVCardModal(true);
             }}
-            className="py-2 px-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-blue-700 rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold border border-slate-200 active:scale-95 transition-transform cursor-pointer"
+            className="py-2 px-1 xs:px-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-blue-700 rounded-xl flex items-center justify-center gap-1 xs:gap-1.5 text-[11px] xs:text-xs font-bold border border-slate-200 active:scale-95 transition-transform cursor-pointer min-h-[38px]"
           >
-            <Contact className="w-3.5 h-3.5" />
+            <Contact className="w-3.5 h-3.5 shrink-0" />
             <span>vCard</span>
           </button>
         </div>
       </div>
 
       {/* 2. Key Metrics Bar (Exact Desktop Parity) */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white rounded-xl p-3 border border-slate-200/90 shadow-2xs text-center">
-          <div className="text-lg font-black text-blue-700 font-mono">
+      <div className="grid grid-cols-3 gap-1.5 xs:gap-2">
+        <div className="bg-white rounded-xl p-2.5 xs:p-3 border border-slate-200/90 shadow-2xs text-center">
+          <div className="text-base xs:text-lg font-black text-blue-700 font-mono">
             {about.experience_years}+
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
-            Years Experience
+          <div className="text-[9px] xs:text-[10px] font-bold text-slate-500 uppercase tracking-tight xs:tracking-wider mt-0.5 leading-tight">
+            Years Exp.
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3 border border-slate-200/90 shadow-2xs text-center">
-          <div className="text-lg font-black text-indigo-700 font-mono">
+        <div className="bg-white rounded-xl p-2.5 xs:p-3 border border-slate-200/90 shadow-2xs text-center">
+          <div className="text-base xs:text-lg font-black text-indigo-700 font-mono">
             {about.projects_completed}
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
-            Shipped Projects
+          <div className="text-[9px] xs:text-[10px] font-bold text-slate-500 uppercase tracking-tight xs:tracking-wider mt-0.5 leading-tight">
+            Shipped Apps
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-3 border border-slate-200/90 shadow-2xs text-center">
-          <div className="text-lg font-black text-amber-700 font-mono">
+        <div className="bg-white rounded-xl p-2.5 xs:p-3 border border-slate-200/90 shadow-2xs text-center">
+          <div className="text-base xs:text-lg font-black text-amber-700 font-mono">
             {about.coffee_cups}
           </div>
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
-            Cups of Coffee
+          <div className="text-[9px] xs:text-[10px] font-bold text-slate-500 uppercase tracking-tight xs:tracking-wider mt-0.5 leading-tight">
+            Coffee Cups
           </div>
         </div>
       </div>

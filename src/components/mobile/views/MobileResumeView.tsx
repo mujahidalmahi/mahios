@@ -135,7 +135,7 @@ ${langText}${refText ? `\n\nREFERENCES\n----------------------------------------
   return (
     <div className="space-y-3 pb-6 flex flex-col min-h-full">
       {/* Top Controls Toolbar */}
-      <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+      <div className="flex flex-wrap xs:flex-nowrap items-center justify-between gap-2 bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
         <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-semibold">
           <button
             type="button"
@@ -143,13 +143,14 @@ ${langText}${refText ? `\n\nREFERENCES\n----------------------------------------
               playSound('click');
               setViewMode('document');
             }}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
+            className={`px-2.5 xs:px-3 py-1.5 rounded-lg transition-all ${
               viewMode === 'document'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Formatted CV
+            <span className="hidden xs:inline">Formatted CV</span>
+            <span className="xs:hidden">CV</span>
           </button>
           <button
             type="button"
@@ -157,13 +158,14 @@ ${langText}${refText ? `\n\nREFERENCES\n----------------------------------------
               playSound('click');
               setViewMode('plaintext');
             }}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
+            className={`px-2.5 xs:px-3 py-1.5 rounded-lg transition-all ${
               viewMode === 'plaintext'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Plaintext (ATS)
+            <span className="hidden xs:inline">Plaintext (ATS)</span>
+            <span className="xs:hidden">ATS</span>
           </button>
         </div>
 
@@ -276,12 +278,12 @@ ${langText}${refText ? `\n\nREFERENCES\n----------------------------------------
             <div className="space-y-4">
               {cv.experiences.map((exp, idx) => (
                 <div key={idx} className="space-y-2 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-col xs:flex-row xs:items-start justify-between gap-1">
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 leading-snug">{exp.role}</h4>
                       <div className="text-[11px] font-semibold text-blue-700">{exp.company}</div>
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400 shrink-0 text-right">
+                    <span className="text-[10px] font-mono text-slate-400 shrink-0 xs:text-right">
                       {exp.start} — {exp.end}
                     </span>
                   </div>
@@ -317,14 +319,14 @@ ${langText}${refText ? `\n\nREFERENCES\n----------------------------------------
             <div className="space-y-3">
               {cv.education.map((edu, idx) => (
                 <div key={idx} className="space-y-1 pb-2.5 border-b border-slate-100 last:border-b-0 last:pb-0">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-col xs:flex-row xs:items-start justify-between gap-1">
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 leading-snug">
                         {edu.degree}{edu.field ? ` in ${edu.field}` : ''}
                       </h4>
                       <div className="text-[11px] font-semibold text-emerald-700">{edu.school}</div>
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                    <span className="text-[10px] font-mono text-slate-400 shrink-0 xs:text-right">
                       {edu.start} — {edu.end}
                     </span>
                   </div>

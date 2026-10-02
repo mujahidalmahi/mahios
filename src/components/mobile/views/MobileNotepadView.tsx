@@ -72,9 +72,9 @@ export default function MobileNotepadView() {
   }[fontSize];
 
   return (
-    <div className="space-y-3 pb-6 flex flex-col h-full min-h-[75vh]">
+    <div className="space-y-2.5 pb-6 flex flex-col flex-1 h-full min-h-0">
       {/* Top Controls Toolbar */}
-      <div className="flex items-center justify-between px-1 gap-2">
+      <div className="flex items-center justify-between px-1 gap-2 flex-wrap xs:flex-nowrap">
         <span className="text-[10px] font-mono text-slate-500 font-bold truncate">
           {savedTime || 'Instant local storage'}
         </span>
@@ -132,7 +132,7 @@ export default function MobileNotepadView() {
         value={content}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Type quick notes, ideas, code snippets, or thoughts here..."
-        className={`flex-1 w-full p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs font-mono leading-relaxed text-slate-900 focus:outline-none focus:border-blue-500 resize-none min-h-[350px] ${fontSizeClass}`}
+        className={`flex-1 w-full p-3.5 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs font-mono leading-relaxed text-slate-900 focus:outline-none focus:border-blue-500 resize-none min-h-[220px] ${fontSizeClass}`}
       />
 
       {/* Word & Char counter bar */}

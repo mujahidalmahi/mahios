@@ -180,7 +180,7 @@ export default function MobileFeedView({ feedPosts = [], authorAvatar }: MobileF
                   <button
                     type="button"
                     onClick={() => toggleLike(post.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer min-h-[36px] ${
                       isLiked
                         ? 'bg-rose-50 text-rose-600 border border-rose-200 shadow-2xs'
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -191,11 +191,11 @@ export default function MobileFeedView({ feedPosts = [], authorAvatar }: MobileF
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-400">PULSE #{post.sort_order ?? ''}</span>
+                    <span className="text-[10px] font-mono text-slate-400 hidden xs:inline">PULSE #{post.sort_order ?? ''}</span>
                     <button
                       type="button"
                       onClick={() => handleShare(post)}
-                      className="px-2.5 py-1 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer border border-slate-200 transition-colors"
+                      className="px-2.5 py-1 text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 rounded-lg text-[11px] font-semibold flex items-center gap-1 cursor-pointer border border-slate-200 transition-colors min-h-[36px]"
                       title="Share pulse"
                     >
                       {isCopied ? (
@@ -225,7 +225,7 @@ export default function MobileFeedView({ feedPosts = [], authorAvatar }: MobileF
             type="button"
             disabled={currentPage <= 1}
             onClick={() => handlePageChange(currentPage - 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Prev</span>
@@ -239,7 +239,7 @@ export default function MobileFeedView({ feedPosts = [], authorAvatar }: MobileF
             type="button"
             disabled={currentPage >= totalPages}
             onClick={() => handlePageChange(currentPage + 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
           >
             <span>Next</span>
             <ChevronRight className="w-3.5 h-3.5" />

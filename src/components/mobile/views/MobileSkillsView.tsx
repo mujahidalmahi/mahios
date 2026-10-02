@@ -211,7 +211,7 @@ export default function MobileSkillsView({ categories = [], skills = [] }: Mobil
       {/* Skill Detail Modal / Sheet */}
       {selectedSkill && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] animate-in fade-in duration-150"
           onClick={() => setSelectedSkill(null)}
         >
           <div

@@ -241,7 +241,7 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
           )}
 
           {/* Action Links (Live Demo & Source Code) */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 pt-1">
             {activeProject.live_url ? (
               <a
                 href={activeProject.live_url}
@@ -492,7 +492,7 @@ export default function MobileProjectsView({ projects = [], initialProjectId }: 
               >
                 <div className="flex items-start gap-3">
                   {project.thumbnail_url && (
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                    <div className="w-14 h-14 xs:w-16 xs:h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
                       <img
                         src={project.thumbnail_url}
                         alt={project.title}

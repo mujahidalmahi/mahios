@@ -809,7 +809,8 @@ export default function TabletShell({ data }: TabletShellProps) {
           triggerHaptic('light');
           setIsNotificationShadeOpen(!isNotificationShadeOpen);
         }}
-        className="h-9 px-6 bg-black/45 backdrop-blur-md flex items-center justify-between text-xs font-bold shrink-0 z-40 select-none border-b border-white/10 cursor-pointer hover:bg-black/55 transition-colors"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="px-6 bg-black/45 backdrop-blur-md flex items-center justify-between text-xs font-bold shrink-0 z-40 select-none border-b border-white/10 cursor-pointer hover:bg-black/55 transition-colors h-[calc(2.25rem+env(safe-area-inset-top,0px))]"
         title="Tap to open Control Center & Notifications"
       >
         <div className="flex items-center gap-3">
@@ -1340,7 +1341,9 @@ export default function TabletShell({ data }: TabletShellProps) {
 
             {/* Content Body */}
             <div className="flex-1 min-h-0 bg-slate-50 overflow-y-auto p-4 md:p-8 flex flex-col overscroll-contain">
-              {renderAppContent(activeApp.app_id)}
+              <div className="w-full max-w-4xl mx-auto flex-1 flex flex-col min-h-full">
+                {renderAppContent(activeApp.app_id)}
+              </div>
             </div>
           </div>
         ) : (
@@ -1354,7 +1357,10 @@ export default function TabletShell({ data }: TabletShellProps) {
       {/* ========================================================= */}
       {/* 6. TABLET BOTTOM NAVIGATION DOCK & THREE-KEY SOFTKEYS     */}
       {/* ========================================================= */}
-      <div className="h-18 px-6 pb-2 pt-2 bg-slate-950/80 backdrop-blur-2xl border-t border-white/15 flex items-center justify-between shrink-0 z-30 select-none shadow-2xl">
+      <div
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+        className="min-h-[4.5rem] px-6 pt-2 bg-slate-950/80 backdrop-blur-2xl border-t border-white/15 flex items-center justify-between shrink-0 z-30 select-none shadow-2xl"
+      >
         {/* Softkeys: Back, Home, Recents (Android/iPad Multitasking Bar) */}
         <div className="flex items-center gap-3">
           {/* Back Softkey */}

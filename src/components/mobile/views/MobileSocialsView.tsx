@@ -152,20 +152,20 @@ export default function MobileSocialsView({ socialLinks = [] }: MobileSocialsVie
             return (
               <div
                 key={link.id}
-                className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-2xs flex items-center justify-between gap-3 hover:border-blue-400 transition-all"
+                className="bg-white rounded-2xl p-3 xs:p-3.5 border border-slate-200 shadow-2xs flex items-center justify-between gap-2.5 xs:gap-3 hover:border-blue-400 transition-all"
               >
                 <a
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => playSound('open')}
-                  className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                  className="flex items-center gap-2.5 xs:gap-3 min-w-0 flex-1 cursor-pointer"
                 >
                   <div
-                    className={`w-10 h-10 rounded-xl ${!link.accent_color ? bg : ''} flex items-center justify-center shrink-0 shadow-xs`}
+                    className={`w-9 h-9 xs:w-10 xs:h-10 rounded-xl ${!link.accent_color ? bg : ''} flex items-center justify-center shrink-0 shadow-xs`}
                     style={link.accent_color ? { backgroundColor: link.accent_color } : undefined}
                   >
-                    <Icon className={`w-5 h-5 ${text}`} />
+                    <Icon className={`w-4 h-4 xs:w-5 xs:h-5 ${text}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -176,7 +176,7 @@ export default function MobileSocialsView({ socialLinks = [] }: MobileSocialsVie
                         <span className="text-[10px] text-blue-600 font-bold shrink-0">✓</span>
                       )}
                       {link.category && (
-                        <span className="text-[9px] font-mono uppercase bg-slate-100 text-slate-500 px-1 rounded">
+                        <span className="text-[9px] font-mono uppercase bg-slate-100 text-slate-500 px-1 rounded shrink-0">
                           {link.category}
                         </span>
                       )}
@@ -191,7 +191,7 @@ export default function MobileSocialsView({ socialLinks = [] }: MobileSocialsVie
                   <button
                     type="button"
                     onClick={() => handleCopy(link.id, link.url)}
-                    className="p-2 text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 cursor-pointer active:scale-95 transition-all"
+                    className="p-1.5 xs:p-2 text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 cursor-pointer active:scale-95 transition-all min-h-[36px] min-w-[36px] flex items-center justify-center"
                     title="Copy link"
                   >
                     {isCopied ? (
@@ -206,7 +206,7 @@ export default function MobileSocialsView({ socialLinks = [] }: MobileSocialsVie
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => playSound('open')}
-                    className="p-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 cursor-pointer active:scale-95 transition-all"
+                    className="p-1.5 xs:p-2 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 cursor-pointer active:scale-95 transition-all min-h-[36px] min-w-[36px] flex items-center justify-center"
                     title="Visit profile"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />

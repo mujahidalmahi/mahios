@@ -159,7 +159,7 @@ export default function MobileContactView({
             <button
               type="button"
               onClick={handleCopyEmail}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold active:scale-95 transition-all cursor-pointer"
+              className="p-1.5 xs:p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold active:scale-95 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
               title="Copy email"
             >
               {copiedEmail ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
@@ -167,7 +167,7 @@ export default function MobileContactView({
             <a
               href={`mailto:${directEmail}`}
               onClick={() => playSound('open')}
-              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl active:scale-95 transition-all shadow-xs"
+              className="px-2.5 xs:px-3 py-1.5 xs:py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] xs:text-xs font-bold rounded-xl active:scale-95 transition-all shadow-xs min-h-[36px] flex items-center justify-center"
             >
               Compose
             </a>
@@ -366,7 +366,7 @@ export default function MobileContactView({
           <button
             type="submit"
             disabled={isSending}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98 transition-all"
+            className="w-full py-2.5 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-98 transition-all"
           >
             {isSending ? (
               <>

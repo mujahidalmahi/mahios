@@ -139,21 +139,21 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
         </div>
       ) : (
         /* Photo Stream */
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 xs:gap-2.5">
           {paginatedImages.map((image) => (
             <div
               key={image.id}
               onClick={() => handleOpenLightbox(image)}
               className="bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-2xs group cursor-pointer active:scale-98 transition-transform hover:border-blue-400"
             >
-              <div className="w-full h-36 bg-slate-100 overflow-hidden relative">
+              <div className="w-full h-32 xs:h-36 sm:h-44 bg-slate-100 overflow-hidden relative">
                 <img
                   src={image.image_url}
                   alt={image.title || 'Photo'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
-              <div className="p-2.5">
+              <div className="p-2 xs:p-2.5">
                 <h4 className="text-xs font-bold text-slate-900 truncate">{image.title || 'Untitled'}</h4>
                 {image.caption && (
                   <p className="text-[10px] text-slate-500 truncate mt-0.5">{image.caption}</p>
@@ -173,7 +173,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
       {/* Lightbox Modal with Next/Prev, Slideshow, Taken Date, and Tags */}
       {activeImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 animate-in fade-in duration-150 select-none"
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(0.75rem+env(safe-area-inset-bottom))] animate-in fade-in duration-150 select-none"
           onClick={() => {
             setSelectedImageIndex(null);
             setIsSlideshow(false);
@@ -202,7 +202,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
               <button
                 type="button"
                 onClick={() => setIsSlideshow(!isSlideshow)}
-                className={`p-2 rounded-xl text-xs flex items-center gap-1 border transition-colors ${
+                className={`p-2 rounded-xl text-xs flex items-center gap-1 border transition-colors min-h-[36px] ${
                   isSlideshow
                     ? 'bg-amber-500 text-black border-amber-400 font-bold'
                     : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
@@ -218,7 +218,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
                   setSelectedImageIndex(null);
                   setIsSlideshow(false);
                 }}
-                className="p-2 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20 cursor-pointer"
+                className="p-2 rounded-xl bg-white/10 text-white border border-white/20 hover:bg-white/20 cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -240,7 +240,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             <button
               type="button"
               onClick={handlePrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-white border border-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 xs:p-2.5 rounded-full bg-black/60 text-white border border-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-xs min-h-[40px] min-w-[40px] flex items-center justify-center"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -249,7 +249,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             <button
               type="button"
               onClick={handleNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-white border border-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-xs"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 xs:p-2.5 rounded-full bg-black/60 text-white border border-white/20 active:scale-95 transition-all cursor-pointer backdrop-blur-xs min-h-[40px] min-w-[40px] flex items-center justify-center"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -264,7 +264,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
               <p className="text-white text-xs">{activeImage.caption}</p>
             )}
 
-            <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-slate-400 pt-0.5">
+            <div className="flex items-center justify-center gap-3 text-[10px] font-mono text-slate-400 pt-0.5 flex-wrap">
               {activeImage.taken_at && (
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3 text-slate-400" />
@@ -290,7 +290,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             type="button"
             disabled={currentPage <= 1}
             onClick={() => handlePageChange(currentPage - 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Prev</span>
@@ -304,7 +304,7 @@ export default function MobileGalleryView({ categories = [], images = [] }: Mobi
             type="button"
             disabled={currentPage >= totalPages}
             onClick={() => handlePageChange(currentPage + 1)}
-            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-slate-100 disabled:opacity-40 text-slate-800 rounded-lg text-xs font-bold border border-slate-300 flex items-center gap-1 active:scale-95 cursor-pointer disabled:cursor-not-allowed min-h-[38px]"
           >
             <span>Next</span>
             <ChevronRight className="w-3.5 h-3.5" />

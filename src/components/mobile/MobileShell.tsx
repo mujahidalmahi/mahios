@@ -753,7 +753,8 @@ export default function MobileShell({ data }: MobileShellProps) {
           triggerHaptic('light');
           setIsNotificationShadeOpen(true);
         }}
-        className="h-7 px-3 bg-black/40 backdrop-blur-md flex items-center justify-between text-xs font-bold shrink-0 z-40 select-none border-b border-white/10 cursor-pointer active:bg-black/60 transition-colors"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="px-3 bg-black/40 backdrop-blur-md flex items-center justify-between text-xs font-bold shrink-0 z-40 select-none border-b border-white/10 cursor-pointer active:bg-black/60 transition-colors h-[calc(1.75rem+env(safe-area-inset-top,0px))]"
         title="Tap to pull down Mobile Notification & Settings Shade"
       >
         {/* Left: Signal + Carrier + Network Status */}
@@ -864,8 +865,10 @@ export default function MobileShell({ data }: MobileShellProps) {
             </div>
 
             {/* Mobile App Scrollable Body */}
-            <div className="flex-1 min-h-0 bg-slate-50 overflow-y-auto p-3 flex flex-col overscroll-contain">
-              {renderAppContent(activeApp.app_id)}
+            <div className="flex-1 min-h-0 bg-slate-50 overflow-y-auto px-2.5 py-3 xs:px-3 sm:px-4 sm:py-4 flex flex-col overscroll-contain">
+              <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col min-h-full">
+                {renderAppContent(activeApp.app_id)}
+              </div>
             </div>
           </div>
         ) : (
@@ -889,7 +892,10 @@ export default function MobileShell({ data }: MobileShellProps) {
       {/* ========================================================= */}
       {/* 5. VINTAGE MOBILE BOTTOM NAVIGATION DOCK (ALWAYS VISIBLE) */}
       {/* ========================================================= */}
-      <div className="h-16 px-4 pb-2 pt-1.5 bg-slate-900/80 backdrop-blur-xl border-t border-white/15 flex items-center justify-between shrink-0 z-30 select-none shadow-2xl">
+      <div
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+        className="min-h-[4rem] px-3 xs:px-4 pt-1.5 bg-slate-900/80 backdrop-blur-xl border-t border-white/15 flex items-center justify-between shrink-0 z-30 select-none shadow-2xl"
+      >
         {activeApp ? (
           /* Softkey bar when inside an active application */
           <div className="w-full flex items-center justify-between">

@@ -75,7 +75,7 @@ export default function MobileCalculatorView() {
   };
 
   return (
-    <div className="max-w-xs mx-auto space-y-4 pb-6 pt-2">
+    <div className="w-full max-w-sm mx-auto space-y-3 sm:space-y-4 pb-6 pt-1 flex flex-col justify-center my-auto min-h-full">
       {/* LCD Display */}
       <div className="bg-[#14261d] rounded-2xl p-4 border-2 border-[#1e4630] shadow-inner text-right space-y-1">
         <div className="h-4 text-[11px] font-mono text-emerald-400/60 font-bold">
@@ -91,7 +91,7 @@ export default function MobileCalculatorView() {
         <button
           type="button"
           onClick={handleClear}
-          className="col-span-2 py-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold rounded-xl text-xs shadow-xs active:scale-95 cursor-pointer"
+          className="col-span-2 py-3 sm:py-3.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-xs active:scale-95 cursor-pointer min-h-[46px]"
         >
           AC Clear
         </button>
