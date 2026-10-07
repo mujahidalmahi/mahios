@@ -16,6 +16,7 @@ import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
 import { BlogPost } from '@/types/database';
 import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
+import { generateSafeId } from '@/lib/utils/id';
 
 export default function BlogAdminPage() {
   const [posts, setPosts] = useState<BlogPost[]>(fallbackBiographyData.blogPosts);
@@ -61,7 +62,7 @@ export default function BlogAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingPost({
-      id: `post-${Date.now()}`,
+      id: generateSafeId(),
       title: '',
       slug: '',
       excerpt: '',
@@ -132,10 +133,11 @@ export default function BlogAdminPage() {
       return;
     }
 
+    const savedPost = (res.data as BlogPost) || payload;
     if (isNew) {
-      setPosts((prev) => [...prev, payload]);
+      setPosts((prev) => [...prev, savedPost]);
     } else {
-      setPosts((prev) => prev.map((p) => (p.id === payload.id ? payload : p)));
+      setPosts((prev) => prev.map((p) => (p.id === savedPost.id ? savedPost : p)));
     }
 
     setEditingPost(null);

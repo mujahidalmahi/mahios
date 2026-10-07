@@ -75,10 +75,14 @@ export async function uploadMedia(fileBuffer: Buffer, fileName: string, mimeType
     console.warn('Supabase storage fallback error:', supabaseErr);
   }
 
-  // 3. Fallback to inline Base64 data URL for small assets / local testing
-  const base64 = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
-  return {
-    url: base64,
-    provider: 'base64',
-  };
+  // 3. Fallback to inline Base64 data URL ONLY for small assets under 512KB
+  if (fileBuffer.length <= 512 * 1024) {
+    const base64 = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+    return {
+      url: base64,
+      provider: 'base64',
+    };
+  }
+
+  throw new Error('Media upload failed: Storage service unavailable and file exceeds 512KB fallback limit. Please configure Cloudinary or Supabase Storage.');
 }

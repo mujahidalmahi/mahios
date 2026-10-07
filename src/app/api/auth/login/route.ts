@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getClientIp } from '@/lib/security/rateLimiter';
 import { isMaliciousBot, sanitizeInput, validateHoneypot } from '@/lib/security/botShield';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
+import { createAdminSessionToken, ADMIN_SESSION_COOKIE } from '@/lib/security/authSession';
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,7 +73,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-
+    // 2. Optional Environment Variable fallback if configured in production
+    if (!isAuthenticated && process.env.ADMIN_PASSWORD) {
+      if (cleanPassword === process.env.ADMIN_PASSWORD) {
+        isAuthenticated = true;
+      }
+    }
 
     if (!isAuthenticated) {
       return NextResponse.json(
@@ -89,15 +95,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate Secure Session Token
-    const sessionToken = Buffer.from(
-      JSON.stringify({
-        authenticated: true,
-        sub: authUserEmail,
-        role: 'authenticated_admin',
-        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-      })
-    ).toString('base64');
+    // Generate Cryptographically Signed HMAC Session Token
+    const sessionToken = createAdminSessionToken(authUserEmail);
 
     const res = NextResponse.json({
       success: true,
@@ -106,7 +105,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Set secure HTTP-Only session cookie
-    res.cookies.set('mahios_admin_session', sessionToken, {
+    res.cookies.set(ADMIN_SESSION_COOKIE, sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

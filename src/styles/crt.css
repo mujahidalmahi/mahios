@@ -166,3 +166,18 @@
   color: #635f55;
   text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
 }
+
+/* Accessibility: Honor user's vestibular / reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .crt-flicker,
+  .crt-power-on-anim {
+    animation: none !important;
+  }
+  .crt-screen-curvature {
+    transform: none !important;
+    transition: none !important;
+  }
+  .crt-scanlines::before {
+    opacity: 0.15 !important;
+  }
+}

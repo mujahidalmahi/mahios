@@ -17,6 +17,7 @@ import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
 import { Project } from '@/types/database';
+import { generateSafeId } from '@/lib/utils/id';
 
 export default function ProjectsAdminPage() {
   const [projects, setProjects] = useState<Project[]>(fallbackBiographyData.projects);
@@ -57,7 +58,7 @@ export default function ProjectsAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingProject({
-      id: `proj-${Date.now()}`,
+      id: generateSafeId(),
       title: '',
       slug: '',
       summary: '',
@@ -125,10 +126,11 @@ export default function ProjectsAdminPage() {
       return;
     }
 
+    const savedProject = (res.data as Project) || payload;
     if (isNew) {
-      setProjects((prev) => [...prev, payload]);
+      setProjects((prev) => [...prev, savedProject]);
     } else {
-      setProjects((prev) => prev.map((p) => (p.id === payload.id ? payload : p)));
+      setProjects((prev) => prev.map((p) => (p.id === savedProject.id ? savedProject : p)));
     }
 
     setEditingProject(null);

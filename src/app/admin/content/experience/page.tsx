@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 import { adminMutate, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import { Experience } from '@/types/database';
+import { generateSafeId } from '@/lib/utils/id';
 
 export default function ExperienceAdminPage() {
   const [experiences, setExperiences] = useState<Experience[]>(fallbackBiographyData.experiences);
@@ -57,7 +58,7 @@ export default function ExperienceAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingExp({
-      id: `exp-${Date.now()}`,
+      id: generateSafeId(),
       company: '',
       role: '',
       location: 'Remote / Dhaka, Bangladesh',
@@ -122,10 +123,11 @@ export default function ExperienceAdminPage() {
       return;
     }
 
+    const savedExp = (res.data as Experience) || editingExp;
     if (isNew) {
-      setExperiences((prev) => [...prev, editingExp]);
+      setExperiences((prev) => [...prev, savedExp]);
     } else {
-      setExperiences((prev) => prev.map((e) => (e.id === editingExp.id ? editingExp : e)));
+      setExperiences((prev) => prev.map((e) => (e.id === savedExp.id ? savedExp : e)));
     }
 
     setEditingExp(null);

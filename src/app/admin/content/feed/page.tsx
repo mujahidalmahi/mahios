@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { adminMutate, adminFetch, adminBatchOrder } from '@/lib/api/adminMutate';
 import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import { FeedPost } from '@/types/database';
+import { generateSafeId } from '@/lib/utils/id';
 
 export default function FeedAdminPage() {
   const [posts, setPosts] = useState<FeedPost[]>(fallbackBiographyData.feedPosts);
@@ -43,7 +44,7 @@ export default function FeedAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingPost({
-      id: `feed-${Date.now()}`,
+      id: generateSafeId(),
       author_name: 'Mujahid Al Mahi',
       content: '',
       timestamp: 'Just now',
@@ -89,11 +90,6 @@ export default function FeedAdminPage() {
     setSaving(true);
 
     const previous = [...posts];
-    if (isNew) {
-      setPosts((prev) => [editingPost, ...prev]);
-    } else {
-      setPosts((prev) => prev.map((p) => (p.id === editingPost.id ? editingPost : p)));
-    }
 
     try {
       const res = await adminMutate<FeedPost>({
@@ -107,6 +103,13 @@ export default function FeedAdminPage() {
         setTimeout(() => setFeedback(null), 4000);
         setSaving(false);
         return;
+      }
+
+      const savedPost = (res.data as FeedPost) || editingPost;
+      if (isNew) {
+        setPosts((prev) => [savedPost, ...prev]);
+      } else {
+        setPosts((prev) => prev.map((p) => (p.id === savedPost.id ? savedPost : p)));
       }
       setEditingPost(null);
       setSaving(false);

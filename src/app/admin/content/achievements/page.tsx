@@ -16,6 +16,7 @@ import { SkeletonListPage } from '@/components/admin/SkeletonLoader';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import EmptyState from '@/components/admin/EmptyState';
 import { Achievement } from '@/types/database';
+import { generateSafeId } from '@/lib/utils/id';
 
 export default function AchievementsAdminPage() {
   const [achievements, setAchievements] = useState<Achievement[]>(fallbackBiographyData.achievements);
@@ -52,7 +53,7 @@ export default function AchievementsAdminPage() {
   const openNew = () => {
     setIsNew(true);
     setEditingItem({
-      id: `ach-${Date.now()}`,
+      id: generateSafeId(),
       title: '',
       issuer: '',
       issue_date: '2025',
@@ -109,10 +110,11 @@ export default function AchievementsAdminPage() {
       return;
     }
 
+    const savedItem = (res.data as Achievement) || editingItem;
     if (isNew) {
-      setAchievements((prev) => [...prev, editingItem]);
+      setAchievements((prev) => [...prev, savedItem]);
     } else {
-      setAchievements((prev) => prev.map((a) => (a.id === editingItem.id ? editingItem : a)));
+      setAchievements((prev) => prev.map((a) => (a.id === savedItem.id ? savedItem : a)));
     }
 
     setEditingItem(null);

@@ -59,6 +59,23 @@ interface SystemStore {
   playSound: (soundType: 'click' | 'open' | 'close' | 'boot' | 'error' | 'success') => void;
 }
 
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AudioCtxClass =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtxClass) return null;
+  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+    sharedAudioCtx = new AudioCtxClass();
+  }
+  if (sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
 export const useSystemStore = create<SystemStore>((set, get) => {
   return {
     // CRT & Display: Default is clean fullscreen OS without CRT enclosure
@@ -132,7 +149,8 @@ export const useSystemStore = create<SystemStore>((set, get) => {
       if (!soundEnabled || typeof window === 'undefined') return;
 
       try {
-        const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        const audioCtx = getSharedAudioContext();
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);

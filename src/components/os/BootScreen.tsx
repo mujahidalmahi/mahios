@@ -22,15 +22,25 @@ export default function BootScreen({ onBootComplete }: BootScreenProps) {
   const hasTriggeredComplete = useRef(false);
 
   useEffect(() => {
-    if (!isBooting) return;
+    if (typeof window !== 'undefined' && sessionStorage.getItem('mahios_booted') === 'true') {
+      finishBoot();
+      onBootComplete();
+      return;
+    }
 
     let animFrameId: number;
     let startTime: number | null = null;
-    const TOTAL_DURATION_MS = 2000; // 2 seconds authentic boot duration
+    const TOTAL_DURATION_MS = 1800; // Authentic vintage boot duration
 
     const completeBoot = () => {
       if (hasTriggeredComplete.current) return;
       hasTriggeredComplete.current = true;
+
+      try {
+        sessionStorage.setItem('mahios_booted', 'true');
+      } catch {
+        // Storage access might be restricted
+      }
 
       setIsFadingOut(true);
       playSound('boot');
@@ -38,7 +48,7 @@ export default function BootScreen({ onBootComplete }: BootScreenProps) {
       setTimeout(() => {
         finishBoot();
         onBootComplete();
-      }, 240);
+      }, 200);
     };
 
     const step = (timestamp: number) => {

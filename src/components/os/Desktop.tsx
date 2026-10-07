@@ -318,14 +318,27 @@ export default function Desktop({ data }: DesktopProps) {
       )}
 
       {/* ========================================================= */}
-      {/* 28 APPLICATIONS SYMMETRICAL ARCHITECTURE */}
-      {/* LEFT: 2 COLUMNS OF 7 ROWS (Rank 1-14 from Admin Dashboard) */}
-      {/* RIGHT: 2 COLUMNS OF 7 ROWS (Rank 15-28 from Admin Dashboard) */}
-      {/* Distributed equally across full desktop height (no empty space at bottom) */}
+      {/* 28 APPLICATIONS RESPONSIVE ARCHITECTURE */}
+      {/* MOBILE (<640px): 4-Column Scrollable Retro App Launcher */}
+      {/* DESKTOP (>=640px): Symmetrical 2 Columns Left + 2 Columns Right */}
       {/* ========================================================= */}
 
-      {/* LEFT SIDE: 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
-      <div className="absolute top-2 left-2 bottom-[38px] flex gap-x-2 z-0 pointer-events-auto">
+      {/* MOBILE (width < 640px): Responsive Retro App Grid */}
+      <div className="sm:hidden absolute inset-0 bottom-[38px] p-2 overflow-y-auto z-0 pointer-events-auto">
+        <div className="grid grid-cols-4 gap-2 justify-items-center items-start pt-2">
+          {sortedVisibleApps.map((app) => (
+            <div key={app.id} className="w-[74px] h-[66px] flex items-center justify-center">
+              <DesktopIcon
+                app={app}
+                onContextMenu={(e, a) => handleContextMenu(e, a)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* DESKTOP (width >= 640px): LEFT SIDE 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
+      <div className="hidden sm:flex absolute top-2 left-2 bottom-[38px] gap-x-2 z-0 pointer-events-auto">
         {/* Column 1 (Rank 1-7) */}
         <div
           style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
@@ -357,8 +370,8 @@ export default function Desktop({ data }: DesktopProps) {
         </div>
       </div>
 
-      {/* RIGHT SIDE: 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
-      <div className="absolute top-2 right-2 bottom-[38px] flex gap-x-2 z-0 pointer-events-auto">
+      {/* DESKTOP (width >= 640px): RIGHT SIDE 14 APPS (2 COLUMNS OF 7 ROWS EACH) */}
+      <div className="hidden sm:flex absolute top-2 right-2 bottom-[38px] gap-x-2 z-0 pointer-events-auto">
         {/* Column 3 (Rank 15-21) */}
         <div
           style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}

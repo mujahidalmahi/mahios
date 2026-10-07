@@ -66,6 +66,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     }
 
     const isDesktopRes = vw >= 1200;
+    const isMobileRes = vw < 640;
     const desiredWidth = app.default_width || (isDesktopRes ? 780 : 700);
     const desiredHeight = app.default_height || (isDesktopRes ? 520 : 440);
 
@@ -91,7 +92,7 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
       componentKey: app.component_key,
       isOpen: true,
       isMinimized: false,
-      isMaximized: false, // Authentic unmaximized desktop window, matching reference screenshot
+      isMaximized: isMobileRes, // Automatically maximize on mobile viewports for clean, readable layout
       zIndex: newZ,
       position: {
         x: clampedX,

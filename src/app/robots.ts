@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/admin/', '/api', '/api/'],
+        disallow: ['/admin', '/admin/*', '/api', '/api/*'],
       },
       {
         userAgent: [
@@ -24,7 +24,19 @@ export default function robots(): MetadataRoute.Robots {
           'LinkedInBot',
         ],
         allow: '/',
-        disallow: ['/admin', '/admin/', '/api', '/api/'],
+        disallow: ['/admin', '/admin/*', '/api', '/api/*'],
+      },
+      {
+        userAgent: [
+          'GPTBot',
+          'ChatGPT-User',
+          'Claude-Web',
+          'anthropic-ai',
+          'CCBot',
+          'PerplexityBot',
+        ],
+        allow: '/',
+        disallow: ['/admin', '/admin/*', '/api', '/api/*'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

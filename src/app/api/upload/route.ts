@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getClientIp } from '@/lib/security/rateLimiter';
 import { isMaliciousBot, validateFileUpload } from '@/lib/security/botShield';
 import { uploadMedia } from '@/lib/storage/upload';
+import { verifyAdminSessionToken, ADMIN_SESSION_COOKIE } from '@/lib/security/authSession';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,26 +12,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Strict Administrator Authentication Verification
-    const sessionCookie = req.cookies.get('mahios_admin_session')?.value;
-    let isAuthorized = false;
+    const sessionCookie = req.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+    const sessionVerification = verifyAdminSessionToken(sessionCookie);
 
-    if (sessionCookie) {
-      try {
-        const decoded = JSON.parse(Buffer.from(sessionCookie, 'base64').toString('utf-8'));
-        if (
-          decoded &&
-          (decoded.authenticated === true || decoded.role === 'authenticated_admin') &&
-          typeof decoded.exp === 'number' &&
-          decoded.exp > Date.now()
-        ) {
-          isAuthorized = true;
-        }
-      } catch {
-        isAuthorized = false;
-      }
-    }
-
-    if (!isAuthorized) {
+    if (!sessionVerification.valid) {
       return NextResponse.json(
         { error: 'Unauthorized. An active administrator session is required to upload media.' },
         { status: 401 }

@@ -57,6 +57,10 @@ export default function SettingsApp() {
     timeFormat, setTimeFormat,
     showSeconds, setShowSeconds,
     osStartTime, resetToDefaults,
+    crtMonitorFrame, toggleCrtMonitorFrame,
+    crtScanlines, toggleScanlines,
+    crtCurvature, toggleCurvature,
+    crtFlicker, toggleFlicker,
     playSound
   } = useSystemStore();
 
@@ -363,6 +367,66 @@ export default function SettingsApp() {
                     {cur === 'default' ? 'Classic Pointer' : 'Precision Crosshair (+)'}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* CRT Monitor & Vintage Effects */}
+            <div className="p-3 bg-white retro-box-inset space-y-3">
+              <h3 className="font-bold text-xs text-[#000080] uppercase flex items-center gap-1.5">
+                <Monitor className="w-4 h-4 text-blue-700" />
+                <span>Vintage CRT Monitor Simulation</span>
+              </h3>
+              <p className="text-[11px] text-gray-600">
+                Immerse yourself in authentic 1990s cathode-ray tube hardware simulation:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
+                  <div>
+                    <div className="font-bold text-gray-900 text-[11px]">CRT Monitor Chassis</div>
+                    <div className="text-[9px] text-gray-500">Physical vintage beige computer monitor frame</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={crtMonitorFrame}
+                    onChange={() => { toggleCrtMonitorFrame(); playSound('click'); }}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
+                  <div>
+                    <div className="font-bold text-gray-900 text-[11px]">Scanline Overlay</div>
+                    <div className="text-[9px] text-gray-500">Cathode ray horizontal scanline rasterization</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={crtScanlines}
+                    onChange={() => { toggleScanlines(); playSound('click'); }}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
+                  <div>
+                    <div className="font-bold text-gray-900 text-[11px]">Glass Curvature</div>
+                    <div className="text-[9px] text-gray-500">Spherical 3D screen bulge distortion</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={crtCurvature}
+                    onChange={() => { toggleCurvature(); playSound('click'); }}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between p-2 bg-[#f3f4f6] border border-gray-300 rounded-2xs cursor-pointer">
+                  <div>
+                    <div className="font-bold text-gray-900 text-[11px]">Phosphor Flicker</div>
+                    <div className="text-[9px] text-gray-500">Subtle 60Hz turn-on power flicker</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={crtFlicker}
+                    onChange={() => { toggleFlicker(); playSound('click'); }}
+                  />
+                </label>
               </div>
             </div>
           </div>

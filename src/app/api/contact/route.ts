@@ -91,6 +91,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Optional external webhook alert (e.g. Discord, Slack, custom webhook)
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL || process.env.NOTIFICATION_WEBHOOK_URL;
+    if (webhookUrl) {
+      try {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: `📬 **New MahiOS Contact Message**\n**From:** ${cleanName} (${cleanEmail})\n**Subject:** ${cleanSubject}\n**Message:**\n>>> ${cleanMessage.slice(0, 1500)}`,
+          }),
+        }).catch((err) => console.warn('Webhook dispatch failed:', err));
+      } catch {
+        // Non-blocking for client response
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Message securely transmitted via MahiOS mail subsystem!',

@@ -254,6 +254,25 @@ function WindowComponent({ window: win, children }: WindowProps) {
     };
   }, [isDragging, isResizing, snapPreview, win.appId, win.position.x, win.position.y, win.size.width, win.size.height, updateWindowPosition, updateWindowSize, snapWindow]);
 
+  // Keyboard accessibility: Escape closes the active window
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const activeTag = document.activeElement?.tagName;
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
+          return;
+        }
+        playSound('close');
+        closeWindow(win.appId);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isActive, win.appId, closeWindow, playSound]);
+
   if (win.isMinimized) return null;
 
   return (
